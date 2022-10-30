@@ -17,7 +17,7 @@ import {
 import { OneToMany } from 'typeorm/decorator/relations/OneToMany';
 import { BaseEntity } from '../../common/entities/base-entity.entity';
 import {
-  generateReferralCode,
+  generateUniqueCode,
   removeSpecialCharacters,
 } from '../../common/utils/functions';
 import { CreditCard } from './../../credit-cards/entities/credit-card.entity';
@@ -26,7 +26,7 @@ import { CreditCard } from './../../credit-cards/entities/credit-card.entity';
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-  
+
   @Column({ nullable: false })
   firstName: string;
 
@@ -105,7 +105,7 @@ export class User extends BaseEntity {
   @Column({ nullable: false })
   walletId: string;
 
-  @OneToMany((type) => Address, (address) => address.user)
+  @OneToMany((type) => Address, (address) => address.user, { cascade: true })
   addresses: Address[];
 
   @OneToMany((type) => Vehicle, (v) => v.user, { cascade: true })
@@ -148,10 +148,13 @@ export class User extends BaseEntity {
     this.username = this.username
       ? this.username
       : removeSpecialCharacters(this.firstName + this.lastName) + Date.now();
+    this.password = this.password
+      ? removeSpecialCharacters(this.phoneNumber)
+      : null;
     const password = this.password ? this.password : this.username;
     const hash = await argon.hash(password);
     this.password = hash;
     this.email = this.email ? this.email.toLowerCase() : null;
-    this.referralCode = await generateReferralCode();
+    this.referralCode = generateUniqueCode();
   }
 }

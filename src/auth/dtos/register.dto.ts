@@ -1,14 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type, } from 'class-transformer';
 import {
   IsNotEmpty,
   Length,
   IsEmail,
   IsOptional,
   ValidateNested,
+  Matches,
+  
 } from 'class-validator';
 import { CreateAddressDto } from 'src/addresses/dto/create-address.dto';
+import { passwordRegex } from 'src/common/constants';
 
-export class LoginDTO {
+export class RegisterUserDTO {
   @ApiProperty()
   @IsNotEmpty()
   @Length(3, 64)
@@ -24,7 +28,11 @@ export class LoginDTO {
   @Length(3, 64)
   username: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    type: String,
+    description: `${passwordRegex}`,
+  })
+  @Matches(passwordRegex, { message: 'Weak password' })
   @IsNotEmpty()
   @Length(6, 32)
   password: string;
@@ -39,11 +47,14 @@ export class LoginDTO {
   @Length(6, 32)
   phoneNumber: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false
+  })
   @IsOptional()
   photo?: any;
-
-  @ApiProperty({ type: Array<CreateAddressDto> })
-  @ValidateNested()
+  
+  @ApiProperty({ type: CreateAddressDto, isArray: true })
+  @ValidateNested({ each: true })
+  @Type(() => CreateAddressDto)
   addresses: CreateAddressDto[];
 }

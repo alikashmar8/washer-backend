@@ -2,14 +2,14 @@ import {
   CanActivate,
   ExecutionContext,
   HttpException,
-  HttpStatus
+  HttpStatus,
 } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 import { JWT_SECRET } from 'src/common/constants';
 import { JWTDataTypeEnum } from 'src/common/enums/jwt-data-type.enum';
 import { User } from 'src/users/entities/user.entity';
 
-export class IsEmployeeGuard implements CanActivate {
+export class IsUserGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const authorization = request.headers.authorization;

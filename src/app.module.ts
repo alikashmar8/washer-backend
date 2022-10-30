@@ -5,6 +5,7 @@ import configuration from 'config/configuration';
 import { AddressesModule } from './addresses/addresses.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
 import { BranchesModule } from './branches/branches.module';
 import { CreditCardsModule } from './credit-cards/credit-cards.module';
 import { EmployeesModule } from './employees/employees.module';
@@ -26,6 +27,7 @@ import { WalletsModule } from './wallets/wallets.module';
       useFactory: async (configService: ConfigService) =>
         configService.get('database'),
     }),
+    AuthModule,
     UsersModule,
     EmployeesModule,
     AddressesModule,

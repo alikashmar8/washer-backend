@@ -1,25 +1,47 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { BranchesService } from './branches.service';
 import { CreateBranchDto } from './dto/create-branch.dto';
 import { UpdateBranchDto } from './dto/update-branch.dto';
 
+@ApiTags('Branches')
+@ApiBearerAuth('access_token')
 @Controller('branches')
 export class BranchesController {
   constructor(private readonly branchesService: BranchesService) {}
 
+  @Roles(EmployeeRole.ADMIN)
+  @UseGuards(RolesGuard)
   @Post()
-  create(@Body() createBranchDto: CreateBranchDto) {
-    return this.branchesService.create(createBranchDto);
+  async create(@Body() createBranchDto: CreateBranchDto) {
+    return await this.branchesService.create(createBranchDto);
   }
 
   @Get()
-  findAll() {
-    return this.branchesService.findAll();
+  async findAll(
+    @Query() query
+  ) {
+    const relations = ['address']
+    return await this.branchesService.findAll(query, relations);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.branchesService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    const relations = ['address']
+    return await this.branchesService.findByIdOrFail(id, relations);
   }
 
   @Patch(':id')

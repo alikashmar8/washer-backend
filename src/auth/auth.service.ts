@@ -2,100 +2,143 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as argon from 'argon2';
 import * as jwt from 'jsonwebtoken';
-import {
-  JWT_SECRET
-} from 'src/common/constants';
+import { JWT_SECRET, JWT_USERS_EXPIRY_TIME } from 'src/common/constants';
+import { Currency } from 'src/common/enums/currency.enum';
+import { JWTDataTypeEnum } from 'src/common/enums/jwt-data-type.enum';
+import { removeSpecialCharacters } from 'src/common/utils/functions';
+import { EmployeesService } from 'src/employees/employees.service';
+import { Employee } from 'src/employees/entities/employee.entity';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
-import { Repository } from 'typeorm';
-import { JWT_SUPER_ADMIN_EXPIRY_TIME } from './../common/constants';
+import { DataSource, Repository } from 'typeorm';
 import { LoginDTO } from './dtos/login.dto';
+import { RegisterUserDTO } from './dtos/register.dto';
 import { UpdatePasswordDTO } from './dtos/update-password-dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
+    private employeesService: EmployeesService,
+    private dataSource: DataSource,
     @InjectRepository(User) private usersRepository: Repository<User>,
+    @InjectRepository(Employee) private employeesRepository: Repository<Employee>,
   ) {}
 
-  async login(data: LoginDTO): Promise<{ access_token: string; user: User }> {
-    let user: any = await this.usersService.findByUsernameOrFail(data.username, [
-      'company',
-    ]);
+  async registerUser(data: RegisterUserDTO) {
+    const exists =
+      (await this.usersService.findByEmail(data.email)) ||
+      (await this.usersService.findByPhoneNumber(
+        removeSpecialCharacters(data.phoneNumber),
+      ));
+    if (exists)
+      throw new BadRequestException('Email or Phone Number is already in use!');
 
-    // const decipher = createDecipheriv('aes-256-ctr', CRYPTO_KEY, CRYPTO_IV);
-    // const decryptedText = Buffer.concat([
-    //   decipher.update(user.password, 'hex'),
-    //   decipher.final(),
-    // ]);
+    if (data.addresses.length < 1)
+      throw new BadRequestException('At least 1 address should be provided!');
 
-    // const match = decryptedText.toString() === data.password;
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.startTransaction();
+    try {
+      let user = this.usersRepository.create({
+        // email: data.email,
+        // firstName: data.firstName,
+        // lastName: data.lastName,
+        // phoneNumber: data.phoneNumber,
+        // password: data.password,
+        // username: data.username,
+        // addresses: data.addresses,
+        ...data,
+        wallet: {
+          balance: 0,
+          currency: Currency.LBP,
+        },
+      });
+
+      user = await queryRunner.manager.save(user);
+
+      // data.addresses.forEach(async address => {
+      //   address.userId = user.id;
+      //   address.branchId = null;
+      //   await queryRunner.manager.save(Address, address)
+      // })
+
+      await queryRunner.commitTransaction();
+      return user;
+    } catch (err) {
+      console.log(err);
+      await queryRunner.rollbackTransaction();
+      throw new BadRequestException('Error registering user!');
+    } finally {
+      await queryRunner.release();
+    }
+  }
+  
+  async loginUsers(data: LoginDTO): Promise<{ access_token: string; user: User }> {
+    if (!data.email && !data.username && !data.phoneNumber)
+      throw new BadRequestException('Error empty credentials!');
+
+    let user: User;
+
+    user = data.email
+      ? await this.usersService.findByEmail(data.email)
+      : data.username
+      ? await this.usersService.findByUsernameOrFail(data.username)
+      : await this.usersService.findByPhoneNumber(data.phoneNumber);
+
+    if (!user) throw new BadRequestException('Error user not found!');
 
     const match = await argon.verify(user.password, data.password);
     if (!match) throw new BadRequestException('Password incorrect!');
 
-    if (user.isSuperAdmin) {
-      const access_token = jwt.sign({ user }, JWT_SECRET, {
-        expiresIn: JWT_SUPER_ADMIN_EXPIRY_TIME,
-      });
-      return {
-        access_token,
-        user,
-      };
-    }
+    const access_token = jwt.sign(
+      { user, type: JWTDataTypeEnum.USER },
+      JWT_SECRET,
+      {
+        expiresIn: JWT_USERS_EXPIRY_TIME,
+      },
+    );
+    return {
+      access_token,
+      user,
+    };
+  }
+  
+  async loginStaffs(data: LoginDTO): Promise<{ access_token: string; employee: Employee }> {
+    if (!data.email && !data.username && !data.phoneNumber)
+      throw new BadRequestException('Error empty credentials!');
 
-    if (user.expiryDate) {
-      //expiry date exists
-      if (user.expiryDate.getTime() < new Date().getTime())
-        //account expired
-        throw new BadRequestException(
-          'Your account has expired. Please contact the administrator',
-        );
+    let employee: Employee;
 
-      //else account did not expire
-      let diff = user.expiryDate.getTime() - new Date().getTime();
-      var daysToExpire = Math.floor(diff / 1000 / 60 / 60 / 24);
-      daysToExpire++;
+    employee = data.email
+      ? await this.employeesService.findByEmailOrFail(data.email)
+      : data.username
+      ? await this.employeesService.findByUsernameOrFail(data.username)
+      : await this.employeesService.findByPhoneNumberOrFail(data.phoneNumber);
 
-      const access_token = jwt.sign({ user }, JWT_SECRET, {
-        expiresIn: `${daysToExpire}d`,
-      });
-      return {
-        access_token,
-        user,
-      };
-    } else {
-      //No expiry date exists
-      const access_token = jwt.sign({ user }, JWT_SECRET, {
-        expiresIn: '30d',
-      });
-      return {
-        access_token,
-        user,
-      };
-    }
+    if (!employee) throw new BadRequestException('Error employee not found!');
+
+    const match = await argon.verify(employee.password, data.password);
+    if (!match) throw new BadRequestException('Password incorrect!');
+
+    const access_token = jwt.sign(
+      { employee, type: JWTDataTypeEnum.EMPLOYEE },
+      JWT_SECRET,
+      {
+        expiresIn: JWT_USERS_EXPIRY_TIME,
+      },
+    );
+    return {
+      access_token,
+      employee,
+    };
   }
 
-
-  async updatePassword(id: string, body: UpdatePasswordDTO) {
-    let user:any = await this.usersService.findById(id);
-
-    // const sc = simplecrypt({
-    //   salt: BCRYPT_SALT,
-    // });
-    // const password = sc.decrypt(user.password);
-    // const match = password == body.oldPassword;
+  async updateUserPassword(id: string, body: UpdatePasswordDTO) {
+    let user: User = await this.usersService.findById(id);
 
     const match = await argon.verify(user.password, body.oldPassword);
-
-    // const decipher = createDecipheriv('aes-256-ctr', CRYPTO_KEY, CRYPTO_IV);
-    // const decryptedText = Buffer.concat([
-    //   decipher.update(user.password, 'hex'),
-    //   decipher.final(),
-    // ]);
-
-    // const match = decryptedText.toString() === body.oldPassword;
 
     if (!match) throw new BadRequestException('Old password incorrect!');
 
@@ -103,17 +146,26 @@ export class AuthService {
       throw new BadRequestException(
         'New password and confirm password do not match!',
       );
-
-    // user.password = sc.encrypt(body.newPassword);
-    // user.password = await argon.hash(body.newPassword);
-    // const cipher = createCipheriv('aes-256-ctr', CRYPTO_KEY, CRYPTO_IV);
-    // const encryptedText = Buffer.concat([
-    //   cipher.update(body.newPassword),
-    //   cipher.final(),
-    // ]);
-    // user.password = encryptedText.toString('hex');
     user.password = await argon.hash(body.newPassword);
     return await this.usersRepository.save(user).catch((err) => {
+      console.log(err);
+      throw new BadRequestException('Error updating password');
+    });
+  }
+
+  async updateEmployeePassword(id: string, body: UpdatePasswordDTO) {
+    let employee: Employee = await this.employeesService.findById(id);
+
+    const match = await argon.verify(employee.password, body.oldPassword);
+
+    if (!match) throw new BadRequestException('Old password incorrect!');
+
+    if (body.newPassword !== body.confirmPassword)
+      throw new BadRequestException(
+        'New password and confirm password do not match!',
+      );
+    employee.password = await argon.hash(body.newPassword);
+    return await this.employeesRepository.save(employee).catch((err) => {
       console.log(err);
       throw new BadRequestException('Error updating password');
     });

@@ -1,19 +1,37 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateBranchDto } from './dto/create-branch.dto';
 import { UpdateBranchDto } from './dto/update-branch.dto';
+import { Branch } from './entities/branch.entity';
 
 @Injectable()
 export class BranchesService {
-  create(createBranchDto: CreateBranchDto) {
-    return 'This action adds a new branch';
+  constructor(
+    @InjectRepository(Branch) private branchesRepository: Repository<Branch>,
+  ) {}
+  async create(data: CreateBranchDto) {
+    return await this.branchesRepository.save(data).catch(() => {
+      throw new BadRequestException('Error adding a branch');
+    });
   }
 
-  findAll() {
-    return `This action returns all branches`;
+  async findAll(filters: any, relations?: string[]) {
+    const res = await this.branchesRepository.findAndCount({
+      relations,
+    });
+    return {
+      data: res[0],
+      count: res[1]
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} branch`;
+  async findByIdOrFail(id: string, relations?: string[]) {
+    return await this.branchesRepository
+      .findOneOrFail({ where: { id: id }, relations: relations })
+      .catch((err: any) => {
+        throw new BadRequestException('Branch not found!');
+      });
   }
 
   update(id: number, updateBranchDto: UpdateBranchDto) {

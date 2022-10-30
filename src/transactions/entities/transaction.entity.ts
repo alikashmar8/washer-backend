@@ -19,7 +19,7 @@ export class Transaction extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'decimal', nullable: false })
+  @Column({ type: 'float', nullable: false })
   amount: number;
 
   @Column({

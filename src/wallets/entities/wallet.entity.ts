@@ -15,7 +15,7 @@ export class Wallet extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'decimal', default: 0 })
+  @Column({ type: 'float', default: 0 })
   balance: number;
 
   @Column({ type: 'enum', enum: Currency, default: Currency.LBP })

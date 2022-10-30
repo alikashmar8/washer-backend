@@ -1,14 +1,49 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
-  findById(id: string) {
-    throw new Error('Method not implemented.');
+  constructor(
+    @InjectRepository(User) private usersRepository: Repository<User>,
+  ) {}
+  async findByEmail(email: string, relations?: string[]): Promise<User> {
+    return await this.usersRepository.findOne({
+      where: { email: email },
+      relations: relations,
+    });
   }
-  findByUsernameOrFail(username: string, arg1: string[]) {
-    throw new Error('Method not implemented.');
+  async findByPhoneNumber(
+    phoneNumber: string,
+    relations?: string[],
+  ): Promise<User> {
+    return await this.usersRepository.findOne({
+      where: { phoneNumber: phoneNumber },
+      relations: relations,
+    });
+  }
+  async findById(id: string, relations?: string[]) {
+    return await this.usersRepository
+      .findOneOrFail({
+        where: { id: id },
+        relations: relations,
+      })
+      .catch((err) => {
+        throw new BadRequestException(`User not found!`);
+      });
+  }
+  async findByUsernameOrFail(username: string, relations?: string[]) {
+    return await this.usersRepository
+      .findOneOrFail({
+        where: { username: username },
+        relations: relations,
+      })
+      .catch((err) => {
+        throw new BadRequestException(`User ${username} not found!`);
+      });
   }
   create(createUserDto: CreateUserDto) {
     return 'This action adds a new user';

@@ -2,7 +2,7 @@ import { Branch } from 'src/branches/entities/branch.entity';
 import { PaymentType } from 'src/common/enums/payment-type.enum';
 import { RequestStatus } from 'src/common/enums/request-status.enum';
 import { ServiceType } from 'src/common/enums/service-type.enum';
-import { generateReferralCode } from 'src/common/utils/functions';
+import { generateUniqueCode } from 'src/common/utils/functions';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { Transaction } from 'src/transactions/entities/transaction.entity';
 import { User } from 'src/users/entities/user.entity';
@@ -27,7 +27,7 @@ export class ServiceRequest extends BaseEntity {
     enum: RequestStatus,
     default: RequestStatus.PENDING_APPROVAL,
   })
-  type: RequestStatus;
+  status: RequestStatus;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   dueDate: Date;
@@ -35,19 +35,19 @@ export class ServiceRequest extends BaseEntity {
   @Column({ type: 'text', nullable: false })
   address: string;
 
-  @Column({ type: 'decimal', nullable: false })
+  @Column({ type: 'float', nullable: false })
   lat: number;
 
-  @Column({ type: 'decimal', nullable: false })
+  @Column({ type: 'float', nullable: false })
   long: number;
 
   @Column({ type: 'enum', enum: PaymentType, default: PaymentType.CASH })
   paymentType: PaymentType;
 
-  @Column({ type: 'decimal', nullable: false })
+  @Column({ type: 'float', nullable: false })
   cost: number;
 
-  @Column({ type: 'decimal', nullable: false, default: 0 })
+  @Column({ type: 'float', nullable: false, default: 0 })
   tips: number;
 
   @Column({ default: false })
@@ -57,7 +57,7 @@ export class ServiceRequest extends BaseEntity {
   isClientVerified: boolean;
 
   @Column({ type: 'enum', enum: ServiceType, default: ServiceType.OTHERS })
-  serviceType: ServiceType;
+  type: ServiceType;
 
   @Column({ type: 'text', nullable: false })
   verificationCode: string;
@@ -109,6 +109,6 @@ export class ServiceRequest extends BaseEntity {
 
   @BeforeInsert()
   async hashPassword() {
-    this.verificationCode = 'await generateReferralCode()';
+    this.verificationCode = generateUniqueCode();
   }
 }

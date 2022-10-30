@@ -18,11 +18,11 @@ export class Address extends BaseEntity {
   @Column({ type: 'text', nullable: false })
   description: string;
 
-  @Column({ type: 'decimal', nullable: true })
-  lat: number;
+  @Column({ type: 'float', nullable: true })
+  lat?: number;
 
-  @Column({ type: 'decimal', nullable: true })
-  long: number;
+  @Column({ type: 'float', nullable: true })
+  long?: number;
 
   @Column({ default: false })
   isDefault: boolean;
@@ -34,12 +34,12 @@ export class Address extends BaseEntity {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'userId' })
-  user: User;
+  user?: User;
 
   @OneToOne((type) => Branch, (branch) => branch.address, {
     onDelete: 'CASCADE',
   })
-  branch: Branch;
+  branch?: Branch;
 
   public get isUserAddress(): boolean {
     return !!this.user;

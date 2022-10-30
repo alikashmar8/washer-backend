@@ -1,5 +1,3 @@
-// import * as cryptoRandomString from 'crypto-random-string';
-
 export function removeSpecialCharacters(text: string): string {
   return text.replace(/[`\s~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '');
 }
@@ -29,8 +27,36 @@ export function generateFileUniqueName() {
     .concat(Date.now().toString());
 }
 
-export async function generateReferralCode(length?: number): Promise<string> {
+export function generateUniqueCode(length?: number) {
   length = length || 12;
-  return '1';
-//   return await cryptoRandomString.cryptoRandomStringAsync({ length, type: 'alphanumeric' });
+  var result = '';
+  var characters =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  var charactersLength = characters.length;
+  for (var i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
+
+export function calculateDistance(
+  point1: { lat: number; long: number },
+  point2: { lat: number; long: number },
+): number {
+  var radLat1 = (Math.PI * point1.lat) / 180;
+  var radLat2 = (Math.PI * point2.lat) / 180;
+  var theta = point1.long - point2.long;
+  var radTheta = (Math.PI * theta) / 180;
+  var dist =
+    Math.sin(radLat1) * Math.sin(radLat2) +
+    Math.cos(radLat1) * Math.cos(radLat2) * Math.cos(radTheta);
+  if (dist > 1) {
+    dist = 1;
+  }
+  dist = Math.acos(dist);
+  dist = (dist * 180) / Math.PI;
+  dist = dist * 60 * 1.1515;
+  dist = dist * 1.609344; //converted to KM
+  // if (unit=="N") { dist = dist * 0.8684 }
+  return dist;
 }

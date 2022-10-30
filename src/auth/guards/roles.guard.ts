@@ -27,7 +27,7 @@ export class RolesGuard implements CanActivate {
       const verified: any = jwt.verify(token, JWT_SECRET);
       if (
         verified.type == JWTDataTypeEnum.EMPLOYEE &&
-        roles.includes(verified.employee?.role)
+        roles.includes(verified.employee?.type)
       ) {
         return true;
       } else {
