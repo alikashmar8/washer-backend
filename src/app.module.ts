@@ -7,6 +7,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { BranchesModule } from './branches/branches.module';
+import { ConsoleCommandsModule } from './console-commands/console-commands.module';
 import { CreditCardsModule } from './credit-cards/credit-cards.module';
 import { EmployeesModule } from './employees/employees.module';
 import { PromosModule } from './promos/promos.module';
@@ -27,6 +28,7 @@ import { WalletsModule } from './wallets/wallets.module';
       useFactory: async (configService: ConfigService) =>
         configService.get('database'),
     }),
+    ConsoleCommandsModule,
     AuthModule,
     UsersModule,
     EmployeesModule,

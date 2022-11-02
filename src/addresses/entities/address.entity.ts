@@ -42,6 +42,6 @@ export class Address extends BaseEntity {
   branch?: Branch;
 
   public get isUserAddress(): boolean {
-    return !!this.user;
+    return !!this.userId;
   }
 }

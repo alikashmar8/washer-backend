@@ -7,7 +7,9 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards
+  UseGuards,
+  UsePipes,
+  ValidationPipe
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
@@ -19,6 +21,7 @@ import { UpdateBranchDto } from './dto/update-branch.dto';
 
 @ApiTags('Branches')
 @ApiBearerAuth('access_token')
+@UsePipes(new ValidationPipe())
 @Controller('branches')
 export class BranchesController {
   constructor(private readonly branchesService: BranchesService) {}
