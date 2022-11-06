@@ -20,6 +20,7 @@ import { VehiclesModule } from './vehicles/vehicles.module';
 import { WalletsModule } from './wallets/wallets.module';
 import { DeviceTokensModule } from './device-tokens/device-tokens.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AdsModule } from './ads/ads.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     ServiceTypesModule,
     DeviceTokensModule,
     NotificationsModule,
+    AdsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
