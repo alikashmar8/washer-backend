@@ -11,11 +11,15 @@ import { ConsoleCommandsModule } from './console-commands/console-commands.modul
 import { CreditCardsModule } from './credit-cards/credit-cards.module';
 import { EmployeesModule } from './employees/employees.module';
 import { PromosModule } from './promos/promos.module';
+import { ServiceCategoriesModule } from './service-categories/service-categories.module';
 import { ServiceRequestsModule } from './service-requests/service-requests.module';
+import { ServiceTypesModule } from './service-types/service-types.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { WalletsModule } from './wallets/wallets.module';
+import { DeviceTokensModule } from './device-tokens/device-tokens.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -40,6 +44,10 @@ import { WalletsModule } from './wallets/wallets.module';
     WalletsModule,
     TransactionsModule,
     ServiceRequestsModule,
+    ServiceCategoriesModule,
+    ServiceTypesModule,
+    DeviceTokensModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,7 +1,0 @@
-export enum ServiceType {
-  VEHICLE_IN = 'VEHICLE_IN',
-  VEHICLE_OUT = 'VEHICLE_OUT',
-  VEHICLE_FULL = 'VEHICLE_FULL',
-  CARPETS = 'CARPETS',
-  OTHERS = 'OTHERS',
-}

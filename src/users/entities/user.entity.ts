@@ -1,11 +1,13 @@
 import * as argon from 'argon2';
 import { Exclude } from 'class-transformer';
 import { Address } from 'src/addresses/entities/address.entity';
+import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
 import { Promo } from 'src/promos/entities/promo.entity';
 import { ServiceRequest } from 'src/service-requests/entities/service-request.entity';
 import { Transaction } from 'src/transactions/entities/transaction.entity';
 import { Vehicle } from 'src/vehicles/entities/vehicle.entity';
 import { Wallet } from 'src/wallets/entities/wallet.entity';
+import { Notification } from 'src/notifications/entities/notification.entity';
 import {
   BeforeInsert,
   Column,
@@ -36,6 +38,7 @@ export class User extends BaseEntity {
   @Column({ nullable: false, unique: true })
   username: string;
 
+  @Exclude()
   @Column()
   password: string;
 
@@ -120,6 +123,12 @@ export class User extends BaseEntity {
   @Exclude()
   @OneToMany((type) => Promo, (promo) => promo.user, { cascade: true })
   promos: Promo[];
+
+  @OneToMany((type) => DeviceToken, (deviceToken) => deviceToken.user, { cascade: true })
+  deviceTokens: DeviceToken[];
+
+  @OneToMany((type) => Notification, (notification) => notification.user)
+  notifications: Notification[];
 
   @Exclude()
   @OneToMany((type) => CreditCard, (card) => card.user, { cascade: true })

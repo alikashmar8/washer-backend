@@ -51,7 +51,7 @@ export class AddressesController {
     if (
       employee &&
       ![EmployeeRole.ADMIN, EmployeeRole.BRANCH_EMPLOYEE].includes(
-        employee.type,
+        employee.role,
       )
     ) {
       throw new HttpException(

@@ -55,7 +55,7 @@ export class AddressesService {
     if (
       currentEmployee &&
       ![EmployeeRole.ADMIN, EmployeeRole.BRANCH_EMPLOYEE].includes(
-        currentEmployee.type,
+        currentEmployee.role,
       )
     )
       throw new UnauthorizedException(
@@ -73,7 +73,7 @@ export class AddressesService {
       );
     return await this.addressesRepository.delete(address.id).catch((err) => {
       console.log(err);
-      throw new BadRequestException('Error unable to delete this address!');
+      throw new BadRequestException('Error unable to delete this address!', err);
     });
   }
 }

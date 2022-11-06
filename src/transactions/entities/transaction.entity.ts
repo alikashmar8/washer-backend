@@ -29,12 +29,12 @@ export class Transaction extends BaseEntity {
   })
   status: TransactionStatus;
 
-  @Column({
-    type: 'enum',
-    enum: TransactionType,
-    nullable: false,
-  })
-  type: TransactionType;
+  // @Column({
+  //   type: 'enum',
+  //   enum: TransactionType,
+  //   nullable: false,
+  // })
+  // type: TransactionType;
 
   @Column({ nullable: true })
   walletId?: string;

@@ -2,6 +2,8 @@ import * as argon from 'argon2';
 import { Exclude } from 'class-transformer';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { removeSpecialCharacters } from 'src/common/utils/functions';
+import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
+import { Notification } from 'src/notifications/entities/notification.entity';
 import { ServiceRequest } from 'src/service-requests/entities/service-request.entity';
 import {
   BaseEntity,
@@ -10,7 +12,7 @@ import {
   Entity,
   ManyToOne,
   OneToMany,
-  PrimaryGeneratedColumn,
+  PrimaryGeneratedColumn
 } from 'typeorm';
 import { Branch } from './../../branches/entities/branch.entity';
 
@@ -41,7 +43,7 @@ export class Employee extends BaseEntity {
   photo?: string;
 
   @Column({ type: 'enum', enum: EmployeeRole, default: EmployeeRole.DRIVER })
-  type: EmployeeRole;
+  role: EmployeeRole;
 
   @Column({ default: true })
   isActive: boolean;
@@ -67,6 +69,14 @@ export class Employee extends BaseEntity {
     cascade: true,
   })
   requests: ServiceRequest[];
+
+  @OneToMany((type) => DeviceToken, (deviceToken) => deviceToken.employee, {
+    cascade: true,
+  })
+  deviceTokens: DeviceToken[];
+
+  @OneToMany((type) => Notification, (notification) => notification.employee)
+  notifications: Notification[];
 
   @BeforeInsert()
   async hashPassword() {

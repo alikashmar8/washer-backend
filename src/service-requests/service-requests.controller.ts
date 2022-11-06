@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -8,6 +9,7 @@ import {
   Param,
   Patch,
   Post,
+  UnauthorizedException
 } from '@nestjs/common';
 import { Query, UseGuards } from '@nestjs/common/decorators';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -16,11 +18,11 @@ import { IsUserGuard } from 'src/auth/guards/is-user.guard';
 import { CurrentEmployee } from 'src/common/decorators/current-employee.decorator';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
+import { RequestStatus } from 'src/common/enums/request-status.enum';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { User } from 'src/users/entities/user.entity';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
-import { UpdateServiceRequestDto } from './dto/update-service-request.dto';
 import { ServiceRequestsService } from './service-requests.service';
 
 @ApiBearerAuth('access_token')
@@ -50,18 +52,24 @@ export class ServiceRequestsController {
     if (user) {
       query.userId = user.id;
     } else if (employee) {
-      if (employee.type == EmployeeRole.DRIVER) {
+      if (employee.role == EmployeeRole.DRIVER) {
         query.employeeId = employee.id;
-      } else if (employee.type == EmployeeRole.BRANCH_EMPLOYEE) {
+      } else if (employee.role == EmployeeRole.BRANCH_EMPLOYEE) {
         query.branchId = employee.branchId;
       }
     }
     return await this.serviceRequestsService.findAll(query);
   }
 
+  @UseGuards(new AuthGuard())
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return await this.serviceRequestsService.findOneByIdOrFail(id);
+  async findOne(@Param('id') id: string, @CurrentUser() user: User) {
+    const serviceReq = await this.serviceRequestsService.findOneByIdOrFail(id);
+    if (user && user.id != serviceReq.userId)
+      throw new UnauthorizedException(
+        'You are not allowed to perform this action',
+      );
+    return serviceReq;
   }
 
   @UseGuards(new AuthGuard())
@@ -72,12 +80,34 @@ export class ServiceRequestsController {
     @CurrentUser() user: User,
     @CurrentEmployee() employee: Employee,
   ) {
-    //TODO: make checking
+    //user can only cancel a request
+    if (user && body.status != RequestStatus.CANCELLED)
+      throw new BadRequestException(
+        'You are not allowed to perform this action!',
+      );
+    if (employee) {
+      if (
+        employee.role == EmployeeRole.DRIVER &&
+        ![RequestStatus.DONE, RequestStatus.IN_PROGRESS].includes(body.status)
+      )
+        throw new BadRequestException(
+          'You are not allowed to perform this action!',
+        );
+    }
+    if (user) {
+      const serviceReq = await this.serviceRequestsService.findOneByIdOrFail(
+        id,
+      );
+      if (user.id != serviceReq.userId)
+        throw new UnauthorizedException(
+          'You are not allowed to perform this action!',
+        );
+    }
     return await this.serviceRequestsService.updateStatus(id, body);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.serviceRequestsService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.serviceRequestsService.remove(+id);
+  // }
 }

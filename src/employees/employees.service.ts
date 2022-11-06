@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { Repository } from 'typeorm';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
@@ -68,12 +69,36 @@ export class EmployeesService {
         );
       });
   }
-  create(createEmployeeDto: CreateEmployeeDto) {
-    return 'This action adds a new employee';
+  async create(data: CreateEmployeeDto) {
+    let employee = this.employeesRepository.create(data);
+    return await this.employeesRepository.save(employee).catch((err) => {
+      console.log(err);
+      throw new BadRequestException('Error creating employee!');
+    });
   }
 
-  findAll() {
-    return `This action returns all employees`;
+  async findAll(queryParams: any, currentEmployee: Employee) {
+    if (currentEmployee.role == EmployeeRole.DRIVER)
+      throw new BadRequestException(
+        'You are not allowed to perform this action!',
+      );
+
+    const take = queryParams.take || 10;
+    const skip = queryParams.skip || 0;
+
+    let query: any = this.employeesRepository.createQueryBuilder('employee');
+    if (currentEmployee.role == EmployeeRole.BRANCH_EMPLOYEE) {
+      query = query.where('employee.branchId :bId', {
+        bId: currentEmployee.branchId,
+      });
+    }
+
+    query = await query.skip(skip).take(take).getManyAndCount();
+
+    return {
+      data: query[0],
+      count: query[1],
+    };
   }
 
   findOne(id: number) {

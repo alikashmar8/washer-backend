@@ -8,7 +8,7 @@ export class LoginDTO {
   })
   @IsOptional()
   @Length(3)
-  username: string;
+  username?: string;
 
   @ApiProperty({
     required: false,
@@ -16,12 +16,17 @@ export class LoginDTO {
   })
   @IsOptional()
   @IsEmail()
-  email: string;
+  email?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
   @Length(6)
-  phoneNumber: string;
+  phoneNumber?: string;
+
+  @ApiProperty({ required: true })
+  @IsNotEmpty()
+  @Length(6)
+  fcmToken?: string;
 
   @ApiProperty()
   @IsNotEmpty()

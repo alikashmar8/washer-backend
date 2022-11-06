@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BranchesService } from 'src/branches/branches.service';
-import { ServiceType } from 'src/common/enums/service-type.enum';
 import { calculateDistance } from 'src/common/utils/functions';
 import { Repository } from 'typeorm';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
@@ -11,9 +10,7 @@ import { ServiceRequest } from './entities/service-request.entity';
 
 @Injectable()
 export class ServiceRequestsService {
-  updateStatus(id: string, body: UpdateServiceRequestStatusDto) {
-    throw new Error('Method not implemented.');
-  }
+  
   constructor(
     private branchesService: BranchesService,
     @InjectRepository(ServiceRequest)
@@ -21,17 +18,6 @@ export class ServiceRequestsService {
   ) {}
 
   async create(data: CreateServiceRequestDto) {
-    if (
-      [
-        ServiceType.VEHICLE_FULL,
-        ServiceType.VEHICLE_IN,
-        ServiceType.VEHICLE_OUT,
-      ].includes(data.type) &&
-      !data.vehicleId
-    ) {
-      throw new BadRequestException('Vehicle should be provided!');
-    }
-
     //TODO: enhance branch choosing
     const res = await this.branchesService.findAll(null, ['address']);
     const branches = res.data;
@@ -136,5 +122,12 @@ export class ServiceRequestsService {
 
   remove(id: number) {
     return `This action removes a #${id} serviceRequest`;
+  }
+
+  async updateStatus(id: string, data: UpdateServiceRequestStatusDto) {
+    return await this.requestsRepository.update(id, data).catch((err) => {
+      console.log(err);
+      throw new BadRequestException('Error updating status');
+    });
   }
 }

@@ -11,6 +11,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDTO } from './dtos/login.dto';
+import { LogoutDTO } from './dtos/logout.dto';
 import { RegisterUserDTO } from './dtos/register.dto';
 import { UpdatePasswordDTO } from './dtos/update-password-dto';
 import { IsEmployeeGuard } from './guards/is-employee.guard';
@@ -35,6 +36,18 @@ export class AuthController {
   @Post('login/staffs')
   async loginStaffs(@Body() loginDto: LoginDTO) {
     return await this.authService.loginStaffs(loginDto);
+  }
+
+  @UseGuards(new IsUserGuard())
+  @Post('logout/users')
+  async logoutUsers(@Body() body: LogoutDTO) {
+    return await this.authService.logout(body);
+  }
+
+  @UseGuards(new IsEmployeeGuard())
+  @Post('logout/staffs')
+  async logoutStaffs(@Body() body: LogoutDTO) {
+    return await this.authService.logout(body);
   }
 
   @UseGuards(new IsUserGuard())

@@ -1,9 +1,9 @@
 import { Branch } from 'src/branches/entities/branch.entity';
 import { PaymentType } from 'src/common/enums/payment-type.enum';
 import { RequestStatus } from 'src/common/enums/request-status.enum';
-import { ServiceType } from 'src/common/enums/service-type.enum';
 import { generateUniqueCode } from 'src/common/utils/functions';
 import { Employee } from 'src/employees/entities/employee.entity';
+import { ServiceType } from 'src/service-types/entities/service-type.entity';
 import { Transaction } from 'src/transactions/entities/transaction.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Vehicle } from 'src/vehicles/entities/vehicle.entity';
@@ -14,14 +14,14 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryGeneratedColumn
 } from 'typeorm';
 
 @Entity('service-requests')
 export class ServiceRequest extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-  
+
   @Column({
     type: 'enum',
     enum: RequestStatus,
@@ -56,9 +56,6 @@ export class ServiceRequest extends BaseEntity {
   @Column({ default: false })
   isClientVerified: boolean;
 
-  @Column({ type: 'enum', enum: ServiceType, default: ServiceType.OTHERS })
-  type: ServiceType;
-
   @Column({ type: 'text', nullable: false })
   verificationCode: string;
 
@@ -76,6 +73,9 @@ export class ServiceRequest extends BaseEntity {
 
   @Column({ nullable: true })
   transactionId?: string;
+
+  @Column({ nullable: false })
+  typeId: string;
 
   @ManyToOne((type) => User, (user) => user.requests, {
     onDelete: 'CASCADE',
@@ -106,6 +106,12 @@ export class ServiceRequest extends BaseEntity {
   })
   @JoinColumn({ name: 'transactionId' })
   transaction?: Transaction;
+
+  @ManyToOne((type) => ServiceType, (type) => type.serviceRequests, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'typeId' })
+  type: ServiceType;
 
   @BeforeInsert()
   async hashPassword() {

@@ -6,12 +6,15 @@ import { JWT_SECRET, JWT_USERS_EXPIRY_TIME } from 'src/common/constants';
 import { Currency } from 'src/common/enums/currency.enum';
 import { JWTDataTypeEnum } from 'src/common/enums/jwt-data-type.enum';
 import { removeSpecialCharacters } from 'src/common/utils/functions';
+import { DeviceTokensService } from 'src/device-tokens/device-tokens.service';
+import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
 import { EmployeesService } from 'src/employees/employees.service';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 import { DataSource, Repository } from 'typeorm';
 import { LoginDTO } from './dtos/login.dto';
+import { LogoutDTO } from './dtos/logout.dto';
 import { RegisterUserDTO } from './dtos/register.dto';
 import { UpdatePasswordDTO } from './dtos/update-password-dto';
 
@@ -20,9 +23,13 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private employeesService: EmployeesService,
+    private deviceTokensService: DeviceTokensService,
     private dataSource: DataSource,
+    @InjectRepository(DeviceToken)
+    private deviceTokensRepository: Repository<DeviceToken>,
     @InjectRepository(User) private usersRepository: Repository<User>,
-    @InjectRepository(Employee) private employeesRepository: Repository<Employee>,
+    @InjectRepository(Employee)
+    private employeesRepository: Repository<Employee>,
   ) {}
 
   async registerUser(data: RegisterUserDTO) {
@@ -74,8 +81,10 @@ export class AuthService {
       await queryRunner.release();
     }
   }
-  
-  async loginUsers(data: LoginDTO): Promise<{ access_token: string; user: User }> {
+
+  async loginUsers(
+    data: LoginDTO,
+  ): Promise<{ access_token: string; user: User }> {
     if (!data.email && !data.username && !data.phoneNumber)
       throw new BadRequestException('Error empty credentials!');
 
@@ -99,13 +108,21 @@ export class AuthService {
         expiresIn: JWT_USERS_EXPIRY_TIME,
       },
     );
+
+    await this.deviceTokensService.createUserDeviceToken({
+      fcmToken: data.fcmToken,
+      jwtToken: access_token,
+      userId: user.id,
+    });
     return {
       access_token,
       user,
     };
   }
-  
-  async loginStaffs(data: LoginDTO): Promise<{ access_token: string; employee: Employee }> {
+
+  async loginStaffs(
+    data: LoginDTO,
+  ): Promise<{ access_token: string; employee: Employee }> {
     if (!data.email && !data.username && !data.phoneNumber)
       throw new BadRequestException('Error empty credentials!');
 
@@ -129,6 +146,13 @@ export class AuthService {
         expiresIn: JWT_USERS_EXPIRY_TIME,
       },
     );
+
+    await this.deviceTokensService.createEmployeeDeviceToken({
+      fcmToken: data.fcmToken,
+      jwtToken: access_token,
+      employeeId: employee.id,
+    });
+
     return {
       access_token,
       employee,
@@ -169,5 +193,19 @@ export class AuthService {
       console.log(err);
       throw new BadRequestException('Error updating password');
     });
+  }
+
+  async logout(body: LogoutDTO) {
+    let deviceToken = await this.deviceTokensRepository
+      .findOneOrFail({
+        where: {
+          jwtToken: body.jwtToken,
+        },
+      })
+      .catch(() => {
+        throw new BadRequestException('Session not found!');
+      });
+
+    return await this.deviceTokensService.remove(deviceToken.id);
   }
 }
