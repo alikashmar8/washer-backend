@@ -33,8 +33,8 @@ export class AuthController {
     return await this.authService.loginUsers(loginDto);
   }
 
-  @Post('login/staffs')
-  async loginStaffs(@Body() loginDto: LoginDTO) {
+  @Post('login/staff')
+  async loginStaff(@Body() loginDto: LoginDTO) {
     return await this.authService.loginStaffs(loginDto);
   }
 
@@ -45,8 +45,8 @@ export class AuthController {
   }
 
   @UseGuards(new IsEmployeeGuard())
-  @Post('logout/staffs')
-  async logoutStaffs(@Body() body: LogoutDTO) {
+  @Post('logout/staff')
+  async logoutStaff(@Body() body: LogoutDTO) {
     return await this.authService.logout(body);
   }
 
@@ -60,7 +60,7 @@ export class AuthController {
   }
 
   @UseGuards(new IsEmployeeGuard())
-  @Patch('update-password/staffs/:id')
+  @Patch('update-password/staff/:id')
   async updateEmployeePassword(
     @Param('id') id: string,
     @Body() body: UpdatePasswordDTO,
