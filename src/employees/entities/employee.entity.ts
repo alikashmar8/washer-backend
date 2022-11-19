@@ -1,12 +1,12 @@
 import * as argon from 'argon2';
 import { Exclude } from 'class-transformer';
+import { BaseEntity } from 'src/common/entities/base-entity.entity';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { removeSpecialCharacters } from 'src/common/utils/functions';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
 import { Notification } from 'src/notifications/entities/notification.entity';
 import { ServiceRequest } from 'src/service-requests/entities/service-request.entity';
 import {
-  BaseEntity,
   BeforeInsert,
   Column,
   Entity,
@@ -22,10 +22,10 @@ export class Employee extends BaseEntity {
   id: string;
 
   @Column({ nullable: false })
-  first_name: string;
+  firstName: string;
 
   @Column({ nullable: false })
-  last_name: string;
+  lastName: string;
 
   @Column({ nullable: false, unique: true })
   username: string;
@@ -82,7 +82,7 @@ export class Employee extends BaseEntity {
   async hashPassword() {
     this.username = this.username
       ? this.username
-      : removeSpecialCharacters(this.first_name + this.last_name) + Date.now();
+      : removeSpecialCharacters(this.firstName + this.lastName) + Date.now();
     const password = this.password ? this.password : this.username;
     const hash = await argon.hash(password);
     this.password = hash;

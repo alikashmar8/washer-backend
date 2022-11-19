@@ -21,6 +21,7 @@ import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { CurrentEmployee } from 'src/common/decorators/current-employee.decorator';
 import { Employee } from './entities/employee.entity';
+import { IsEmployeeGuard } from 'src/auth/guards/is-employee.guard';
 
 @ApiTags('Employees')
 @UsePipes(new ValidationPipe())
@@ -65,8 +66,23 @@ export class EmployeesController {
     return this.employeesService.update(+id, updateEmployeeDto);
   }
 
+  @UseGuards(new IsEmployeeGuard())
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.employeesService.remove(+id);
+  async remove(@Param('id') id: string, @CurrentEmployee() employee: Employee) {
+    if (employee.role == EmployeeRole.DRIVER && employee.id == id) {
+      return new UnauthorizedException(
+        'You are not allowed to perform this action!',
+      );
+    }
+
+    if (employee.role == EmployeeRole.BRANCH_EMPLOYEE) {
+      const employeeToDelete = await this.employeesService.findByIdOrFail(id);
+      if (employee.branchId != employeeToDelete.branchId) {
+        return new UnauthorizedException(
+          'You are not allowed to perform this action!',
+        );
+      }
+    }
+    return await this.employeesService.remove(id);
   }
 }

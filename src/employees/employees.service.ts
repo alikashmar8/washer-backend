@@ -86,7 +86,9 @@ export class EmployeesService {
     const take = queryParams.take || 10;
     const skip = queryParams.skip || 0;
 
-    let query: any = this.employeesRepository.createQueryBuilder('employee');
+    let query: any = this.employeesRepository
+      .createQueryBuilder('employee')
+      .leftJoinAndSelect('employee.branch', 'branch');
     if (currentEmployee.role == EmployeeRole.BRANCH_EMPLOYEE) {
       query = query.where('employee.branchId :bId', {
         bId: currentEmployee.branchId,
@@ -109,7 +111,9 @@ export class EmployeesService {
     return `This action updates a #${id} employee`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} employee`;
+  async remove(id: string) {
+    return await this.employeesRepository.delete(id).catch((err) => {
+      throw new BadRequestException('Error unable to delete employee!');
+    });
   }
 }

@@ -17,6 +17,9 @@ export class Branch extends BaseEntity {
   id: string;
 
   @Column({ nullable: false })
+  description: string;
+
+  @Column({ nullable: false })
   addressId: string;
 
   @OneToOne((type) => Address, (address) => address.branch, {

@@ -23,6 +23,7 @@ export class AppService {
     });
 
     await this.branchesService.create({
+      description: 'Beirut branch 1',
       address: {
         description: 'Beirut, Lebanon',
         isDefault: true,
