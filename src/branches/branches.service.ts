@@ -22,8 +22,8 @@ export class BranchesService {
     });
     return {
       data: res[0],
-      count: res[1]
-    }
+      count: res[1],
+    };
   }
 
   async findByIdOrFail(id: string, relations?: string[]) {
@@ -38,7 +38,9 @@ export class BranchesService {
     return `This action updates a #${id} branch`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} branch`;
+  async remove(id: string) {
+    return await this.branchesRepository.delete(id).catch((err) => {
+      throw new BadRequestException('Error deleting branch');
+    });
   }
 }

@@ -1,27 +1,27 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UnauthorizedException,
+  UseGuards,
   UsePipes,
   ValidationPipe,
-  UseGuards,
-  UnauthorizedException,
-  Query,
 } from '@nestjs/common';
-import { EmployeesService } from './employees.service';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { IsEmployeeGuard } from 'src/auth/guards/is-employee.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { CurrentEmployee } from 'src/common/decorators/current-employee.decorator';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
-import { ApiTags } from '@nestjs/swagger';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { EmployeeRole } from 'src/common/enums/employee-role.enum';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { CurrentEmployee } from 'src/common/decorators/current-employee.decorator';
+import { EmployeesService } from './employees.service';
 import { Employee } from './entities/employee.entity';
-import { IsEmployeeGuard } from 'src/auth/guards/is-employee.guard';
 
 @ApiTags('Employees')
 @UsePipes(new ValidationPipe())
@@ -48,8 +48,30 @@ export class EmployeesController {
 
   @Roles(EmployeeRole.ADMIN, EmployeeRole.BRANCH_EMPLOYEE)
   @UseGuards(RolesGuard)
+  @ApiQuery({ name: 'take', example: 10, required: false })
+  @ApiQuery({ name: 'skip', example: 0, required: false })
+  @ApiQuery({ name: 'search', example: 'Employee Ahmed', required: false })
+  @ApiQuery({ name: 'branchId', example: '1', required: false })
+  @ApiQuery({
+    name: 'role',
+    example: EmployeeRole.DRIVER,
+    required: false,
+    enum: EmployeeRole,
+  })
+  @ApiQuery({ name: 'isActive', example: true, required: false, type: Boolean })
   @Get()
-  findAll(@Query() query, @CurrentEmployee() employee: Employee) {
+  findAll(
+    @Query()
+    query: {
+      search?: string;
+      branchId?: string;
+      role?: EmployeeRole;
+      isActive?: boolean;
+      take?: number;
+      skip?: number;
+    },
+    @CurrentEmployee() employee: Employee,
+  ) {
     return this.employeesService.findAll(query, employee);
   }
 

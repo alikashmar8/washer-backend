@@ -52,8 +52,11 @@ export class BranchesController {
     return this.branchesService.update(+id, updateBranchDto);
   }
 
+  
+  @Roles(EmployeeRole.ADMIN)
+  @UseGuards(RolesGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.branchesService.remove(+id);
+  async remove(@Param('id') id: string) {
+    return await this.branchesService.remove(id);
   }
 }

@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { Employee } from './entities/employee.entity';
@@ -77,7 +77,17 @@ export class EmployeesService {
     });
   }
 
-  async findAll(queryParams: any, currentEmployee: Employee) {
+  async findAll(
+    queryParams: {
+      search?: string;
+      branchId?: string;
+      role?: EmployeeRole;
+      isActive?: boolean;
+      take?: number;
+      skip?: number;
+    },
+    currentEmployee: Employee,
+  ) {
     if (currentEmployee.role == EmployeeRole.DRIVER)
       throw new BadRequestException(
         'You are not allowed to perform this action!',
@@ -85,16 +95,89 @@ export class EmployeesService {
 
     const take = queryParams.take || 10;
     const skip = queryParams.skip || 0;
+    let isFirstWhere = true;
 
     let query: any = this.employeesRepository
       .createQueryBuilder('employee')
       .leftJoinAndSelect('employee.branch', 'branch');
     if (currentEmployee.role == EmployeeRole.BRANCH_EMPLOYEE) {
+      if (isFirstWhere) isFirstWhere = false;
       query = query.where('employee.branchId :bId', {
         bId: currentEmployee.branchId,
       });
     }
 
+    if (queryParams.branchId) {
+      let queryString = 'employee.branchId = ' + queryParams.branchId;
+      if (isFirstWhere) {
+        isFirstWhere = false;
+        query = query.where(queryString);
+      } else {
+        query = query.andWhere(queryString);
+      }
+    }
+
+    if (queryParams.role) {
+      if (isFirstWhere) {
+        isFirstWhere = false;
+        query = query.where('employee.role = :role ', {
+          role: queryParams.role,
+        });
+      } else {
+        query = query.andWhere('employee.role = :role ', {
+          role: queryParams.role,
+        });
+      }
+    }
+
+    if (queryParams.isActive == true || queryParams.isActive == false) {
+      let queryString = 'employee.isActive = ' + queryParams.isActive;
+    }
+    if (queryParams.isActive != null) {
+      if (typeof queryParams.isActive == 'string') {
+        if (queryParams.isActive == 'true') {
+          queryParams.isActive = true;
+        } else if (queryParams.isActive == 'false') {
+          queryParams.isActive = false;
+        }
+      }
+      if (isFirstWhere) {
+        isFirstWhere = false;
+        query = query.where('employee.isActive = :isActive', {
+          isActive: queryParams.isActive,
+        });
+      } else {
+        query = query.andWhere('employee.isActive = :isActive', {
+          isActive: queryParams.isActive,
+        });
+      }
+    }
+
+    if (queryParams.search) {
+      let innerQuery = new Brackets((qb) => {
+        qb.where('employee.firstName like :name', {
+          name: `%${queryParams.search}%`,
+        })
+          .orWhere('employee.lastName like :name', {
+            name: `%${queryParams.search}%`,
+          })
+          .orWhere('employee.username like :username', {
+            username: `%${queryParams.search}%`,
+          })
+          .orWhere('employee.email like :email', {
+            email: `%${queryParams.search}%`,
+          })
+          .orWhere('employee.phoneNumber like :mobile', {
+            mobile: `%${queryParams.search}%`,
+          });
+      });
+      if (isFirstWhere) {
+        isFirstWhere = false;
+        query = query.where(innerQuery);
+      } else {
+        query = query.andWhere(innerQuery);
+      }
+    }
     query = await query.skip(skip).take(take).getManyAndCount();
 
     return {

@@ -1,15 +1,9 @@
+import { BaseEntity } from 'src/common/entities/base-entity.entity';
 import { ServiceType } from 'src/service-types/entities/service-type.entity';
-import {
-    BaseEntity, Column,
-    Entity,
-    OneToMany, PrimaryGeneratedColumn
-} from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 
 @Entity('service-categories')
 export class ServiceCategory extends BaseEntity {
-  @PrimaryGeneratedColumn()
-  id: string;
-
   @Column({ type: 'text', nullable: false })
   name: string;
 
