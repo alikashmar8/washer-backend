@@ -1,22 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { CreateServiceCategoryDto } from './dto/create-service-category.dto';
+import { UpdateServiceCategoryStatusDto } from './dto/update-service-category-status.dto';
 import { UpdateServiceCategoryDto } from './dto/update-service-category.dto';
 import { ServiceCategory } from './entities/service-category.entity';
 
 @Injectable()
 export class ServiceCategoriesService {
-  async findOneByIdOrFail(id: string, relations?: string[]) {
-    return await this.serviceCategoriesRepository
-      .findOneOrFail({
-        where: { id },
-        relations,
-      })
-      .catch((err) => {
-        throw new BadRequestException('Category not found!', err);
-      });
-  }
   constructor(
     @InjectRepository(ServiceCategory)
     private serviceCategoriesRepository: Repository<ServiceCategory>,
@@ -28,9 +19,15 @@ export class ServiceCategoriesService {
     });
   }
 
-  async findAll(queryParams: { take?: any; skip?: any; isActive?: boolean }) {
+  async findAll(queryParams: {
+    take?: any;
+    skip?: any;
+    isActive?: boolean;
+    search?: string;
+  }) {
     const take = queryParams.take || 10;
     const skip = queryParams.skip || 0;
+    let isFirstWhere = true;
     let query: any =
       this.serviceCategoriesRepository.createQueryBuilder('category');
     if (queryParams.isActive != null) {
@@ -41,9 +38,25 @@ export class ServiceCategoriesService {
           queryParams.isActive = false;
         }
       }
+      isFirstWhere = false;
       query = query.where('category.isActive = :isActive', {
         isActive: queryParams.isActive,
       });
+    }
+    if (queryParams.search) {
+      let innerQuery = new Brackets((qb) => {
+        qb.where('category.name like :name', {
+          name: `%${queryParams.search}%`,
+        }).orWhere('category.icon like :name', {
+          name: `%${queryParams.search}%`,
+        });
+      });
+      if (isFirstWhere) {
+        isFirstWhere = false;
+        query = query.where(innerQuery);
+      } else {
+        query = query.andWhere(innerQuery);
+      }
     }
     query = await query.skip(skip).take(take).getManyAndCount();
     return {
@@ -64,7 +77,29 @@ export class ServiceCategoriesService {
       });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} serviceCategory`;
+  async remove(id: string) {
+    return await this.serviceCategoriesRepository.delete(id).catch((err) => {
+      console.log(err);
+      throw new BadRequestException('Error deleting category!', err);
+    });
+  }
+
+  async updateStatus(id: string, data: UpdateServiceCategoryStatusDto) {
+    return await this.serviceCategoriesRepository
+      .update(id, data)
+      .catch((err) => {
+        console.log(err);
+        throw new BadRequestException('Error updating category status');
+      });
+  }
+  async findOneByIdOrFail(id: string, relations?: string[]) {
+    return await this.serviceCategoriesRepository
+      .findOneOrFail({
+        where: { id },
+        relations,
+      })
+      .catch((err) => {
+        throw new BadRequestException('Category not found!', err);
+      });
   }
 }

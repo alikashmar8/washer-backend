@@ -20,6 +20,7 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { UpdateServiceCategoryStatusDto } from './dto/update-service-category-status.dto';
 
 @ApiTags('Services Categories')
 @UsePipes(new ValidationPipe())
@@ -38,6 +39,7 @@ export class ServiceCategoriesController {
 
   @UseGuards(new AuthGuard())
   @ApiQuery({ name: 'isActive', example: true, required: false })
+  @ApiQuery({ name: 'search', example: 'Washing Service', required: false })
   @Get()
   async findAll(@Query() query: any) {
     return await this.serviceCategoriesService.findAll(query);
@@ -52,15 +54,28 @@ export class ServiceCategoriesController {
   @Roles(EmployeeRole.ADMIN)
   @UseGuards(RolesGuard)
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateServiceCategoryDto: UpdateServiceCategoryDto,
   ) {
-    return this.serviceCategoriesService.update(id, updateServiceCategoryDto);
+    return await this.serviceCategoriesService.update(id, updateServiceCategoryDto);
   }
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.serviceCategoriesService.remove(+id);
-  // }
+  @Roles(EmployeeRole.ADMIN)
+  @UseGuards(RolesGuard)
+  @Patch(':id/status')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() body: UpdateServiceCategoryStatusDto,
+  ) {
+    return await this.serviceCategoriesService.updateStatus(id, body);
+  }
+
+  
+  @Roles(EmployeeRole.ADMIN)
+  @UseGuards(RolesGuard)
+  @Delete(':id')
+  async remove(@Param('id') id: string) {
+    return await this.serviceCategoriesService.remove(id);
+  }
 }
