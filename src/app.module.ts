@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import configuration from 'config/configuration';
+import { join } from 'path';
 import { AddressesModule } from './addresses/addresses.module';
 import { AdsModule } from './ads/ads.module';
 import { AppController } from './app.controller';
@@ -38,6 +40,10 @@ import { WalletsModule } from './wallets/wallets.module';
         configService.get('database'),
     }),
     TypeOrmModule.forFeature([Branch, Employee]),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', '../public'), // added ../ to get one folder back
+      serveRoot: '/public/' //last slash was important
+    }),
     ConsoleCommandsModule,
     AuthModule,
     UsersModule,

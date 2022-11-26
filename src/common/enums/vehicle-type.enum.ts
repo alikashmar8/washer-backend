@@ -1,7 +1,7 @@
 export enum VehicleType {
   CAR = 'CAR',
   MOTORCYCLE = 'MOTORCYCLE',
-  SUV = 'SUV',
+  RANGE = 'RANGE', //SUV
   TRUCK = 'TRUCK',
   VAN = 'VAN',
 }

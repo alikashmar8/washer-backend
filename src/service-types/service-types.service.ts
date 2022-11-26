@@ -43,6 +43,7 @@ export class ServiceTypesService {
   }
 
   async remove(id: string) {
+    // TODO: delete icon file
     return await this.serviceTypesRepository.delete(id).catch((err) => {
       throw new BadRequestException('Error removing service type!', err);
     });

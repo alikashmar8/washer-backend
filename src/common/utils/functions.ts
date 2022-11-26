@@ -1,3 +1,7 @@
+import { HttpException, HttpStatus } from '@nestjs/common';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+
 export function removeSpecialCharacters(text: string): string {
   return text.replace(/[`\s~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '');
 }
@@ -59,4 +63,40 @@ export function calculateDistance(
   dist = dist * 1.609344; //converted to KM
   // if (unit=="N") { dist = dist * 0.8684 }
   return dist;
+}
+
+export function getMulterSettings(config: { destination: string }) {
+  if (!config.destination) config.destination = './uploads';
+  return {
+    limits: {
+      fileSize: +process.env.MAX_FILE_SIZE || 50 * 1024 * 1024, //50mb,
+    },
+    fileFilter: (req: any, file: any, cb: any) => {
+      if (file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
+        // Allow storage of file
+        cb(null, true);
+      } else {
+        // Reject file
+        cb(
+          new HttpException(
+            `Unsupported file type ${extname(file.originalname)}`,
+            HttpStatus.BAD_REQUEST,
+          ),
+          false,
+        );
+      }
+    },
+    storage: diskStorage({
+      destination: config.destination,
+      filename: (req, file, cb) => {
+        // Generating a 32 random chars long string
+        const randomName = Array(32)
+          .fill(null)
+          .map(() => Math.round(Math.random() * 16).toString(16))
+          .join('');
+        //Calling the callback passing the random name generated with the original extension name
+        cb(null, `${randomName}${extname(file.originalname)}`);
+      },
+    }),
+  };
 }

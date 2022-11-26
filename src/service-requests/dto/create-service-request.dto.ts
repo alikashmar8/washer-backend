@@ -4,7 +4,7 @@ import {
   IsEnum,
   IsNotEmpty,
   IsNumber,
-  IsOptional,
+  IsOptional
 } from 'class-validator';
 import { PaymentType } from 'src/common/enums/payment-type.enum';
 import { RequestStatus } from 'src/common/enums/request-status.enum';
@@ -18,21 +18,16 @@ export class CreateServiceRequestDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsDateString()
-  dueDate: Date;
+  requestedDate: Date;
 
   @ApiProperty()
   @IsNotEmpty()
-  address: string;
+  addressId: string;
 
   @ApiProperty({ type: Number })
   @IsNotEmpty()
   @IsNumber()
-  lat: number;
-
-  @ApiProperty({ type: Number })
-  @IsNotEmpty()
-  @IsNumber()
-  long: number;
+  quantity: number;
 
   @ApiProperty({ enum: PaymentType })
   @IsNotEmpty()

@@ -19,6 +19,9 @@ export class Branch extends BaseEntity {
   @Column({ nullable: false })
   description: string;
 
+  @Column({ default: false })
+  isActive: boolean;
+  
   @Column({ nullable: false })
   addressId: string;
 

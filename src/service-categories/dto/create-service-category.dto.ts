@@ -15,5 +15,13 @@ export class CreateServiceCategoryDto {
   @IsBoolean()
   isActive?: boolean;
 
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    required: true,
+    description: 'Ad image',
+    example: 'image.png',
+  })
+  @IsOptional()
   icon?: any;
 }

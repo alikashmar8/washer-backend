@@ -1,12 +1,14 @@
 import { Branch } from 'src/branches/entities/branch.entity';
+import { ServiceRequest } from 'src/service-requests/entities/service-request.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
   Column,
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   OneToOne,
-  PrimaryGeneratedColumn
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base-entity.entity';
 
@@ -18,11 +20,11 @@ export class Address extends BaseEntity {
   @Column({ type: 'text', nullable: false })
   description: string;
 
-  @Column({ type: 'float', nullable: true })
-  lat?: number;
+  @Column({ type: 'float', nullable: false })
+  lat: number;
 
-  @Column({ type: 'float', nullable: true })
-  long?: number;
+  @Column({ type: 'float', nullable: false })
+  long: number;
 
   @Column({ default: false })
   isDefault: boolean;
@@ -40,6 +42,11 @@ export class Address extends BaseEntity {
     onDelete: 'CASCADE',
   })
   branch?: Branch;
+
+  @OneToMany((type) => ServiceRequest, (req) => req.address, {
+    cascade: true,
+  })
+  requests: ServiceRequest[];
 
   public get isUserAddress(): boolean {
     return !!this.userId;

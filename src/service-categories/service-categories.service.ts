@@ -12,6 +12,7 @@ export class ServiceCategoriesService {
     @InjectRepository(ServiceCategory)
     private serviceCategoriesRepository: Repository<ServiceCategory>,
   ) {}
+
   async create(data: CreateServiceCategoryDto) {
     return await this.serviceCategoriesRepository.save(data).catch((err) => {
       console.log(err);
@@ -78,6 +79,7 @@ export class ServiceCategoriesService {
   }
 
   async remove(id: string) {
+    // TODO: remove icon
     return await this.serviceCategoriesRepository.delete(id).catch((err) => {
       console.log(err);
       throw new BadRequestException('Error deleting category!', err);

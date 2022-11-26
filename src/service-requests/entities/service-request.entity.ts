@@ -1,3 +1,4 @@
+import { Address } from 'src/addresses/entities/address.entity';
 import { Branch } from 'src/branches/entities/branch.entity';
 import { PaymentType } from 'src/common/enums/payment-type.enum';
 import { RequestStatus } from 'src/common/enums/request-status.enum';
@@ -14,7 +15,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 
 @Entity('service-requests')
@@ -29,20 +30,21 @@ export class ServiceRequest extends BaseEntity {
   })
   status: RequestStatus;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  dueDate: Date;
+  @Column({
+    nullable: false,
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  requestedDate: Date;
 
-  @Column({ type: 'text', nullable: false })
-  address: string;
-
-  @Column({ type: 'float', nullable: false })
-  lat: number;
-
-  @Column({ type: 'float', nullable: false })
-  long: number;
+  @Column({ type: 'timestamp', nullable: true })
+  confirmedDate?: Date;
 
   @Column({ type: 'enum', enum: PaymentType, default: PaymentType.CASH })
   paymentType: PaymentType;
+
+  @Column({ nullable: false, default: 1 })
+  quantity: number;
 
   @Column({ type: 'float', nullable: false })
   cost: number;
@@ -77,6 +79,9 @@ export class ServiceRequest extends BaseEntity {
   @Column({ nullable: false })
   typeId: string;
 
+  @Column({ nullable: false })
+  addressId: string;
+
   @ManyToOne((type) => User, (user) => user.requests, {
     onDelete: 'CASCADE',
   })
@@ -84,31 +89,37 @@ export class ServiceRequest extends BaseEntity {
   user: User;
 
   @ManyToOne((type) => Vehicle, (v) => v.requests, {
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'vehicleId' })
   vehicle?: Vehicle;
 
+  @ManyToOne((type) => Address, (add) => add.requests, {
+    onDelete: 'RESTRICT',
+  })
+  @JoinColumn({ name: 'addressId' })
+  address?: Address;
+
   @ManyToOne((type) => Employee, (employee) => employee.requests, {
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'employeeId' })
   employee?: Employee;
 
   @ManyToOne((type) => Branch, (branch) => branch.requests, {
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'branchId' })
   branch?: Branch;
 
   @ManyToOne((type) => Transaction, (transaction) => transaction.requests, {
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'transactionId' })
   transaction?: Transaction;
 
   @ManyToOne((type) => ServiceType, (type) => type.serviceRequests, {
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'typeId' })
   type: ServiceType;

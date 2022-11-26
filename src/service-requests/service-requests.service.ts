@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AddressesService } from 'src/addresses/addresses.service';
 import { BranchesService } from 'src/branches/branches.service';
 import { calculateDistance } from 'src/common/utils/functions';
 import { Repository } from 'typeorm';
@@ -10,9 +11,9 @@ import { ServiceRequest } from './entities/service-request.entity';
 
 @Injectable()
 export class ServiceRequestsService {
-  
   constructor(
     private branchesService: BranchesService,
+    private addressesService: AddressesService,
     @InjectRepository(ServiceRequest)
     private requestsRepository: Repository<ServiceRequest>,
   ) {}
@@ -24,11 +25,15 @@ export class ServiceRequestsService {
     let branch: any = {};
     branch.distance = 99999999;
 
+    const requestAddress = await this.addressesService.findByIdOrFail(
+      data.addressId,
+    );
+
     branches.forEach((b) => {
       let dist = calculateDistance(
         {
-          lat: data.lat,
-          long: data.long,
+          lat: requestAddress.lat,
+          long: requestAddress.long,
         },
         {
           lat: b.address.lat,

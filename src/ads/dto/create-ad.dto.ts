@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsBooleanString, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateAdDto {
   @ApiProperty()
@@ -19,8 +19,16 @@ export class CreateAdDto {
     default: false,
   })
   @IsOptional()
-  @IsBoolean()
+  @IsBooleanString()
   isActive?: boolean;
 
-  image: string;
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    required: true,
+    description: 'Ad image',
+    example: 'image.png',
+  })
+  @IsOptional()
+  image: any;
 }
