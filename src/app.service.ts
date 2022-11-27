@@ -26,12 +26,17 @@ export class AppService {
       description: 'Beirut branch 1',
       address: {
         description: 'Beirut, Lebanon',
+        city: 'Building',
+        building: 'Building 1',
+        region: 'Al Hara',
+        street: 'Street 1',
         isDefault: true,
         lat: 33.8938,
         long: 35.5018,
       },
     });
   }
+  
   getHello(): string {
     return 'Hello World!';
   }

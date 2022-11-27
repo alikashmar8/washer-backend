@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-    IsEmail, IsEnum, IsNotEmpty, IsOptional, Length, Matches, ValidateIf
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  Length,
+  Matches,
+  ValidateIf
 } from 'class-validator';
 import { passwordRegex } from 'src/common/constants';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
@@ -43,7 +49,11 @@ export class CreateEmployeeDto {
   phoneNumber: string;
 
   @ApiProperty({
-    required: false,
+    type: 'string',
+    format: 'binary',
+    required: true,
+    description: 'Ad image',
+    example: 'image.png',
   })
   @IsOptional()
   photo?: any;
@@ -54,7 +64,7 @@ export class CreateEmployeeDto {
   role: EmployeeRole;
 
   @ApiProperty()
-  @ValidateIf(o => o.role != EmployeeRole.ADMIN)
+  @ValidateIf((o) => o.role != EmployeeRole.ADMIN)
   @IsNotEmpty()
   branchId: string;
 }

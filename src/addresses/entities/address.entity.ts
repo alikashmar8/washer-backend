@@ -18,6 +18,18 @@ export class Address extends BaseEntity {
   id: string;
 
   @Column({ type: 'text', nullable: false })
+  city: string;
+  
+  @Column({ type: 'text', nullable: false })
+  region: string;
+  
+  @Column({ type: 'text', nullable: false })
+  street: string;
+  
+  @Column({ type: 'text', nullable: false })
+  building: string;
+  
+  @Column({ type: 'text', nullable: false })
   description: string;
 
   @Column({ type: 'float', nullable: false })

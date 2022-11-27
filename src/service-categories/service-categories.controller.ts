@@ -26,7 +26,7 @@ import { UpdateServiceCategoryStatusDto } from './dto/update-service-category-st
 import { UpdateServiceCategoryDto } from './dto/update-service-category.dto';
 import { ServiceCategoriesService } from './service-categories.service';
 
-@UsePipes(new ValidationPipe())
+@UsePipes(new ValidationPipe({ transform: true }))
 @ApiTags('Services Categories')
 @ApiBearerAuth('access_token')
 @Controller('service-categories')

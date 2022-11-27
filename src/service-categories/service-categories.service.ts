@@ -13,7 +13,7 @@ export class ServiceCategoriesService {
     private serviceCategoriesRepository: Repository<ServiceCategory>,
   ) {}
 
-  async create(data: CreateServiceCategoryDto) {
+  async create(data: CreateServiceCategoryDto) {    
     return await this.serviceCategoriesRepository.save(data).catch((err) => {
       console.log(err);
       throw new BadRequestException('Error adding category!');

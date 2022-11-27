@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { CreateServiceTypeDto } from './dto/create-service-type.dto';
 import { UpdateServiceTypeDto } from './dto/update-service-type.dto';
 import { ServiceType } from './entities/service-type.entity';
@@ -28,8 +28,55 @@ export class ServiceTypesService {
     });
   }
 
-  findAll() {
-    return `This action returns all serviceTypes`;
+  async findAll(queryParams: {
+    take?: any;
+    skip?: any;
+    isActive?: boolean;
+    search?: string;
+  }) {
+    const take = queryParams.take || 10;
+    const skip = queryParams.skip || 0;
+    let isFirstWhere = true;
+    let query: any = this.serviceTypesRepository
+      .createQueryBuilder('type')
+      .leftJoinAndSelect('type.category', 'category');
+    if (queryParams.isActive != null) {
+      if (typeof queryParams.isActive == 'string') {
+        if (queryParams.isActive == 'true') {
+          queryParams.isActive = true;
+        } else if (queryParams.isActive == 'false') {
+          queryParams.isActive = false;
+        }
+      }
+      isFirstWhere = false;
+      query = query.where('type.isActive = :isActive', {
+        isActive: queryParams.isActive,
+      });
+    }
+    if (queryParams.search) {
+      let innerQuery = new Brackets((qb) => {
+        qb.where('type.name like :name', {
+          name: `%${queryParams.search}%`,
+        })
+          .orWhere('type.icon like :name', {
+            name: `%${queryParams.search}%`,
+          })
+          .orWhere('category.name like :name', {
+            name: `%${queryParams.search}%`,
+          });
+      });
+      if (isFirstWhere) {
+        isFirstWhere = false;
+        query = query.where(innerQuery);
+      } else {
+        query = query.andWhere(innerQuery);
+      }
+    }
+    query = await query.skip(skip).take(take).getManyAndCount();
+    return {
+      data: query[0],
+      count: query[1],
+    };
   }
 
   findOne(id: number) {

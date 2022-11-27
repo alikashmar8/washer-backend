@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -8,16 +9,20 @@ import {
   Post,
   Query,
   UnauthorizedException,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { IsEmployeeGuard } from 'src/auth/guards/is-employee.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { CurrentEmployee } from 'src/common/decorators/current-employee.decorator';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
+import { getMulterSettings } from 'src/common/utils/functions';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { EmployeesService } from './employees.service';
@@ -31,11 +36,25 @@ export class EmployeesController {
 
   @Roles(EmployeeRole.ADMIN, EmployeeRole.BRANCH_EMPLOYEE)
   @UseGuards(RolesGuard)
+  @UseInterceptors(
+    FileInterceptor(
+      'photo',
+      getMulterSettings({ destination: './public/uploads/employees' }),
+    ),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBearerAuth('access_token')
   @Post()
   async create(
     @Body() createEmployeeDto: CreateEmployeeDto,
     @CurrentEmployee() employee: Employee,
+    @UploadedFile() photo: Express.Multer.File,
   ) {
+    if (!photo) {
+      throw new BadRequestException('Ad image is required!');
+    } else {
+      createEmployeeDto.photo = photo.path;
+    }
     if (
       employee.role != EmployeeRole.ADMIN &&
       createEmployeeDto.role == EmployeeRole.ADMIN

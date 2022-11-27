@@ -36,6 +36,9 @@ export class ServiceType extends BaseEntity {
   @Column({ default: false })
   showQuantityInput: boolean;
 
+  @Column({ default: false })
+  isMotoAllowed: boolean;
+
   @Column({ nullable: false })
   icon: string;
 

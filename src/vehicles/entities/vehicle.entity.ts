@@ -19,14 +19,26 @@ export class Vehicle extends BaseEntity {
   @Column({ nullable: false })
   name: string;
 
-  @Column({ nullable: true })
-  plateNb?: string;
+  @Column({ nullable: false })
+  brand: string;
 
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  color?: string;
+  @Column({ nullable: false })
+  model: string;
 
   @Column({ nullable: true })
-  photo?: string;
+  year?: string;
+
+  @Column({ nullable: false })
+  plateSymbol: string;
+
+  @Column({ nullable: false })
+  plateNumber: string;
+
+  @Column({ type: 'varchar', length: 50, nullable: false })
+  color: string;
+
+  @Column({ nullable: false })
+  photo: string;
 
   @Column({ type: 'enum', enum: VehicleType, default: VehicleType.CAR })
   type: VehicleType;

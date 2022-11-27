@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsBoolean, IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
 import { Currency } from 'src/common/enums/currency.enum';
 
@@ -36,6 +37,9 @@ export class CreateServiceTypeDto {
   })
   @IsOptional()
   @IsBoolean()
+  @Transform(({ value }) => {
+    return [true, 'enabled', 'true', 1, '1'].indexOf(value) > -1;
+  })
   isActive?: boolean;
 
   @ApiProperty({
@@ -46,6 +50,9 @@ export class CreateServiceTypeDto {
   })
   @IsOptional()
   @IsBoolean()
+  @Transform(({ value }) => {
+    return [true, 'enabled', 'true', 1, '1'].indexOf(value) > -1;
+  })
   showVehicleSelection?: boolean;
 
   @ApiProperty({
@@ -56,7 +63,23 @@ export class CreateServiceTypeDto {
   })
   @IsOptional()
   @IsBoolean()
+  @Transform(({ value }) => {
+    return [true, 'enabled', 'true', 1, '1'].indexOf(value) > -1;
+  })
   showQuantityInput?: boolean;
+
+  @ApiProperty({
+    type: Boolean,
+    default: false,
+    nullable: true,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    return [true, 'enabled', 'true', 1, '1'].indexOf(value) > -1;
+  })
+  isMotoAllowed?: boolean;
 
   @ApiProperty({
     type: 'string',
