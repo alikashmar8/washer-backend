@@ -23,8 +23,8 @@ export class LoginDTO {
   @Length(6)
   phoneNumber?: string;
 
-  @ApiProperty({ required: true })
-  @IsNotEmpty()
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
   @Length(6)
   fcmToken?: string;
 
@@ -32,4 +32,13 @@ export class LoginDTO {
   @IsNotEmpty()
   @Length(6)
   password: string;
+
+  deviceInfo?: {
+    platform: string;
+    isMobile: boolean;
+    browser: string;
+    version: string;
+    os: string;
+    source: string;
+  };
 }

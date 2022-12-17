@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as morgan from 'morgan';
+import * as useragent from 'express-useragent';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -13,6 +14,7 @@ async function bootstrap() {
     }),
   );
   app.setGlobalPrefix('api');
+  app.use(useragent.express());
   app.enableCors();
 
   const config = new DocumentBuilder()

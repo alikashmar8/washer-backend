@@ -1,9 +1,7 @@
 import {
   BadRequestException,
   Body,
-  Controller,
-  Delete,
-  Get,
+  Controller, Get,
   HttpException,
   HttpStatus,
   Param,
@@ -33,7 +31,7 @@ export class ServiceRequestsController {
     private readonly serviceRequestsService: ServiceRequestsService,
   ) {}
 
-  @UseGuards(new IsUserGuard())
+  @UseGuards(IsUserGuard)
   @Post()
   create(@Body() body: CreateServiceRequestDto, @CurrentUser() user: User) {
     if (!user)
@@ -42,26 +40,42 @@ export class ServiceRequestsController {
     return this.serviceRequestsService.create(body);
   }
 
-  @UseGuards(new AuthGuard())
+  @UseGuards(AuthGuard)
   @Get()
   async findAll(
-    @Query() query: any,
+    @Query()
+    query: {
+      userId?: string;
+      employeeId?: string;
+      branchId?: string;
+      take?: number;
+      skip?: number;
+      lat?: number;
+      long?: number;
+    },
     @CurrentUser() user: User,
     @CurrentEmployee() employee: Employee,
   ) {
+    if (
+      employee &&
+      employee.role == EmployeeRole.DRIVER &&
+      (!query.lat || !query.long)
+    )
+      throw new BadRequestException('Error retrieving your location!');
     if (user) {
       query.userId = user.id;
-    } else if (employee) {
-      if (employee.role == EmployeeRole.DRIVER) {
-        query.employeeId = employee.id;
-      } else if (employee.role == EmployeeRole.BRANCH_EMPLOYEE) {
-        query.branchId = employee.branchId;
-      }
+    } else if (
+      employee &&
+      [EmployeeRole.BRANCH_EMPLOYEE, EmployeeRole.DRIVER].includes(
+        employee.role,
+      )
+    ) {
+      query.branchId = employee.branchId;
     }
-    return await this.serviceRequestsService.findAll(query);
+    return await this.serviceRequestsService.findAll(query, employee, user);
   }
 
-  @UseGuards(new AuthGuard())
+  @UseGuards(AuthGuard)
   @Get(':id')
   async findOne(@Param('id') id: string, @CurrentUser() user: User) {
     const serviceReq = await this.serviceRequestsService.findOneByIdOrFail(id);
@@ -72,15 +86,17 @@ export class ServiceRequestsController {
     return serviceReq;
   }
 
-  @UseGuards(new AuthGuard())
-  @Patch(':id/update-status')
-  async update(
+  @UseGuards(AuthGuard)
+  @Patch(':id/status')
+  async updateStatus(
     @Param('id') id: string,
     @Body() body: UpdateServiceRequestStatusDto,
     @CurrentUser() user: User,
     @CurrentEmployee() employee: Employee,
   ) {
-    //user can only cancel a request
+    // TODO: return paid amount if exists
+    // user can only cancel a request
+
     if (user && body.status != RequestStatus.CANCELLED)
       throw new BadRequestException(
         'You are not allowed to perform this action!',

@@ -32,6 +32,7 @@ export class ServiceTypesService {
     take?: any;
     skip?: any;
     isActive?: boolean;
+    serviceCategoryId?: string;
     search?: string;
   }) {
     const take = queryParams.take || 10;
@@ -40,6 +41,7 @@ export class ServiceTypesService {
     let query: any = this.serviceTypesRepository
       .createQueryBuilder('type')
       .leftJoinAndSelect('type.category', 'category');
+
     if (queryParams.isActive != null) {
       if (typeof queryParams.isActive == 'string') {
         if (queryParams.isActive == 'true') {
@@ -53,6 +55,7 @@ export class ServiceTypesService {
         isActive: queryParams.isActive,
       });
     }
+
     if (queryParams.search) {
       let innerQuery = new Brackets((qb) => {
         qb.where('type.name like :name', {
@@ -72,6 +75,17 @@ export class ServiceTypesService {
         query = query.andWhere(innerQuery);
       }
     }
+
+    if (queryParams.serviceCategoryId) {
+      let queryString = 'type.serviceCategoryId = ' + queryParams.serviceCategoryId;
+      if (isFirstWhere) {
+        isFirstWhere = false;
+        query = query.where(queryString);
+      } else {
+        query = query.andWhere(queryString);
+      }
+    }
+
     query = await query.skip(skip).take(take).getManyAndCount();
     return {
       data: query[0],

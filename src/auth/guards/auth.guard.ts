@@ -1,15 +1,21 @@
 import {
   CanActivate,
   ExecutionContext,
+  forwardRef,
   HttpException,
   HttpStatus,
+  Inject
 } from '@nestjs/common';
-import { JWT_SECRET } from 'src/common/constants';
-import * as jwt from 'jsonwebtoken';
-import { JWTDataTypeEnum } from 'src/common/enums/jwt-data-type.enum';
-import { User } from 'src/users/entities/user.entity';
+import { EmployeesService } from 'src/employees/employees.service';
+import { UsersService } from 'src/users/users.service';
 
 export class AuthGuard implements CanActivate {
+  constructor(
+    @Inject(forwardRef(() => UsersService)) private usersService: UsersService,
+    @Inject(forwardRef(() => EmployeesService))
+    private employeesService: EmployeesService,
+  ) {}
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const authorization = request.headers.authorization;
@@ -19,13 +25,20 @@ export class AuthGuard implements CanActivate {
       return false;
     }
     try {
-      const verified: any = jwt.verify(token, JWT_SECRET);
-      const type: JWTDataTypeEnum = verified.type;
-      if (type == JWTDataTypeEnum.USER) {
-        request.user = verified.user;
+      const user = await this.usersService.findOneByToken(token);
+      const employee = await this.employeesService.findOneByToken(token);
+
+      if (!user && !employee) {
+        return false;
+      }
+
+      // const verified: any = jwt.verify(token, JWT_SECRET);
+      // const type: JWTDataTypeEnum = verified.type;
+      if (user) {
+        request.user = user;
         request.employee = null;
       } else {
-        request.employee = verified.employee;
+        request.employee = employee;
         request.user = null;
       }
       return true;

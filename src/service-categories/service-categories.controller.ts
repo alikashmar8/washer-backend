@@ -57,7 +57,7 @@ export class ServiceCategoriesController {
     return await this.serviceCategoriesService.create(createServiceCategoryDto);
   }
 
-  @UseGuards(new AuthGuard())
+  @UseGuards(AuthGuard)
   @ApiQuery({ name: 'isActive', example: true, required: false })
   @ApiQuery({ name: 'search', example: 'Washing Service', required: false })
   @Get()
@@ -65,7 +65,7 @@ export class ServiceCategoriesController {
     return await this.serviceCategoriesService.findAll(query);
   }
 
-  @UseGuards(new AuthGuard())
+  @UseGuards(AuthGuard)
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return await this.serviceCategoriesService.findOneByIdOrFail(id);

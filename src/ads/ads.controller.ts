@@ -53,13 +53,13 @@ export class AdsController {
     return await this.adsService.create(createAdDto);
   }
 
-  @UseGuards(new AuthGuard())
+  @UseGuards(AuthGuard)
   @Get()
   async findAll(@Query() query) {
     return await this.adsService.findAll(query);
   }
 
-  @UseGuards(new AuthGuard())
+  @UseGuards(AuthGuard)
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return await this.adsService.findOneByIdOrFail(id);

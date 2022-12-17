@@ -13,7 +13,7 @@ import {
   UseGuards,
   UseInterceptors,
   UsePipes,
-  ValidationPipe,
+  ValidationPipe
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
@@ -107,7 +107,7 @@ export class EmployeesController {
     return this.employeesService.update(+id, updateEmployeeDto);
   }
 
-  @UseGuards(new IsEmployeeGuard())
+  @UseGuards(IsEmployeeGuard)
   @Delete(':id')
   async remove(@Param('id') id: string, @CurrentEmployee() employee: Employee) {
     if (employee.role == EmployeeRole.DRIVER && employee.id == id) {

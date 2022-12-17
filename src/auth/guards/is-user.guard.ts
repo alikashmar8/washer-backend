@@ -1,15 +1,17 @@
 import {
   CanActivate,
   ExecutionContext,
+  forwardRef,
   HttpException,
   HttpStatus,
+  Inject
 } from '@nestjs/common';
-import * as jwt from 'jsonwebtoken';
-import { JWT_SECRET } from 'src/common/constants';
-import { JWTDataTypeEnum } from 'src/common/enums/jwt-data-type.enum';
-import { User } from 'src/users/entities/user.entity';
+import { UsersService } from 'src/users/users.service';
 
 export class IsUserGuard implements CanActivate {
+  constructor(
+    @Inject(forwardRef(() => UsersService)) private usersService: UsersService,
+  ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const authorization = request.headers.authorization;
@@ -20,11 +22,9 @@ export class IsUserGuard implements CanActivate {
       return false;
     }
     try {
-      const verified: any = jwt.verify(token, JWT_SECRET);
-      const type: JWTDataTypeEnum = verified.type;
-      if (type != JWTDataTypeEnum.USER) return false;
+      const user = await this.usersService.findOneByToken(token);
+      if (!user) return false;
 
-      let user: User = verified.user;
       request.user = user;
       return true;
     } catch (err) {

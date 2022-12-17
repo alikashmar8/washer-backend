@@ -15,6 +15,7 @@ import { Branch } from './branches/entities/branch.entity';
 import { ConsoleCommandsModule } from './console-commands/console-commands.module';
 import { CreditCardsModule } from './credit-cards/credit-cards.module';
 import { DeviceTokensModule } from './device-tokens/device-tokens.module';
+import { DeviceToken } from './device-tokens/entities/device-token.entity';
 import { EmployeesModule } from './employees/employees.module';
 import { EmployeesService } from './employees/employees.service';
 import { Employee } from './employees/entities/employee.entity';
@@ -39,10 +40,10 @@ import { WalletsModule } from './wallets/wallets.module';
       useFactory: async (configService: ConfigService) =>
         configService.get('database'),
     }),
-    TypeOrmModule.forFeature([Branch, Employee]),
+    TypeOrmModule.forFeature([Branch, Employee, DeviceToken]),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '../public'), // added ../ to get one folder back
-      serveRoot: '/public/' //last slash was important
+      serveRoot: '/public/', //last slash was important
     }),
     ConsoleCommandsModule,
     AuthModule,

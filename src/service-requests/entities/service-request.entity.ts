@@ -30,6 +30,9 @@ export class ServiceRequest extends BaseEntity {
   })
   status: RequestStatus;
 
+  @Column({ type: 'text', nullable: true })
+  cancelReason?: string;
+
   @Column({
     nullable: false,
     type: 'timestamp',

@@ -30,7 +30,7 @@ import { UpdateAddressDto } from './dto/update-address.dto';
 export class AddressesController {
   constructor(private readonly addressesService: AddressesService) {}
 
-  @UseGuards(new IsUserGuard())
+  @UseGuards(IsUserGuard)
   @Post()
   async create(
     @Body() createAddressDto: CreateAddressDto,
@@ -40,7 +40,7 @@ export class AddressesController {
     return await this.addressesService.create(body);
   }
 
-  @UseGuards(new AuthGuard())
+  @UseGuards(AuthGuard)
   @Patch(':id')
   async update(
     @Param('id') id: string,
@@ -69,7 +69,7 @@ export class AddressesController {
     return await this.addressesService.update(id, updateAddressDto);
   }
 
-  @UseGuards(new AuthGuard())
+  @UseGuards(AuthGuard)
   @Delete(':id')
   async remove(
     @Param('id') id: string,

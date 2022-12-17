@@ -4,6 +4,7 @@ import * as argon from 'argon2';
 import * as jwt from 'jsonwebtoken';
 import { JWT_SECRET, JWT_USERS_EXPIRY_TIME } from 'src/common/constants';
 import { Currency } from 'src/common/enums/currency.enum';
+import { DeviceTokenStatus } from 'src/common/enums/device-token-status.enum';
 import { JWTDataTypeEnum } from 'src/common/enums/jwt-data-type.enum';
 import { removeSpecialCharacters } from 'src/common/utils/functions';
 import { DeviceTokensService } from 'src/device-tokens/device-tokens.service';
@@ -17,6 +18,7 @@ import { LoginDTO } from './dtos/login.dto';
 import { LogoutDTO } from './dtos/logout.dto';
 import { RegisterUserDTO } from './dtos/register.dto';
 import { UpdatePasswordDTO } from './dtos/update-password-dto';
+import { uuid } from 'uuidv4';
 
 @Injectable()
 export class AuthService {
@@ -101,21 +103,26 @@ export class AuthService {
     const match = await argon.verify(user.password, data.password);
     if (!match) throw new BadRequestException('Password incorrect!');
 
-    const access_token = jwt.sign(
-      { user, type: JWTDataTypeEnum.USER },
-      JWT_SECRET,
-      {
-        expiresIn: JWT_USERS_EXPIRY_TIME,
-      },
-    );
+    // const access_token = jwt.sign(
+    //   { user, type: JWTDataTypeEnum.USER },
+    //   JWT_SECRET,
+    //   {
+    //     expiresIn: JWT_USERS_EXPIRY_TIME,
+    //   },
+    // );
+
+    const token = uuid();
 
     await this.deviceTokensService.createUserDeviceToken({
       fcmToken: data.fcmToken,
-      jwtToken: access_token,
+      token: token,
+      status: DeviceTokenStatus.ACTIVE,
+      ...data.deviceInfo,
       userId: user.id,
     });
+
     return {
-      access_token,
+      access_token: token,
       user,
     };
   }
@@ -139,22 +146,26 @@ export class AuthService {
     const match = await argon.verify(employee.password, data.password);
     if (!match) throw new BadRequestException('Password incorrect!');
 
-    const access_token = jwt.sign(
-      { employee, type: JWTDataTypeEnum.EMPLOYEE },
-      JWT_SECRET,
-      {
-        expiresIn: JWT_USERS_EXPIRY_TIME,
-      },
-    );
+    // const access_token = jwt.sign(
+    //   { employee, type: JWTDataTypeEnum.EMPLOYEE },
+    //   JWT_SECRET,
+    //   {
+    //     expiresIn: JWT_USERS_EXPIRY_TIME,
+    //   },
+    // );
+
+    const token = uuid();
 
     await this.deviceTokensService.createEmployeeDeviceToken({
       fcmToken: data.fcmToken,
-      jwtToken: access_token,
+      token: token,
       employeeId: employee.id,
+      status: DeviceTokenStatus.ACTIVE,
+      ...data.deviceInfo,
     });
 
     return {
-      access_token,
+      access_token: token,
       employee,
     };
   }
@@ -199,7 +210,7 @@ export class AuthService {
     let deviceToken = await this.deviceTokensRepository
       .findOneOrFail({
         where: {
-          jwtToken: body.jwtToken,
+          token: body.token,
         },
       })
       .catch(() => {

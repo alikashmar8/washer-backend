@@ -23,7 +23,7 @@ import { CreditCardValidationPipe } from './pipes/credit-card-validation.pipe';
 export class CreditCardsController {
   constructor(private readonly creditCardsService: CreditCardsService) {}
 
-  @UseGuards(new IsUserGuard())
+  @UseGuards(IsUserGuard)
   @Post()
   async create(
     @Body(new CreditCardValidationPipe()) data: CreateCreditCardDto,
@@ -50,7 +50,7 @@ export class CreditCardsController {
   //   return this.creditCardsService.update(+id, updateCreditCardDto);
   // }
 
-  @UseGuards(new IsUserGuard())
+  @UseGuards(IsUserGuard)
   @Delete(':id')
   async remove(@Param('id') id: string, @CurrentUser() user: User) {
     const card = await this.creditCardsService.findOneByIdOrFail(id);

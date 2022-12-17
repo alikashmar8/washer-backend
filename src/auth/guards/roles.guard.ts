@@ -1,18 +1,22 @@
 import {
   CanActivate,
   ExecutionContext,
+  forwardRef,
   HttpException,
   HttpStatus,
-  Injectable,
+  Inject,
+  Injectable
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import * as jwt from 'jsonwebtoken';
-import { JWT_SECRET } from 'src/common/constants';
-import { JWTDataTypeEnum } from 'src/common/enums/jwt-data-type.enum';
+import { EmployeesService } from 'src/employees/employees.service';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private reflector: Reflector,
+    @Inject(forwardRef(() => EmployeesService))
+    private employeesService: EmployeesService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const roles = this.reflector.get<string[]>('roles', context.getHandler());
@@ -24,12 +28,10 @@ export class RolesGuard implements CanActivate {
       return false;
     }
     try {
-      const verified: any = jwt.verify(token, JWT_SECRET);
-      if (
-        verified.type == JWTDataTypeEnum.EMPLOYEE &&
-        roles.includes(verified.employee?.role)
-      ) {
-        request.employee = verified.employee;
+      const employee = await this.employeesService.findOneByToken(token);
+
+      if (roles.includes(employee.role)) {
+        request.employee = employee;
         return true;
       } else {
         return false;

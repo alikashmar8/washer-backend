@@ -2,8 +2,11 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AddressesService } from 'src/addresses/addresses.service';
 import { BranchesService } from 'src/branches/branches.service';
+import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { calculateDistance } from 'src/common/utils/functions';
-import { Repository } from 'typeorm';
+import { Employee } from 'src/employees/entities/employee.entity';
+import { User } from 'src/users/entities/user.entity';
+import { Brackets, Repository } from 'typeorm';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
 import { UpdateServiceRequestDto } from './dto/update-service-request.dto';
@@ -61,13 +64,17 @@ export class ServiceRequestsService {
     });
   }
 
-  async findAll(filters: {
-    userId?: string;
-    employeeId?: string;
-    branchId?: string;
-    take?: number;
-    skip?: number;
-  }) {
+  async findAll(
+    filters: {
+      userId?: string;
+      employeeId?: string;
+      branchId?: string;
+      take?: number;
+      skip?: number;
+    },
+    currentEmployee: Employee,
+    currentUser: User,
+  ) {
     const take = filters.take || 10;
     const skip = filters.skip || 0;
     let isFirstWhere: boolean = true;
@@ -81,19 +88,7 @@ export class ServiceRequestsService {
       isFirstWhere = false;
     }
 
-    if (filters.employeeId) {
-      if (isFirstWhere)
-        query = query.where('req.employeeId = :eId', {
-          eId: filters.employeeId,
-        });
-      else
-        query = query.andWhere('req.employeeId = :eId', {
-          eId: filters.employeeId,
-        });
-      isFirstWhere = false;
-    }
-
-    if (filters.employeeId) {
+    if (filters.branchId) {
       if (isFirstWhere)
         query = query.where('req.branchId = :bId', { bId: filters.branchId });
       else
@@ -103,7 +98,58 @@ export class ServiceRequestsService {
       isFirstWhere = false;
     }
 
+    if (currentEmployee && currentEmployee.role == EmployeeRole.DRIVER) {
+      // if employee is driver => he will be able to see his requests or non assigned ones
+      let innerQuery = new Brackets((qb) => {
+        qb.where('req.employeeId = :eid', {
+          eid: currentEmployee.id,
+        })
+          .orWhere('req.employeeId is null')
+          // .orWhere('req.employeeId = :eid', {
+          //   eid: null,
+          // });
+      });
+      if (isFirstWhere) {
+        isFirstWhere = false;
+        query = query.where(innerQuery);
+      } else {
+        query = query.andWhere(innerQuery);
+      }
+    } else {
+      // filter by employee normally
+      if (filters.employeeId) {
+        if (isFirstWhere)
+          query = query.where('req.employeeId = :eId', {
+            eId: filters.employeeId,
+          });
+        else
+          query = query.andWhere('req.employeeId = :eId', {
+            eId: filters.employeeId,
+          });
+        isFirstWhere = false;
+      }
+    }
+
     query = await query.skip(skip).take(take).getManyAndCount();
+
+    if (currentEmployee && currentEmployee.role == EmployeeRole.DRIVER) {
+      query[0].forEach(function (element, index) {
+        let dist = calculateDistance(
+          {
+            lat: query.lat,
+            long: query.long,
+          },
+          {
+            lat: element.address.lat,
+            long: element.address.long,
+          },
+        );
+
+        if (dist <= 3000) {
+          query[0].splice(index, 1);
+        }
+      });
+    }
     return {
       data: query[0],
       count: query[1],

@@ -1,15 +1,18 @@
 import {
   CanActivate,
   ExecutionContext,
+  forwardRef,
   HttpException,
-  HttpStatus
+  HttpStatus,
+  Inject
 } from '@nestjs/common';
-import * as jwt from 'jsonwebtoken';
-import { JWT_SECRET } from 'src/common/constants';
-import { JWTDataTypeEnum } from 'src/common/enums/jwt-data-type.enum';
-import { Employee } from 'src/employees/entities/employee.entity';
+import { EmployeesService } from 'src/employees/employees.service';
 
 export class IsEmployeeGuard implements CanActivate {
+  constructor(
+    @Inject(forwardRef(() => EmployeesService))
+    private employeesService: EmployeesService,
+  ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const authorization = request.headers.authorization;
@@ -20,11 +23,9 @@ export class IsEmployeeGuard implements CanActivate {
       return false;
     }
     try {
-      const verified: any = jwt.verify(token, JWT_SECRET);
-      const type: JWTDataTypeEnum = verified.type;
-      if (type != JWTDataTypeEnum.EMPLOYEE) return false;
+      const employee = await this.employeesService.findOneByToken(token);
+      if (!employee) return false;
 
-      let employee: Employee = verified.employee;
       request.employee = employee;
       return true;
     } catch (err) {
