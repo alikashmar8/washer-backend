@@ -41,7 +41,7 @@ export class AuthService {
     if (exists)
       throw new BadRequestException('Email or Phone Number is already in use!');
 
-    if (data.addresses.length < 1)
+    if (data.addresses && data.addresses.length < 1)
       throw new BadRequestException('At least 1 address should be provided!');
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -98,11 +98,11 @@ export class AuthService {
 
     if (!user) throw new BadRequestException('Error user not found!');
 
-    const match = await argon.verify(user.password, data.password);
-    if (!match) throw new BadRequestException('Password incorrect!');
+    // const match = await argon.verify(user.password, data.password);
+    // if (!match) throw new BadRequestException('Password incorrect!');
 
     const access_token = jwt.sign(
-      { user, type: JWTDataTypeEnum.USER },
+      { id: user.id, type: JWTDataTypeEnum.USER },
       JWT_SECRET,
       {
         expiresIn: JWT_USERS_EXPIRY_TIME,
@@ -136,11 +136,19 @@ export class AuthService {
 
     if (!employee) throw new BadRequestException('Error employee not found!');
 
-    const match = await argon.verify(employee.password, data.password);
-    if (!match) throw new BadRequestException('Password incorrect!');
+    // const match = await argon.verify(employee.password, data.password);
+    // if (!match) throw new BadRequestException('Password incorrect!');
 
     const access_token = jwt.sign(
-      { employee, type: JWTDataTypeEnum.EMPLOYEE },
+      {
+        employee: {
+          id: employee.id,
+          role: employee.role,
+          branchId: employee.branchId,
+          isActive: employee.isActive,
+        },
+        type: JWTDataTypeEnum.EMPLOYEE,
+      },
       JWT_SECRET,
       {
         expiresIn: JWT_USERS_EXPIRY_TIME,
