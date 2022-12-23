@@ -44,12 +44,12 @@ export function generateUniqueCode(length?: number) {
 }
 
 export function calculateDistance(
-  point1: { lat: number; long: number },
-  point2: { lat: number; long: number },
+  point1: { lat: number; lon: number },
+  point2: { lat: number; lon: number },
 ): number {
   var radLat1 = (Math.PI * point1.lat) / 180;
   var radLat2 = (Math.PI * point2.lat) / 180;
-  var theta = point1.long - point2.long;
+  var theta = point1.lon - point2.lon;
   var radTheta = (Math.PI * theta) / 180;
   var dist =
     Math.sin(radLat1) * Math.sin(radLat2) +

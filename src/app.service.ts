@@ -32,7 +32,7 @@ export class AppService {
         street: 'Street 1',
         isDefault: true,
         lat: 33.8938,
-        long: 35.5018,
+        lon: 35.5018,
       },
     });
   }

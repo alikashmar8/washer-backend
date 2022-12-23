@@ -36,7 +36,7 @@ export class Address extends BaseEntity {
   lat: number;
 
   @Column({ type: 'float', nullable: false })
-  long: number;
+  lon: number;
 
   @Column({ default: false })
   isDefault: boolean;

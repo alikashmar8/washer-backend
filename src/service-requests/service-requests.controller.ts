@@ -51,7 +51,7 @@ export class ServiceRequestsController {
       take?: number;
       skip?: number;
       lat?: number;
-      long?: number;
+      lon?: number;
     },
     @CurrentUser() user: User,
     @CurrentEmployee() employee: Employee,
@@ -59,7 +59,7 @@ export class ServiceRequestsController {
     if (
       employee &&
       employee.role == EmployeeRole.DRIVER &&
-      (!query.lat || !query.long)
+      (!query.lat || !query.lon)
     )
       throw new BadRequestException('Error retrieving your location!');
     if (user) {

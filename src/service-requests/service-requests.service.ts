@@ -36,11 +36,11 @@ export class ServiceRequestsService {
       let dist = calculateDistance(
         {
           lat: requestAddress.lat,
-          long: requestAddress.long,
+          lon: requestAddress.lon,
         },
         {
           lat: b.address.lat,
-          long: b.address.long,
+          lon: b.address.lon,
         },
       );
 
@@ -137,11 +137,11 @@ export class ServiceRequestsService {
         let dist = calculateDistance(
           {
             lat: query.lat,
-            long: query.long,
+            lon: query.lon,
           },
           {
             lat: element.address.lat,
-            long: element.address.long,
+            lon: element.address.lon,
           },
         );
 
