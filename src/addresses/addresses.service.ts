@@ -1,7 +1,7 @@
 import {
   BadRequestException,
   Injectable,
-  UnauthorizedException
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Employee } from 'src/employees/entities/employee.entity';
@@ -32,10 +32,15 @@ export class AddressesService {
     return await this.addressesRepository.save(createAddressDto);
   }
 
-  findAll() {
-    return `This action returns all addresses`;
-  }
+  async findAll(queryParams: { userId?: string }) {
+    let query = this.addressesRepository.createQueryBuilder('address');
 
+    if (queryParams.userId) {
+      query = query.where('address.userId = :uid', { uid: queryParams.userId });
+    }
+
+    return await query.getMany();
+  }
   findOne(id: number) {
     return `This action returns a #${id} address`;
   }
@@ -73,7 +78,10 @@ export class AddressesService {
       );
     return await this.addressesRepository.delete(address.id).catch((err) => {
       console.log(err);
-      throw new BadRequestException('Error unable to delete this address!', err);
+      throw new BadRequestException(
+        'Error unable to delete this address!',
+        err,
+      );
     });
   }
 }
