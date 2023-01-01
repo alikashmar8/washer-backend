@@ -79,12 +79,17 @@ export class ServiceRequestsService {
     const skip = filters.skip || 0;
     let isFirstWhere: boolean = true;
 
-    let query: any = this.requestsRepository.createQueryBuilder('req');
+    let query: any = this.requestsRepository
+      .createQueryBuilder('req')
+      .leftJoinAndSelect('req.user', 'user')
+      .leftJoinAndSelect('req.type', 'type')
+      .leftJoinAndSelect('type.category', 'category');
 
-    if (filters.userId) {
-      if (isFirstWhere)
-        query = query.where('req.userId = :uId', { uId: filters.userId });
-      else query = query.andWhere('req.userId = :uId', { uId: filters.userId });
+    if (filters.userId || currentUser) {
+      let uid = filters.userId;
+      if (currentUser) uid = currentUser.id;
+      if (isFirstWhere) query = query.where('req.userId = :uId', { uId: uid });
+      else query = query.andWhere('req.userId = :uId', { uId: uid });
       isFirstWhere = false;
     }
 
@@ -103,11 +108,10 @@ export class ServiceRequestsService {
       let innerQuery = new Brackets((qb) => {
         qb.where('req.employeeId = :eid', {
           eid: currentEmployee.id,
-        })
-          .orWhere('req.employeeId is null')
-          // .orWhere('req.employeeId = :eid', {
-          //   eid: null,
-          // });
+        }).orWhere('req.employeeId is null');
+        // .orWhere('req.employeeId = :eid', {
+        //   eid: null,
+        // });
       });
       if (isFirstWhere) {
         isFirstWhere = false;
