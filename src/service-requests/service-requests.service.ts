@@ -5,18 +5,25 @@ import { BranchesService } from 'src/branches/branches.service';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { calculateDistance } from 'src/common/utils/functions';
 import { Employee } from 'src/employees/entities/employee.entity';
+import { ServiceTypesService } from 'src/service-types/service-types.service';
 import { User } from 'src/users/entities/user.entity';
 import { Brackets, Repository } from 'typeorm';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
 import { UpdateServiceRequestDto } from './dto/update-service-request.dto';
 import { ServiceRequest } from './entities/service-request.entity';
+import { VehiclesService } from 'src/vehicles/vehicles.service';
+import { SettingsService } from 'src/settings/settings.service';
+import { VehicleType } from 'src/common/enums/vehicle-type.enum';
 
 @Injectable()
 export class ServiceRequestsService {
   constructor(
     private branchesService: BranchesService,
     private addressesService: AddressesService,
+    private vehiclesService: VehiclesService,
+    private serviceTypesService: ServiceTypesService,
+    private settingsService: SettingsService,
     @InjectRepository(ServiceRequest)
     private requestsRepository: Repository<ServiceRequest>,
   ) {}
@@ -26,7 +33,8 @@ export class ServiceRequestsService {
     const res = await this.branchesService.findAll(null, ['address']);
     const branches = res.data;
     let branch: any = {};
-    branch.distance = 99999999;
+    const initialDistance = 99999999;
+    branch.distance = initialDistance;
 
     const requestAddress = await this.addressesService.findByIdOrFail(
       data.addressId,
@@ -50,10 +58,18 @@ export class ServiceRequestsService {
       }
     });
 
-    if (branch.distance == 99999999)
+    if (branch.distance == initialDistance)
       throw new BadRequestException('No branch was found close to you!');
 
     data.branchId = branch.id;
+
+    const totalCost: number = await this.calculateRequestCost({
+      serviceTypeId: data.typeId,
+      tips: data.tips,
+      vehicleId: data.vehicleId,
+    });
+
+    data.cost = totalCost;
 
     let request = this.requestsRepository.create(data);
 
@@ -184,5 +200,33 @@ export class ServiceRequestsService {
       console.log(err);
       throw new BadRequestException('Error updating status');
     });
+  }
+
+  async calculateRequestCost(data: {
+    serviceTypeId: string;
+    vehicleId?: string;
+    tips: number;
+  }): Promise<number> {
+    let total: number = 0;
+    const serviceType = await this.serviceTypesService.findOneByIdOrFail(
+      data.serviceTypeId,
+    );
+    total += serviceType.price;
+
+    if (data.vehicleId) {
+      const vehicle = await this.vehiclesService.findOneByIdOrFail(
+        data.vehicleId,
+      );
+      let key = vehicle.type + '_COST';
+      let setting = await this.settingsService.findByKey(key);
+      if (setting && setting.value != null) {
+        total += Number(setting.value);
+      }
+    }
+
+    total += data.tips;
+
+    // todo: check for fees or other costs in case of payment by credit cards
+    return total;
   }
 }

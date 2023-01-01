@@ -22,6 +22,7 @@ import { User } from 'src/users/entities/user.entity';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
 import { ServiceRequestsService } from './service-requests.service';
+import { CalculateRequestTotal } from './dto/calculate-request-total.dto';
 
 @ApiBearerAuth('access_token')
 @ApiTags('Service Requests')
@@ -122,6 +123,11 @@ export class ServiceRequestsController {
     return await this.serviceRequestsService.updateStatus(id, body);
   }
 
+  @UseGuards(IsUserGuard)
+  @Post('calculate-total')
+  async getTotal(@Body() body: CalculateRequestTotal, @CurrentUser() user: User) {
+    return await this.serviceRequestsService.calculateRequestCost(body)
+  }
   // @Delete(':id')
   // remove(@Param('id') id: string) {
   //   return this.serviceRequestsService.remove(+id);

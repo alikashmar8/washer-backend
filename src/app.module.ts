@@ -24,8 +24,12 @@ import { PromosModule } from './promos/promos.module';
 import { ServiceCategoriesModule } from './service-categories/service-categories.module';
 import { ServiceRequestsModule } from './service-requests/service-requests.module';
 import { ServiceTypesModule } from './service-types/service-types.module';
+import { Setting } from './settings/entities/setting.entity';
+import { SettingsModule } from './settings/settings.module';
 import { TransactionsModule } from './transactions/transactions.module';
+import { User } from './users/entities/user.entity';
 import { UsersModule } from './users/users.module';
+import { UsersService } from './users/users.service';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { WalletsModule } from './wallets/wallets.module';
 
@@ -40,7 +44,7 @@ import { WalletsModule } from './wallets/wallets.module';
       useFactory: async (configService: ConfigService) =>
         configService.get('database'),
     }),
-    TypeOrmModule.forFeature([Branch, Employee, DeviceToken]),
+    TypeOrmModule.forFeature([Branch, Employee, DeviceToken, User, Setting]),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '../public'), // added ../ to get one folder back
       serveRoot: '/public/', //last slash was important
@@ -62,8 +66,9 @@ import { WalletsModule } from './wallets/wallets.module';
     DeviceTokensModule,
     NotificationsModule,
     AdsModule,
+    SettingsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, BranchesService, EmployeesService],
+  providers: [AppService, BranchesService, EmployeesService, UsersService],
 })
 export class AppModule {}

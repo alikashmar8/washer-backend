@@ -1,5 +1,6 @@
-import { Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AppService } from './app.service';
+import { AuthGuard } from './auth/guards/auth.guard';
 
 @Controller()
 export class AppController {
@@ -8,6 +9,12 @@ export class AppController {
   @Get()
   getHello(): string {
     return this.appService.getHello();
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('constants')
+  async getAllConstants(){
+    return await this.appService.getAllConstants();
   }
 
   @Post('initData')

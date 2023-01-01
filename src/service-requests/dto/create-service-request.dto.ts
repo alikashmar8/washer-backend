@@ -37,9 +37,14 @@ export class CreateServiceRequestDto {
   @IsNumber()
   tips: number;
 
+  @ApiProperty({ type: Number })
+  @IsOptional()
+  @IsNumber()
+  cost?: number;
+
   @ApiProperty({ required: false })
   @IsOptional()
-  vehicleId: string;
+  vehicleId?: string;
 
   //userId & branchId are auto set in code
   userId: string;
