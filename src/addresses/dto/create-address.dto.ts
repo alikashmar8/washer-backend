@@ -31,7 +31,7 @@ export class CreateAddressDto {
   @IsOptional()
   @IsNumber()
   @ApiProperty({ type: Number, required: false })
-  long: number;
+  lon: number;
 
   @IsOptional()
   @IsBoolean()

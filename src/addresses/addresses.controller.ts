@@ -1,14 +1,17 @@
 import {
   Body,
   Controller,
-  Delete, HttpException,
+  Delete,
+  Get,
+  HttpException,
   HttpStatus,
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
   UsePipes,
-  ValidationPipe
+  ValidationPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
@@ -38,6 +41,22 @@ export class AddressesController {
   ) {
     let body: CreateUserAddressDto = { ...createAddressDto, userId: user.id };
     return await this.addressesService.create(body);
+  }
+
+  @Get()
+  @UseGuards(AuthGuard)
+  async findAll(
+    @Query()
+    params: {
+      userId?: string;
+    },
+    @CurrentUser() user: User,
+    @CurrentEmployee() employee: Employee,
+  ) {
+    if (user) {
+      params.userId = user.id;
+    }
+    return await this.addressesService.findAll(params);
   }
 
   @UseGuards(AuthGuard)

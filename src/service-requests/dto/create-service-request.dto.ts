@@ -7,14 +7,8 @@ import {
   IsOptional
 } from 'class-validator';
 import { PaymentType } from 'src/common/enums/payment-type.enum';
-import { RequestStatus } from 'src/common/enums/request-status.enum';
 
 export class CreateServiceRequestDto {
-  @ApiProperty({ enum: RequestStatus })
-  @IsNotEmpty()
-  @IsEnum(RequestStatus)
-  status: RequestStatus;
-
   @ApiProperty()
   @IsNotEmpty()
   @IsDateString()
@@ -37,11 +31,6 @@ export class CreateServiceRequestDto {
   @ApiProperty()
   @IsNotEmpty()
   typeId: string;
-
-  @ApiProperty({ type: Number })
-  @IsNotEmpty()
-  @IsNumber()
-  cost: number;
 
   @ApiProperty({ type: Number })
   @IsNotEmpty()

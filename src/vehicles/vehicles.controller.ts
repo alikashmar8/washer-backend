@@ -1,12 +1,20 @@
 import {
-  BadRequestException, Body, Controller, Delete, Get, Param, Post, UnauthorizedException, UseInterceptors,
-  ValidationPipe
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UnauthorizedException,
+  UseInterceptors,
+  ValidationPipe,
 } from '@nestjs/common';
 import {
   Query,
   UploadedFile,
   UseGuards,
-  UsePipes
+  UsePipes,
 } from '@nestjs/common/decorators';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
@@ -46,6 +54,7 @@ export class VehiclesController {
     } else {
       createVehicleDto.photo = photo.path;
     }
+
     createVehicleDto.userId = user.id;
     return await this.vehiclesService.create(createVehicleDto);
   }
