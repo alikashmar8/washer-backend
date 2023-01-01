@@ -103,11 +103,10 @@ export class ServiceRequestsService {
       let innerQuery = new Brackets((qb) => {
         qb.where('req.employeeId = :eid', {
           eid: currentEmployee.id,
-        })
-          .orWhere('req.employeeId is null')
-          // .orWhere('req.employeeId = :eid', {
-          //   eid: null,
-          // });
+        }).orWhere('req.employeeId is null');
+        // .orWhere('req.employeeId = :eid', {
+        //   eid: null,
+        // });
       });
       if (isFirstWhere) {
         isFirstWhere = false;
