@@ -1,5 +1,6 @@
 import { Address } from 'src/addresses/entities/address.entity';
 import { Branch } from 'src/branches/entities/branch.entity';
+import { BaseEntity } from 'src/common/entities/base-entity.entity';
 import { PaymentType } from 'src/common/enums/payment-type.enum';
 import { RequestStatus } from 'src/common/enums/request-status.enum';
 import { generateUniqueCode } from 'src/common/utils/functions';
@@ -9,7 +10,6 @@ import { Transaction } from 'src/transactions/entities/transaction.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Vehicle } from 'src/vehicles/entities/vehicle.entity';
 import {
-  BaseEntity,
   BeforeInsert,
   Column,
   Entity,

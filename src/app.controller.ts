@@ -1,7 +1,7 @@
-import { Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { AuthGuard } from './auth/guards/auth.guard';
-import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller()
 export class AppController {
@@ -15,12 +15,12 @@ export class AppController {
   @ApiBearerAuth('access_token')
   @UseGuards(AuthGuard)
   @Get('constants')
-  async getAllConstants(){
+  async getAllConstants() {
     return await this.appService.getAllConstants();
   }
 
   @Get('initData')
-  async initData(): Promise<void>{
+  async initData(): Promise<void> {
     return await this.appService.initData();
   }
 }

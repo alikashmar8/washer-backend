@@ -3,18 +3,19 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { AddressesService } from 'src/addresses/addresses.service';
 import { BranchesService } from 'src/branches/branches.service';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
+import { RequestStatus } from 'src/common/enums/request-status.enum';
 import { calculateDistance } from 'src/common/utils/functions';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { ServiceTypesService } from 'src/service-types/service-types.service';
+import { SettingsService } from 'src/settings/settings.service';
 import { User } from 'src/users/entities/user.entity';
+import { VehiclesService } from 'src/vehicles/vehicles.service';
 import { Brackets, Repository } from 'typeorm';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
 import { UpdateServiceRequestDto } from './dto/update-service-request.dto';
 import { ServiceRequest } from './entities/service-request.entity';
-import { VehiclesService } from 'src/vehicles/vehicles.service';
-import { SettingsService } from 'src/settings/settings.service';
-import { VehicleType } from 'src/common/enums/vehicle-type.enum';
+import { UpdateServiceRequestPaymentStatusDto } from './dto/update-service-request-payment-status.dto';
 
 @Injectable()
 export class ServiceRequestsService {
@@ -82,9 +83,14 @@ export class ServiceRequestsService {
 
   async findAll(
     filters: {
+      search?: string;
       userId?: string;
       employeeId?: string;
       branchId?: string;
+      fromDate?: string;
+      toDate?: string;
+      status?: RequestStatus;
+      isPaid?: boolean;
       take?: number;
       skip?: number;
     },
@@ -99,6 +105,7 @@ export class ServiceRequestsService {
       .createQueryBuilder('req')
       .leftJoinAndSelect('req.user', 'user')
       .leftJoinAndSelect('req.type', 'type')
+      .leftJoinAndSelect('req.employee', 'employee')
       .leftJoinAndSelect('type.category', 'category');
 
     if (filters.userId || currentUser) {
@@ -119,8 +126,78 @@ export class ServiceRequestsService {
       isFirstWhere = false;
     }
 
+    if (filters.status) {
+      if (isFirstWhere)
+        query = query.where('req.status = :status', { status: filters.status });
+      else
+        query = query.andWhere('req.status = :status', {
+          status: filters.status,
+        });
+      isFirstWhere = false;
+    }
+
+    if (filters.isPaid != null) {
+      if (typeof filters.isPaid == 'string') {
+        if (filters.isPaid == 'true') {
+          filters.isPaid = true;
+        } else if (filters.isPaid == 'false') {
+          filters.isPaid = false;
+        }
+      }
+
+      if (isFirstWhere)
+        query = query.where('req.isPaid = :isPaid', {
+          isPaid: filters.isPaid,
+        });
+      else
+        query = query.andWhere('req.isPaid = :isPaid', {
+          isPaid: filters.isPaid,
+        });
+      isFirstWhere = false;
+    }
+
+    if (filters.fromDate) {
+      let startDate = new Date(filters.fromDate);
+      startDate.setHours(0, 0, 0, 0);
+
+      let innerQuery = new Brackets((qb) => {
+        qb.where('req.requestedDate >= :fromDate', {
+          fromDate: startDate,
+        })
+          .orWhere('req.confirmedDate >= :fromDate', {
+            fromDate: startDate,
+          })
+          .orWhere('req.createdAt >= :fromDate', {
+            fromDate: startDate,
+          });
+      });
+      if (isFirstWhere) query = query.where(innerQuery);
+      else query = query.andWhere(innerQuery);
+      isFirstWhere = false;
+    }
+
+    if (filters.toDate) {
+      let endDate = new Date(filters.toDate);
+      endDate.setHours(23, 59, 59, 999);
+      let innerQuery = new Brackets((qb) => {
+        qb.where('req.requestedDate <= :toDate', {
+          toDate: endDate,
+        })
+          .orWhere('req.confirmedDate <= :toDate', {
+            toDate: endDate,
+          })
+          .orWhere('req.createdAt <= :toDate', {
+            toDate: endDate,
+          });
+      });
+      if (isFirstWhere) query = query.where(innerQuery);
+      else query = query.andWhere(innerQuery);
+      isFirstWhere = false;
+    }
+
     if (currentEmployee && currentEmployee.role == EmployeeRole.DRIVER) {
       // if employee is driver => he will be able to see his requests or non assigned ones
+      // TODO: query to be tested
       let innerQuery = new Brackets((qb) => {
         qb.where('req.employeeId = :eid', {
           eid: currentEmployee.id,
@@ -150,26 +227,48 @@ export class ServiceRequestsService {
       }
     }
 
+    if (filters.search) {
+      query = query.andWhere(
+        new Brackets((qb) => {
+          qb.where('user.firstName like :name', { name: `%${filters.search}%` })
+            .orWhere('user.lastName like :name', {
+              name: `%${filters.search}%`,
+            })
+            .orWhere('employee.firstName like :name', {
+              name: `%${filters.search}%`,
+            })
+            .orWhere('employee.lastName like :name', {
+              name: `%${filters.search}%`,
+            })
+            .orWhere('req.id like :id', { id: `%${filters.search}%` });
+        }),
+      );
+    }
+
     query = await query.skip(skip).take(take).getManyAndCount();
 
-    if (currentEmployee && currentEmployee.role == EmployeeRole.DRIVER) {
-      query[0].forEach(function (element, index) {
-        let dist = calculateDistance(
-          {
-            lat: query.lat,
-            lon: query.lon,
-          },
-          {
-            lat: element.address.lat,
-            lon: element.address.lon,
-          },
-        );
+    // TODO: to be uncommented later on
+    // if (currentEmployee && currentEmployee.role == EmployeeRole.DRIVER) {
+    //   query[0].forEach(function (element, index) {
+    //     if (element.employeeId != currentEmployee.id){
+    //       // => request is not for current driver
+    //       let dist = calculateDistance(
+    //         {
+    //           lat: currentEmployee.lat,
+    //           lon: currentEmployee.lon,
+    //         },
+    //         {
+    //           lat: element.address.lat,
+    //           lon: element.address.lon,
+    //         },
+    //       );
 
-        if (dist <= 3000) {
-          query[0].splice(index, 1);
-        }
-      });
-    }
+    //       if (dist <= 3000) {
+    //         query[0].splice(index, 1);
+    //       }
+    //     }
+    //   });
+    // }
     return {
       data: query[0],
       count: query[1],
@@ -228,5 +327,12 @@ export class ServiceRequestsService {
 
     // todo: check for fees or other costs in case of payment by credit cards
     return total;
+  }
+
+  async updatePaymentStatus(id: string, data: UpdateServiceRequestPaymentStatusDto) {
+    return await this.requestsRepository.update(id, data).catch((err) => {
+      console.log(err);
+      throw new BadRequestException('Error updating payment status');
+    });
   }
 }
