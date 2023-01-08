@@ -15,4 +15,9 @@ export default () => ({
     // migrations: ['src/migrations/**/*.ts'],
     synchronize: process.env.TYPEORM_SYNCHRONIZE || 'true',
   },
+  firebase: {
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY,
+  },
 });

@@ -1,11 +1,15 @@
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as morgan from 'morgan';
 import * as useragent from 'express-useragent';
+import * as firebaseAdmin from 'firebase-admin';
+import * as morgan from 'morgan';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService: ConfigService = app.get(ConfigService);
+
   app.use(
     morgan('common', {
       skip: function (req, res) {
@@ -32,6 +36,18 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
+
+  // Set firebase config options
+  const firebaseConfig: firebaseAdmin.ServiceAccount = {
+    projectId: configService.get<string>('firebase.projectId'),
+    privateKey: configService.get<string>('firebase.privateKey'),
+    clientEmail: configService.get<string>('firebase.clientEmail'),
+  };
+
+  // Initialize the firebase admin app
+  firebaseAdmin.initializeApp({
+    credential: firebaseAdmin.credential.cert(firebaseConfig),
+  });
 
   await app.listen(3001, '0.0.0.0');
 }
