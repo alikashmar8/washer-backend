@@ -11,14 +11,14 @@ import {
 
 @Entity('notifications')
 export class Notification extends BaseEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ nullable: false })
   title: string;
 
   @Column({ nullable: false })
-  message: string;
+  body: string;
 
   @Column({ nullable: false, default: false })
   isRead: boolean;

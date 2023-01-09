@@ -1,90 +1,63 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import 'firebase/database';
-import { CreateNotificationDto } from './dto/create-notification.dto';
-import { UpdateNotificationDto } from './dto/update-notification.dto';
-import { NotificationData } from './interfaces/notification.interface';
-import * as admin from 'firebase-admin';
-import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-
+import * as admin from 'firebase-admin';
+import 'firebase/database';
+import { Repository } from 'typeorm';
+import { CreateNotificationDto } from './dto/create-notification.dto';
+import { Notification } from './entities/notification.entity';
+import { NotificationData } from './interfaces/notification.interface';
 
 @Injectable()
 export class NotificationsService {
-
   constructor(
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
-  ) { }
+  ) {}
 
-  async create(createNotificationDto: CreateNotificationDto): Promise<void> {
-    const notification = this.notificationRepository.create(createNotificationDto);
+  async create(data: CreateNotificationDto): Promise<void> {
+    const notification = this.notificationRepository.create(data);
     await this.notificationRepository.save(notification);
 
     const notificationData: NotificationData = {
       title: notification.title,
       body: notification.body,
-      type: notification.type,
-      fcmTokens: notification.fcmTokens,
+      type: data.type,
+      fcmTokens: data.fcmTokens,
     };
 
     this.notify(notificationData);
   }
 
-  async findAll(): Promise<Notification[]> {
-
-    const snapshot = await admin.database().ref('notifications').once('value');
-
-
-    const notifications: Notification[] = snapshot.val();
-    return Object.keys(notifications).map(key => ({
-      id: key,
-      ...notifications[key],
-    }));
+  async findAll() {
+    return [];
   }
 
-
-  async findOne(id: number): Promise<Notification> {
-    // query Firebase for the notification with the specified id
-    const snapshot = await admin.database().ref(`notifications/${id}`).once('value');
-
-    // parse snapshot data into a Notification object
-    const notification: Notification = snapshot.val();
-    return notification;
+  async findOne(id: string, relations?: string[]): Promise<Notification> {
+    return await this.notificationRepository.findOne({
+      where: { id },
+      relations,
+    });
   }
 
-  /*
-  
-  .findOneOrFail({
-          where: { id },
-          relations,
-        })
-        .catch((err) => {
-          throw new BadRequestException('Category not found!', err);
-        });*/
-
-
-  async updateIsRead(id: number): Promise<void> {
-    const notification = await this.notificationRepository
+  async findOneOrFail(id: string, relations?: string[]): Promise<Notification> {
+    return await this.notificationRepository
       .findOneOrFail({
         where: { id },
-
+        relations,
       })
       .catch((err) => {
-        throw new BadRequestException('Category not found!', err);
+        throw new BadRequestException('Notification not found!', err);
       });
-
-    notification.isRead = true;
-
-    await this.notificationRepository.save(notification);
-
   }
 
+  async updateIsRead(id: string): Promise<void> {
+    const notification = await this.findOneOrFail(id);
+    notification.isRead = true;
+    await this.notificationRepository.save(notification);
+  }
 
-  async remove(id: number): Promise<void> {
-
-    const notification = await this.notificationRepository.findOne(id);
-
-
+  async remove(id: string): Promise<void> {
+    const notification = await this.findOneOrFail(id);
     await this.notificationRepository.remove(notification);
   }
 
@@ -107,9 +80,9 @@ export class NotificationsService {
         .then(function (resp) {
           console.log('Successfully sent message:');
         })
-        .catch(err => {
-          console.error('Error sending notification')
-          console.error(err)
+        .catch((err) => {
+          console.error('Error sending notification');
+          console.error(err);
         });
     });
   }
