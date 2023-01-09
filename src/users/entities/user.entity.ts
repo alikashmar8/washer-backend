@@ -124,7 +124,9 @@ export class User extends BaseEntity {
   @OneToMany((type) => Promo, (promo) => promo.user, { cascade: true })
   promos: Promo[];
 
-  @OneToMany((type) => DeviceToken, (deviceToken) => deviceToken.user, { cascade: true })
+  @OneToMany((type) => DeviceToken, (deviceToken) => deviceToken.user, {
+    cascade: true,
+  })
   deviceTokens: DeviceToken[];
 
   @OneToMany((type) => Notification, (notification) => notification.user)

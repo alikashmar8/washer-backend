@@ -2,12 +2,12 @@ import { Currency } from 'src/common/enums/currency.enum';
 import { Transaction } from 'src/transactions/entities/transaction.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
-    BaseEntity,
-    Column,
-    Entity,
-    OneToMany,
-    OneToOne,
-    PrimaryGeneratedColumn
+  BaseEntity,
+  Column,
+  Entity,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn
 } from 'typeorm';
 
 @Entity('wallets')

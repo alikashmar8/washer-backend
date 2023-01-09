@@ -78,6 +78,12 @@ export class Employee extends BaseEntity {
   @OneToMany((type) => Notification, (notification) => notification.employee)
   notifications: Notification[];
 
+  @Column({ nullable: true })
+  currentLongitude?: number;
+
+  @Column({ nullable: true })
+  currentLatitude?: number;
+
   @BeforeInsert()
   async hashPassword() {
     this.username = this.username
