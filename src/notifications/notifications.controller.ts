@@ -23,9 +23,10 @@ export class NotificationsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateNotificationDto: UpdateNotificationDto) {
-    return this.notificationsService.update(+id, updateNotificationDto);
+  async makeItRead(@Param('id') id: string) {
+    return await this.notificationsService.updateIsRead(+id);
   }
+
 
   @Delete(':id')
   remove(@Param('id') id: string) {

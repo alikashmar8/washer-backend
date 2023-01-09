@@ -1,0 +1,6 @@
+export enum NotificationType {
+    ADMIN = 'ADMIN',
+    REQUEST_SUBMITTED = 'REQUEST_SUBMITTED',
+    REQUEST_DOME = 'REQUEST_DOME',
+    SILENT = 'SILENT'
+}
