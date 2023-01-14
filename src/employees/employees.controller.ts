@@ -163,8 +163,8 @@ export class EmployeesController {
       const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
       const location = geoip.lookup(ip);
       if (location) {
-        const latitude = location.latitude;
-        const longitude = location.longitude;
+        const latitude = location.ll[0];
+        const longitude = location.ll[1];
         return this.employeesService.updateLocation(id, latitude, longitude);
       } else {
         throw new HttpException('Unable to determine location from IP', HttpStatus.BAD_REQUEST);

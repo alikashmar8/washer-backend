@@ -2,19 +2,26 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as admin from 'firebase-admin';
 import 'firebase/database';
+import { Employee } from 'src/employees/entities/employee.entity';
+import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { Notification } from './entities/notification.entity';
 import { NotificationData } from './interfaces/notification.interface';
+
 
 @Injectable()
 export class NotificationsService {
   constructor(
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
-  ) {}
+
+
+  ) { }
 
   async create(data: CreateNotificationDto): Promise<void> {
+
+
     const notification = this.notificationRepository.create(data);
     await this.notificationRepository.save(notification);
 
@@ -28,9 +35,20 @@ export class NotificationsService {
     this.notify(notificationData);
   }
 
-  async findAll() {
-    return [];
+
+  async findAll(
+    filters: {
+      userId?: string;
+      employeeId?: string;
+    },
+  ) {
+
+    return await this.notificationRepository.find({
+      where: filters
+    });
   }
+
+
 
   async findOne(id: string, relations?: string[]): Promise<Notification> {
     return await this.notificationRepository.findOne({

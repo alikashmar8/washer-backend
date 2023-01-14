@@ -24,10 +24,10 @@ export class Notification extends BaseEntity {
   isRead: boolean;
 
   @Column({ nullable: true })
-  userId?: number;
+  userId?: string;
 
   @Column({ nullable: true })
-  employeeId?: number;
+  employeeId?: string;
 
   @ManyToOne((type) => User, (user) => user.notifications, {
     onDelete: 'CASCADE',
