@@ -16,6 +16,8 @@ import { UpdateServiceRequestStatusDto } from './dto/update-service-request-stat
 import { UpdateServiceRequestDto } from './dto/update-service-request.dto';
 import { ServiceRequest } from './entities/service-request.entity';
 import { UpdateServiceRequestPaymentStatusDto } from './dto/update-service-request-payment-status.dto';
+import { Setting } from 'src/settings/entities/setting.entity';
+import { EXCHANGE_RATE } from 'src/common/constants';
 
 @Injectable()
 export class ServiceRequestsService {
@@ -27,6 +29,8 @@ export class ServiceRequestsService {
     private settingsService: SettingsService,
     @InjectRepository(ServiceRequest)
     private requestsRepository: Repository<ServiceRequest>,
+    @InjectRepository(Setting)
+    private settingsRepository: Repository<Setting>,
   ) {}
 
   async create(data: CreateServiceRequestDto) {
@@ -64,13 +68,13 @@ export class ServiceRequestsService {
 
     data.branchId = branch.id;
 
-    const totalCost: number = await this.calculateRequestCost({
+    const costObj = await this.calculateRequestCost({
       serviceTypeId: data.typeId,
       tips: data.tips,
       vehicleId: data.vehicleId,
     });
 
-    data.cost = totalCost;
+    data.cost = costObj.total
 
     let request = this.requestsRepository.create(data);
 
@@ -305,12 +309,29 @@ export class ServiceRequestsService {
     serviceTypeId: string;
     vehicleId?: string;
     tips: number;
-  }): Promise<number> {
+  }): Promise<{
+    total: number;
+    totalLBP: number;
+  }> {
     let total: number = 0;
+    let totalLBP: number = 0;
+
+    const exchangeRateSetting: Setting = await this.settingsRepository
+      .findOneOrFail({
+        where: {
+          key: EXCHANGE_RATE,
+        },
+      })
+      .catch((err) => {
+        throw new BadRequestException('Error calculating prices', err);
+      });
+    const exchangeRate: number = Number(exchangeRateSetting.value);
+
     const serviceType = await this.serviceTypesService.findOneByIdOrFail(
       data.serviceTypeId,
     );
     total += serviceType.price;
+    totalLBP += exchangeRate * serviceType.price;
 
     if (data.vehicleId) {
       const vehicle = await this.vehiclesService.findOneByIdOrFail(
@@ -320,16 +341,21 @@ export class ServiceRequestsService {
       let setting = await this.settingsService.findByKey(key);
       if (setting && setting.value != null) {
         total += Number(setting.value);
+        totalLBP += exchangeRate * Number(setting.value);
       }
     }
 
     total += data.tips;
+    totalLBP += exchangeRate * serviceType.price;
 
     // todo: check for fees or other costs in case of payment by credit cards
-    return total;
+    return { total, totalLBP };
   }
 
-  async updatePaymentStatus(id: string, data: UpdateServiceRequestPaymentStatusDto) {
+  async updatePaymentStatus(
+    id: string,
+    data: UpdateServiceRequestPaymentStatusDto,
+  ) {
     return await this.requestsRepository.update(id, data).catch((err) => {
       console.log(err);
       throw new BadRequestException('Error updating payment status');
