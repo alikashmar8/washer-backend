@@ -2,26 +2,19 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as admin from 'firebase-admin';
 import 'firebase/database';
-import { Employee } from 'src/employees/entities/employee.entity';
-import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { Notification } from './entities/notification.entity';
 import { NotificationData } from './interfaces/notification.interface';
-
 
 @Injectable()
 export class NotificationsService {
   constructor(
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
-
-
-  ) { }
+  ) {}
 
   async create(data: CreateNotificationDto): Promise<void> {
-
-
     const notification = this.notificationRepository.create(data);
     await this.notificationRepository.save(notification);
 
@@ -33,22 +26,15 @@ export class NotificationsService {
     };
 
     this.notify(notificationData);
+
+    return;
   }
 
-
-  async findAll(
-    filters: {
-      userId?: string;
-      employeeId?: string;
-    },
-  ) {
-
+  async findAll(filters: { userId?: string; employeeId?: string }) {
     return await this.notificationRepository.find({
-      where: filters
+      where: filters,
     });
   }
-
-
 
   async findOne(id: string, relations?: string[]): Promise<Notification> {
     return await this.notificationRepository.findOne({
@@ -68,10 +54,10 @@ export class NotificationsService {
       });
   }
 
-  async updateIsRead(id: string): Promise<void> {
-    const notification = await this.findOneOrFail(id);
-    notification.isRead = true;
-    await this.notificationRepository.save(notification);
+  async updateIsRead(id: string) {
+    return await this.notificationRepository.update(id, {
+      isRead: true,
+    });
   }
 
   async remove(id: string): Promise<void> {
@@ -97,6 +83,7 @@ export class NotificationsService {
         .send(notificationMessage)
         .then(function (resp) {
           console.log('Successfully sent message:');
+          console.log(resp);
         })
         .catch((err) => {
           console.error('Error sending notification');

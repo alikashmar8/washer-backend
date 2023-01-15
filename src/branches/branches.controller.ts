@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
   UsePipes,
-  ValidationPipe
+  ValidationPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
@@ -34,16 +34,14 @@ export class BranchesController {
   }
 
   @Get()
-  async findAll(
-    @Query() query
-  ) {
-    const relations = ['address']
+  async findAll(@Query() query) {
+    const relations = ['address'];
     return await this.branchesService.findAll(query, relations);
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    const relations = ['address']
+    const relations = ['address', 'employees'];
     return await this.branchesService.findByIdOrFail(id, relations);
   }
 
@@ -52,7 +50,6 @@ export class BranchesController {
     return this.branchesService.update(+id, updateBranchDto);
   }
 
-  
   @Roles(EmployeeRole.ADMIN)
   @UseGuards(RolesGuard)
   @Delete(':id')
