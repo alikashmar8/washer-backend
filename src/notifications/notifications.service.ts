@@ -1,33 +1,72 @@
-import { Injectable } from '@nestjs/common';
-import { CreateNotificationDto } from './dto/create-notification.dto';
-import { UpdateNotificationDto } from './dto/update-notification.dto';
-import { NotificationData } from './interfaces/notification.interface';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import * as admin from 'firebase-admin';
+import 'firebase/database';
+import { Repository } from 'typeorm';
+import { CreateNotificationDto } from './dto/create-notification.dto';
+import { Notification } from './entities/notification.entity';
+import { NotificationData } from './interfaces/notification.interface';
 
 @Injectable()
 export class NotificationsService {
-  create(createNotificationDto: CreateNotificationDto) {
-    return 'This action adds a new notification';
+  constructor(
+    @InjectRepository(Notification)
+    private readonly notificationRepository: Repository<Notification>,
+  ) {}
+
+  async create(data: CreateNotificationDto): Promise<void> {
+    const notification = this.notificationRepository.create(data);
+    await this.notificationRepository.save(notification);
+
+    const notificationData: NotificationData = {
+      title: notification.title,
+      body: notification.body,
+      type: data.type,
+      fcmTokens: data.fcmTokens,
+    };
+
+    this.notify(notificationData);
+
+    return;
   }
 
-  findAll() {
-    return `This action returns all notifications`;
+  async findAll(filters: { userId?: string; employeeId?: string }) {
+    return await this.notificationRepository.find({
+      where: filters,
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} notification`;
+  async findOne(id: string, relations?: string[]): Promise<Notification> {
+    return await this.notificationRepository.findOne({
+      where: { id },
+      relations,
+    });
   }
 
-  update(id: number, updateNotificationDto: UpdateNotificationDto) {
-    return `This action updates a #${id} notification`;
+  async findOneOrFail(id: string, relations?: string[]): Promise<Notification> {
+    return await this.notificationRepository
+      .findOneOrFail({
+        where: { id },
+        relations,
+      })
+      .catch((err) => {
+        throw new BadRequestException('Notification not found!', err);
+      });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} notification`;
+  async updateIsRead(id: string) {
+    return await this.notificationRepository.update(id, {
+      isRead: true,
+    });
+  }
+
+  async remove(id: string): Promise<void> {
+    const notification = await this.findOneOrFail(id);
+    await this.notificationRepository.remove(notification);
   }
 
   async notify(notificationData: NotificationData): Promise<void> {
-    notificationData.fcmTokens.forEach(function(token) {
+    notificationData.fcmTokens.forEach(function (token) {
       const notificationMessage: admin.messaging.Message = {
         token,
         data: {
@@ -42,12 +81,13 @@ export class NotificationsService {
       admin
         .messaging()
         .send(notificationMessage)
-        .then(function(resp) {
+        .then(function (resp) {
           console.log('Successfully sent message:');
+          console.log(resp);
         })
-        .catch(err => {
-          console.error('Error sending notification')
-          console.error(err)
+        .catch((err) => {
+          console.error('Error sending notification');
+          console.error(err);
         });
     });
   }

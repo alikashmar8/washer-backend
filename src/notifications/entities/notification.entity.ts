@@ -1,33 +1,33 @@
+import { BaseEntity } from 'src/common/entities/base-entity.entity';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
-    BaseEntity,
-    Column,
-    Entity,
-    JoinColumn,
-    ManyToOne,
-    PrimaryGeneratedColumn
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn
 } from 'typeorm';
 
 @Entity('notifications')
 export class Notification extends BaseEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ nullable: false })
   title: string;
 
   @Column({ nullable: false })
-  message: string;
+  body: string;
 
   @Column({ nullable: false, default: false })
   isRead: boolean;
 
   @Column({ nullable: true })
-  userId?: number;
+  userId?: string;
 
   @Column({ nullable: true })
-  employeeId?: number;
+  employeeId?: string;
 
   @ManyToOne((type) => User, (user) => user.notifications, {
     onDelete: 'CASCADE',

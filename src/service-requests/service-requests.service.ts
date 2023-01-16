@@ -31,7 +31,7 @@ export class ServiceRequestsService {
     private requestsRepository: Repository<ServiceRequest>,
     @InjectRepository(Setting)
     private settingsRepository: Repository<Setting>,
-  ) {}
+  ) { }
 
   async create(data: CreateServiceRequestDto) {
     //TODO: enhance branch choosing
@@ -103,6 +103,7 @@ export class ServiceRequestsService {
   ) {
     const take = filters.take || 10;
     const skip = filters.skip || 0;
+
     let isFirstWhere: boolean = true;
 
     let query: any = this.requestsRepository

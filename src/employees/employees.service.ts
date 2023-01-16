@@ -3,17 +3,20 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DeviceTokenStatus } from 'src/common/enums/device-token-status.enum';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, EntityManager, Repository } from 'typeorm';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { Employee } from './entities/employee.entity';
 
 @Injectable()
-export class EmployeesService {  
+export class EmployeesService {
   constructor(
     @InjectRepository(Employee) private employeesRepository: Repository<Employee>,
     @InjectRepository(DeviceToken) private deviceTokensRepository: Repository<DeviceToken>,
-  ) {}
+    private readonly entityManager: EntityManager,
+  ) { }
+
+
   async findById(id: string, relations?: string[]) {
     return await this.employeesRepository.findOne({
       where: {
@@ -72,6 +75,7 @@ export class EmployeesService {
       });
   }
   async create(data: CreateEmployeeDto) {
+
     let employee = this.employeesRepository.create(data);
     return await this.employeesRepository.save(employee).catch((err) => {
       console.log(err);
@@ -212,5 +216,19 @@ export class EmployeesService {
       relations: ['employee'],
     });
     return deviceToken.employee;
+  }
+
+  async updateLocation(
+    id: string,
+    latitude: number,
+    longitude: number,
+  ): Promise<Employee> {
+    const employee = await this.employeesRepository.findOneById(id);
+    if (!employee) {
+      throw new BadRequestException('Error updating location, employee not found');
+    }
+    employee.currentLatitude = latitude;
+    employee.currentLongitude = longitude;
+    return await this.employeesRepository.save(employee);
   }
 }

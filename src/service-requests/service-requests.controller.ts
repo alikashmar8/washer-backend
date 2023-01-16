@@ -1,17 +1,19 @@
 import {
   BadRequestException,
   Body,
-  Controller, Get,
+  Controller,
+  Get,
   HttpException,
   HttpStatus,
   Param,
   Patch,
   Post,
-  UnauthorizedException
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Query, UseGuards } from '@nestjs/common/decorators';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { IsEmployeeGuard } from 'src/auth/guards/is-employee.guard';
 import { IsUserGuard } from 'src/auth/guards/is-user.guard';
 import { CurrentEmployee } from 'src/common/decorators/current-employee.decorator';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
@@ -19,12 +21,11 @@ import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { RequestStatus } from 'src/common/enums/request-status.enum';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { User } from 'src/users/entities/user.entity';
+import { CalculateRequestTotal } from './dto/calculate-request-total.dto';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
+import { UpdateServiceRequestPaymentStatusDto } from './dto/update-service-request-payment-status.dto';
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
 import { ServiceRequestsService } from './service-requests.service';
-import { CalculateRequestTotal } from './dto/calculate-request-total.dto';
-import { IsEmployeeGuard } from 'src/auth/guards/is-employee.guard';
-import { UpdateServiceRequestPaymentStatusDto } from './dto/update-service-request-payment-status.dto';
 
 @ApiBearerAuth('access_token')
 @ApiTags('Service Requests')
@@ -81,7 +82,13 @@ export class ServiceRequestsController {
   @UseGuards(AuthGuard)
   @Get(':id')
   async findOne(@Param('id') id: string, @CurrentUser() user: User) {
-    const serviceReq = await this.serviceRequestsService.findOneByIdOrFail(id);
+    const serviceReq = await this.serviceRequestsService.findOneByIdOrFail(id, [
+      'user',
+      'branch',
+      'employee',
+      'type',
+      'address',
+    ]);
     if (user && user.id != serviceReq.userId)
       throw new UnauthorizedException(
         'You are not allowed to perform this action',
@@ -138,8 +145,11 @@ export class ServiceRequestsController {
 
   @UseGuards(IsUserGuard)
   @Post('calculate-total')
-  async getTotal(@Body() body: CalculateRequestTotal, @CurrentUser() user: User) {
-    return await this.serviceRequestsService.calculateRequestCost(body)
+  async getTotal(
+    @Body() body: CalculateRequestTotal,
+    @CurrentUser() user: User,
+  ) {
+    return await this.serviceRequestsService.calculateRequestCost(body);
   }
   // @Delete(':id')
   // remove(@Param('id') id: string) {

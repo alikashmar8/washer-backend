@@ -4,10 +4,13 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
+  HttpStatus,
   Param,
   Patch,
   Post,
   Query,
+  Req,
   UnauthorizedException,
   UploadedFile,
   UseGuards,
@@ -25,14 +28,19 @@ import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { getMulterSettings } from 'src/common/utils/functions';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { UpdateLocationDto } from './dto/update-location.dto';
 import { EmployeesService } from './employees.service';
 import { Employee } from './entities/employee.entity';
+import geoip from 'geoip-lite';
+
 
 @ApiTags('Employees')
 @UsePipes(new ValidationPipe())
 @Controller('employees')
 export class EmployeesController {
-  constructor(private readonly employeesService: EmployeesService) {}
+  constructor(private readonly employeesService: EmployeesService) { }
+
+
 
   @Roles(EmployeeRole.ADMIN, EmployeeRole.BRANCH_EMPLOYEE)
   @UseGuards(RolesGuard)
@@ -50,11 +58,11 @@ export class EmployeesController {
     @CurrentEmployee() employee: Employee,
     @UploadedFile() photo: Express.Multer.File,
   ) {
-    if (!photo) {
-      throw new BadRequestException('Ad image is required!');
-    } else {
-      createEmployeeDto.photo = photo.path;
-    }
+    // if (!photo) {
+    //   throw new BadRequestException('Ad image is required!');
+    // } else {
+    //   createEmployeeDto.photo = photo.path;
+    // }
     if (
       employee.role != EmployeeRole.ADMIN &&
       createEmployeeDto.role == EmployeeRole.ADMIN
@@ -64,6 +72,8 @@ export class EmployeesController {
       );
     return await this.employeesService.create(createEmployeeDto);
   }
+
+
 
   @Roles(EmployeeRole.ADMIN, EmployeeRole.BRANCH_EMPLOYEE)
   @UseGuards(RolesGuard)
@@ -94,10 +104,14 @@ export class EmployeesController {
     return this.employeesService.findAll(query, employee);
   }
 
+
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.employeesService.findOne(+id);
   }
+
+
 
   @Patch(':id')
   update(
@@ -106,6 +120,9 @@ export class EmployeesController {
   ) {
     return this.employeesService.update(+id, updateEmployeeDto);
   }
+
+
+
 
   @UseGuards(IsEmployeeGuard)
   @Delete(':id')
@@ -126,4 +143,35 @@ export class EmployeesController {
     }
     return await this.employeesService.remove(id);
   }
+
+
+
+
+  @Patch('/:id/location')
+  // @Roles(EmployeeRole.ADMIN, EmployeeRole.BRANCH_EMPLOYEE)
+  // @UseGuards(RolesGuard)
+  // @UseGuards(IsEmployeeGuard)
+  async updateLocation(
+    @Req() req,
+    @Param('id') id: string,
+    @Body() location: UpdateLocationDto,
+  ): Promise<Employee> {
+    if (location.latitude && location.longitude) {
+      return this.employeesService.updateLocation(id, location.latitude, location.longitude);
+    } else {
+
+      const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+      const location = geoip.lookup(ip);
+      if (location) {
+        const latitude = location.ll[0];
+        const longitude = location.ll[1];
+        return this.employeesService.updateLocation(id, latitude, longitude);
+      } else {
+        throw new HttpException('Unable to determine location from IP', HttpStatus.BAD_REQUEST);
+      }
+    }
+  }
+
+
+
 }
