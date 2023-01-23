@@ -32,6 +32,10 @@ import { UsersModule } from './users/users.module';
 import { UsersService } from './users/users.service';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { WalletsModule } from './wallets/wallets.module';
+import { ProductsModule } from './products/products.module';
+import { CategoriesModule } from './categories/categories.module';
+import { OrdersModule } from './orders/orders.module';
+
 
 @Module({
   imports: [
@@ -67,8 +71,11 @@ import { WalletsModule } from './wallets/wallets.module';
     NotificationsModule,
     AdsModule,
     SettingsModule,
+    ProductsModule,
+    CategoriesModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService, BranchesService, EmployeesService, UsersService],
 })
-export class AppModule {}
+export class AppModule { }

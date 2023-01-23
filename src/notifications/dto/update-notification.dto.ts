@@ -4,6 +4,6 @@ import { CreateNotificationDto } from './create-notification.dto';
 export class UpdateNotificationDto extends PartialType(CreateNotificationDto) {
     readonly title?: string;
     readonly message?: string;
-    readonly userId?: number;
-    readonly employeeId?: number;
+    readonly userId?: string;
+    readonly employeeId?: string;
 }
