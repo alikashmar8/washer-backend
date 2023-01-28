@@ -23,6 +23,7 @@ import {
   removeSpecialCharacters,
 } from '../../common/utils/functions';
 import { CreditCard } from './../../credit-cards/entities/credit-card.entity';
+import { Order } from 'src/orders/entities/order.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -135,6 +136,10 @@ export class User extends BaseEntity {
   @Exclude()
   @OneToMany((type) => CreditCard, (card) => card.user, { cascade: true })
   creditCards: CreditCard[];
+
+  @OneToMany((type) => Order, (order) => order.user, { cascade: true })
+  orders: Order[];
+
 
   @Exclude()
   @OneToMany((type) => Transaction, (transaction) => transaction.user, {

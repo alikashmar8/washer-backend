@@ -1,3 +1,4 @@
+
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AddressesService } from 'src/addresses/addresses.service';
@@ -18,6 +19,8 @@ import { ServiceRequest } from './entities/service-request.entity';
 import { UpdateServiceRequestPaymentStatusDto } from './dto/update-service-request-payment-status.dto';
 import { Setting } from 'src/settings/entities/setting.entity';
 import { EXCHANGE_RATE } from 'src/common/constants';
+import { Promo } from 'src/promos/entities/promo.entity';
+import { PromosService } from 'src/promos/promos.service';
 
 @Injectable()
 export class ServiceRequestsService {
@@ -31,6 +34,7 @@ export class ServiceRequestsService {
     private requestsRepository: Repository<ServiceRequest>,
     @InjectRepository(Setting)
     private settingsRepository: Repository<Setting>,
+    private promoService: PromosService,
   ) { }
 
   async create(data: CreateServiceRequestDto) {
@@ -70,8 +74,9 @@ export class ServiceRequestsService {
 
     const costObj = await this.calculateRequestCost({
       serviceTypeId: data.typeId,
-      tips: data.tips,
       vehicleId: data.vehicleId,
+      tips: data.tips,
+      userId: data.userId
     });
 
     data.cost = costObj.total
@@ -308,12 +313,15 @@ export class ServiceRequestsService {
 
   async calculateRequestCost(data: {
     serviceTypeId: string;
+    promoCode?: string;
     vehicleId?: string;
     tips: number;
+    userId: string
   }): Promise<{
     total: number;
     totalLBP: number;
   }> {
+
     let total: number = 0;
     let totalLBP: number = 0;
 
@@ -349,6 +357,18 @@ export class ServiceRequestsService {
     total += data.tips;
     totalLBP += exchangeRate * serviceType.price;
 
+    let discountAmount: number = 0;
+    let promoIsValid: boolean;
+    const promo = await this.promoService.findOne(data.promoCode);
+    promoIsValid = await this.promoService.checkValidity(data.userId, data.promoCode);
+
+    if (promoIsValid && promo.discountPercentage) {
+      discountAmount = total * promo.discountPercentage / 100;
+    } else {
+      if (promoIsValid && promo.discountAmount)
+        discountAmount = promo.discountAmount;
+    }
+    total -= discountAmount;
     // todo: check for fees or other costs in case of payment by credit cards
     return { total, totalLBP };
   }

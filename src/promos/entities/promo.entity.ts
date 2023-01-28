@@ -28,6 +28,15 @@ export class Promo extends BaseEntity {
   @JoinColumn({ name: 'userId' })
   user: User;
 
+  @Column({ nullable: true })
+  discountPercentage?: number;
+
+  @Column({ nullable: true })
+  discountAmount?: number;
+
+  @Column({ nullable: false })
+  isActive: boolean;
+
   public get isLimited(): boolean {
     return this.limit != null && this.limit > 0;
   }

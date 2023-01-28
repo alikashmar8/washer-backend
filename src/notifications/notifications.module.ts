@@ -8,12 +8,13 @@ import { UsersService } from 'src/users/users.service';
 import { Notification } from './entities/notification.entity';
 import { NotificationsController } from './notifications.controller';
 import { NotificationsService } from './notifications.service';
+import { DeviceTokensService } from 'src/device-tokens/device-tokens.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Notification, User, DeviceToken, Employee]),
   ],
   controllers: [NotificationsController],
-  providers: [NotificationsService, UsersService, EmployeesService],
+  providers: [NotificationsService, UsersService, EmployeesService, DeviceTokensService],
 })
 export class NotificationsModule {}

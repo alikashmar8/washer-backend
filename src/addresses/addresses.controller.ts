@@ -31,7 +31,7 @@ import { UpdateAddressDto } from './dto/update-address.dto';
 @UsePipes(new ValidationPipe())
 @Controller('addresses')
 export class AddressesController {
-  constructor(private readonly addressesService: AddressesService) {}
+  constructor(private readonly addressesService: AddressesService) { }
 
   @UseGuards(IsUserGuard)
   @Post()
