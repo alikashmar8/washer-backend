@@ -7,6 +7,8 @@ import { Branch } from 'src/branches/entities/branch.entity';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
 import { EmployeesService } from 'src/employees/employees.service';
 import { Employee } from 'src/employees/entities/employee.entity';
+import { Promo } from 'src/promos/entities/promo.entity';
+import { PromosService } from 'src/promos/promos.service';
 import { ServiceTypesService } from 'src/service-types/service-types.service';
 import { Setting } from 'src/settings/entities/setting.entity';
 import { SettingsService } from 'src/settings/settings.service';
@@ -31,6 +33,7 @@ import { ServiceRequestsService } from './service-requests.service';
       Employee,
       Vehicle,
       Setting,
+      Promo,
     ]),
   ],
   controllers: [ServiceRequestsController],
@@ -43,6 +46,7 @@ import { ServiceRequestsService } from './service-requests.service';
     EmployeesService,
     VehiclesService,
     SettingsService,
+    PromosService,
   ],
 })
 export class ServiceRequestsModule {}
