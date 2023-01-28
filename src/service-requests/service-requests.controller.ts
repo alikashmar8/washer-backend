@@ -139,7 +139,7 @@ export class ServiceRequestsController {
   @UseGuards(IsUserGuard)
   @Post('calculate-total')
   async getTotal(@Body() body: CalculateRequestTotal, @CurrentUser() user: User) {
-    return await this.serviceRequestsService.calculateRequestCost(body)
+    return await this.serviceRequestsService.calculateRequestCost(body,user.id)
   }
   // @Delete(':id')
   // remove(@Param('id') id: string) {

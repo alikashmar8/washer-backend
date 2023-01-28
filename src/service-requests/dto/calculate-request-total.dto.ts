@@ -4,11 +4,16 @@ import {
     IsNumber,
     IsOptional
 } from 'class-validator';
+import { Promo } from 'src/promos/entities/promo.entity';
 
 export class CalculateRequestTotal {
   @ApiProperty()
   @IsNotEmpty()
   serviceTypeId: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  promoCode: string;
 
   @ApiProperty({ required: false })
   @IsOptional()

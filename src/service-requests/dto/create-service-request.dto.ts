@@ -46,6 +46,12 @@ export class CreateServiceRequestDto {
   @IsOptional()
   vehicleId?: string;
 
+  @ApiProperty({ required: false })
+  @IsOptional()
+  promoCode?: string;
+
+
+
   //userId & branchId are auto set in code
   userId: string;
   branchId: string;

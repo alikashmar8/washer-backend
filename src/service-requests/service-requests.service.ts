@@ -1,3 +1,4 @@
+
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AddressesService } from 'src/addresses/addresses.service';
@@ -16,6 +17,8 @@ import { UpdateServiceRequestStatusDto } from './dto/update-service-request-stat
 import { UpdateServiceRequestDto } from './dto/update-service-request.dto';
 import { ServiceRequest } from './entities/service-request.entity';
 import { UpdateServiceRequestPaymentStatusDto } from './dto/update-service-request-payment-status.dto';
+import { Promo } from 'src/promos/entities/promo.entity';
+import { PromosService } from 'src/promos/promos.service';
 
 @Injectable()
 export class ServiceRequestsService {
@@ -27,6 +30,7 @@ export class ServiceRequestsService {
     private settingsService: SettingsService,
     @InjectRepository(ServiceRequest)
     private requestsRepository: Repository<ServiceRequest>,
+    private promoService: PromosService,
   ) { }
 
   async create(data: CreateServiceRequestDto) {
@@ -66,9 +70,9 @@ export class ServiceRequestsService {
 
     const totalCost: number = await this.calculateRequestCost({
       serviceTypeId: data.typeId,
-      tips: data.tips,
       vehicleId: data.vehicleId,
-    });
+      tips: data.tips,
+    },data.userId);
 
     data.cost = totalCost;
 
@@ -304,9 +308,13 @@ export class ServiceRequestsService {
 
   async calculateRequestCost(data: {
     serviceTypeId: string;
+    promoCode?: string;
     vehicleId?: string;
     tips: number;
-  }): Promise<number> {
+  },
+    userId: string
+  ): Promise<number> {
+
     let total: number = 0;
     const serviceType = await this.serviceTypesService.findOneByIdOrFail(
       data.serviceTypeId,
@@ -326,6 +334,18 @@ export class ServiceRequestsService {
 
     total += data.tips;
 
+    let discountAmount: number = 0;
+    let promoIsValid: boolean;
+    const promo = await this.promoService.findOne(data.promoCode);
+    promoIsValid = await this.promoService.checkValidity(userId, data.promoCode);
+
+    if (promoIsValid && promo.discountPercentage) {
+      discountAmount = total * promo.discountPercentage / 100;
+    } else {
+      if (promoIsValid && promo.discountAmount)
+        discountAmount = promo.discountAmount;
+    }
+    total -= discountAmount;
     // todo: check for fees or other costs in case of payment by credit cards
     return total;
   }
