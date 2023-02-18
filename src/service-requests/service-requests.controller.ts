@@ -37,11 +37,14 @@ export class ServiceRequestsController {
 
   @UseGuards(IsUserGuard)
   @Post()
-  create(@Body() body: CreateServiceRequestDto, @CurrentUser() user: User) {
+  async create(
+    @Body() body: CreateServiceRequestDto,
+    @CurrentUser() user: User,
+  ) {
     if (!user)
       throw new HttpException('Authorization error', HttpStatus.UNAUTHORIZED);
     body.userId = user.id;
-    return this.serviceRequestsService.create(body);
+    return await this.serviceRequestsService.create(body);
   }
 
   @UseGuards(AuthGuard)
@@ -145,9 +148,12 @@ export class ServiceRequestsController {
 
   @UseGuards(IsUserGuard)
   @Post('calculate-total')
-  async getTotal(@Body() body: CalculateRequestTotal, @CurrentUser() user: User) {
-    body.userId= user.id;
-    return await this.serviceRequestsService.calculateRequestCost(body)
+  async getTotal(
+    @Body() body: CalculateRequestTotal,
+    @CurrentUser() user: User,
+  ) {
+    body.userId = user.id;
+    return await this.serviceRequestsService.calculateRequestCost(body);
   }
 
   // @Delete(':id')

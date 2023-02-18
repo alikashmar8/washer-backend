@@ -76,7 +76,8 @@ export class ServiceRequestsService {
       serviceTypeId: data.typeId,
       vehicleId: data.vehicleId,
       tips: data.tips,
-      userId: data.userId
+      userId: data.userId,
+      promoCode: data.promoCode
     });
 
     data.cost = costObj.total
