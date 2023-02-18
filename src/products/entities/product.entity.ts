@@ -62,8 +62,10 @@ export class Product {
   @JoinColumn({ name: "category_id" })
   category: Category;
 
-  // @ManyToOne((type) => Plant, (plant) => plant.products, {
-  //   onDelete: 'SET NULL',
-  // })
+
+  @Column({ nullable: false, default: 0 })
+  views: number;
+
+
 
 }

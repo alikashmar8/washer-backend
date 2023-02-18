@@ -17,7 +17,7 @@ export class Order {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, default: 0 })
   total: number;
 
   @Column({ nullable: true })
@@ -38,6 +38,13 @@ export class Order {
     enum: OrderStatus,
   })
   status: OrderStatus;
+
+  @Column({ nullable: true })
+  promoCode: string;
+
+  @Column({ nullable: true })
+  discountAmount?: number;
+
 
   @CreateDateColumn()
   createdAt: Date;

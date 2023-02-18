@@ -73,6 +73,21 @@ export class ProductsService {
             });
     }
 
+    async updateProductView(id:number) {
+        const product = await this.productRepository.findOneOrFail({
+            where: { id },
+          })
+            .catch((err) => {
+                console.log(err);
+                throw new BadRequestException('Can\'t find product !');
+            });
+
+            product.views++;
+
+            return await this.productRepository.save(product);
+
+    }
+
 
     async remove(id: number) {
         return await this.productRepository.delete({ id }).catch((err) => {

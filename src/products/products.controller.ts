@@ -95,6 +95,22 @@ export class ProductsController {
         return await this.productsService.update(id, updateProductDto);
     }
 
+    
+    @UseGuards(AuthGuard)
+    @Patch(':id')
+    async updateProductView(
+        @Param('id') id: number,
+        @CurrentUser() user: User,
+    ) {
+        if (user) {
+            return await this.productsService.updateProductView(id);
+        }
+
+        
+    }
+
+
+
 
 
 
