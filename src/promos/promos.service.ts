@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/user.entity';
-import { Repository } from 'typeorm';
+import { DeepPartial, Repository } from 'typeorm';
 import { CreatePromoDto } from './dto/create-promo.dto';
 import { UpdatePromoDto } from './dto/update-promo.dto';
 import { Promo } from './entities/promo.entity';
@@ -77,19 +77,66 @@ export class PromosService {
     });
   }
 
-  async checkValidity(userId: string, code: string):Promise<boolean> {
+  async checkValidity(userId: string, code: string): Promise<boolean> {
+    if (!code) return false;
     const promoCheck = await this.promosRepository.findOne({
       where: {
         code,
         userId,
       },
     });
-    if (!promoCheck) return false;
-    if (!promoCheck.isActive) return false;
-    if (promoCheck.numberOfUsage >= promoCheck.limit) return false;
-    if (promoCheck.expiryDate && (promoCheck.expiryDate >= new Date())) return false;
+    console.log("Valid check 1");
+    console.log(promoCheck);
+    if (!promoCheck) {
+      console.log("!promoCheck ");
+      return false;
+    }
+    if (!promoCheck.isActive) {
+      console.log("!promoCheck.isActive ");
+      return false;
+    }
+    if (promoCheck.numberOfUsage >= promoCheck.limit) {
+      console.log("promoCheck.numberOfUsage >= promoCheck.limit ");
+      return false;
+    }
+    if (promoCheck.expiryDate && (promoCheck.expiryDate <= new Date())) {
+      console.log("promoCheck.expiryDate && (promoCheck.expiryDate <= new Date()) ");
+      return false;
+    }
     return true;
+  }
 
+  async findPromo(code: string) {
+    const promo = await this.promosRepository.findOne({
+      where: {
+        code,
+        // userId,
+      },
+    }).catch((err) => {
+      throw new BadRequestException('promo can\'t be found!', err);
+    });
+    return promo;
+  }
+
+  async consumePromo(userId: string, promoCode: string) {
+
+    const promo = this.promosRepository.findOne({
+      where: [
+        { userId, code: promoCode },
+      ],
+    }).catch((err) => {
+      console.log(err);
+      throw new BadRequestException('Error finding promo!');
+    });
+
+    if ((await promo).numberOfUsage > (await promo).limit)
+      throw new BadRequestException('Number of usage exceeds limit!');
+    else {
+      await this.promosRepository.update({ id: (await promo).id }, { numberOfUsage: (await promo).numberOfUsage + 1 });
+
+    }
 
   }
+
+
 }
