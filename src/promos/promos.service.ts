@@ -8,11 +8,10 @@ import { Promo } from './entities/promo.entity';
 
 @Injectable()
 export class PromosService {
-
   constructor(
     @InjectRepository(Promo)
     private promosRepository: Repository<Promo>,
-  ) { }
+  ) {}
 
   async create(createPromoDto: CreatePromoDto) {
     return await this.promosRepository.save(createPromoDto).catch((err) => {
@@ -21,7 +20,6 @@ export class PromosService {
     });
   }
 
-
   async findAll(queryParams: {
     take: number;
     skip: number;
@@ -29,7 +27,10 @@ export class PromosService {
   }) {
     const take = queryParams.take || 10;
     const skip = queryParams.skip || 0;
-    let query: any = this.promosRepository.createQueryBuilder('promo');
+    let query: any = this.promosRepository
+      .createQueryBuilder('promo')
+      .innerJoinAndSelect('promo.user', 'user');
+      
     if (queryParams.isActive != null) {
       if (typeof queryParams.isActive == 'string') {
         if (queryParams.isActive == 'true') {
@@ -49,13 +50,11 @@ export class PromosService {
     };
   }
 
-
   async findOneByIdOrFail(id: string) {
     return await this.promosRepository.findOneByOrFail({ id }).catch((err) => {
       throw new BadRequestException('promo code not found!', err);
     });
   }
-
 
   async findOne(id: string, relations?: string[]): Promise<Promo> {
     return await this.promosRepository.findOne({
@@ -64,11 +63,12 @@ export class PromosService {
     });
   }
 
-
   async update(id: string, updatePromoDto: UpdatePromoDto) {
-    return await this.promosRepository.update(id, updatePromoDto).catch((err) => {
-      throw new BadRequestException('Error updating promo code!', err);
-    });
+    return await this.promosRepository
+      .update(id, updatePromoDto)
+      .catch((err) => {
+        throw new BadRequestException('Error updating promo code!', err);
+      });
   }
 
   async remove(id: string) {
@@ -77,7 +77,7 @@ export class PromosService {
     });
   }
 
-  async checkValidity(userId: string, code: string):Promise<boolean> {
+  async checkValidity(userId: string, code: string): Promise<boolean> {
     const promoCheck = await this.promosRepository.findOne({
       where: {
         code,
@@ -87,9 +87,8 @@ export class PromosService {
     if (!promoCheck) return false;
     if (!promoCheck.isActive) return false;
     if (promoCheck.numberOfUsage >= promoCheck.limit) return false;
-    if (promoCheck.expiryDate && (promoCheck.expiryDate >= new Date())) return false;
+    if (promoCheck.expiryDate && promoCheck.expiryDate >= new Date())
+      return false;
     return true;
-
-
   }
 }
