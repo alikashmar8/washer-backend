@@ -32,7 +32,7 @@ export class OrdersService {
         .save(createOrderDto)
         .catch((err) => {
           console.log(err);
-          throw new BadRequestException('Error saving Order  !');
+          throw new BadRequestException('Error saving Order!');
         });
 
       items = await Promise.all(
@@ -58,14 +58,14 @@ export class OrdersService {
 
       await this.orderItemsRepository.save(items).catch((err) => {
         console.log(err);
-        throw new BadRequestException('Error saving items !');
+        throw new BadRequestException('Error saving items!');
       });
 
       await this.ordersRepository
         .update({ id: order.id }, { total: total })
         .catch((err) => {
           console.log(err);
-          throw new BadRequestException('Error Order Creation  !');
+          throw new BadRequestException('Error Order Creation!');
         });
       await queryRunner.commitTransaction();
       return order;
