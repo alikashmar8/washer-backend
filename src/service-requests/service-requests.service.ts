@@ -11,7 +11,7 @@ import { ServiceTypesService } from 'src/service-types/service-types.service';
 import { SettingsService } from 'src/settings/settings.service';
 import { User } from 'src/users/entities/user.entity';
 import { VehiclesService } from 'src/vehicles/vehicles.service';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, DataSource, Repository } from 'typeorm';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
 import { UpdateServiceRequestDto } from './dto/update-service-request.dto';
@@ -21,6 +21,8 @@ import { Setting } from 'src/settings/entities/setting.entity';
 import { EXCHANGE_RATE } from 'src/common/constants';
 import { Promo } from 'src/promos/entities/promo.entity';
 import { PromosService } from 'src/promos/promos.service';
+import { Branch } from 'src/branches/entities/branch.entity';
+import { Address } from 'src/addresses/entities/address.entity';
 
 @Injectable()
 export class ServiceRequestsService {
@@ -35,61 +37,70 @@ export class ServiceRequestsService {
     @InjectRepository(Setting)
     private settingsRepository: Repository<Setting>,
     private promoService: PromosService,
+    private dataSource: DataSource,
   ) { }
 
   async create(data: CreateServiceRequestDto) {
-    //TODO: enhance branch choosing
-    const res = await this.branchesService.findAll(null, ['address']);
-    const branches = res.data;
-    let branch: any = {};
-    const initialDistance = 99999999;
-    branch.distance = initialDistance;
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.startTransaction();
+    try {
 
-    const requestAddress = await this.addressesService.findByIdOrFail(
-      data.addressId,
-    );
+      const branches = await queryRunner.manager.find(Branch, { relations: ['address'] });
+      let branch: any = {};
+      const initialDistance = 99999999;
+      branch.distance = initialDistance;
 
-    branches.forEach((b) => {
-      let dist = calculateDistance(
-        {
-          lat: requestAddress.lat,
-          lon: requestAddress.lon,
-        },
-        {
-          lat: b.address.lat,
-          lon: b.address.lon,
-        },
-      );
+      const requestAddress = await queryRunner.manager.findOneOrFail(Address, { where: { id: data.addressId } });
 
-      if (dist < branch.distance) {
-        branch = b;
-        branch.distance = dist;
-      }
-    });
+      branches.forEach((b) => {
+        const dist = calculateDistance(
+          {
+            lat: requestAddress.lat,
+            lon: requestAddress.lon,
+          },
+          {
+            lat: b.address.lat,
+            lon: b.address.lon,
+          },
+        );
 
-    if (branch.distance == initialDistance)
-      throw new BadRequestException('No branch was found close to you!');
+        if (dist < branch.distance) {
+          branch = b;
+          branch.distance = dist;
+        }
+      });
 
-    data.branchId = branch.id;
+      if (branch.distance == initialDistance)
+        throw new BadRequestException('No branch was found close to you!');
 
-    const costObj = await this.calculateRequestCost({
-      serviceTypeId: data.typeId,
-      vehicleId: data.vehicleId,
-      tips: data.tips,
-      userId: data.userId,
-      promoCode: data.promoCode
-    });
+      data.branchId = branch.id;
 
-    data.cost = costObj.total
+      const costObj = await this.calculateRequestCost({
+        serviceTypeId: data.typeId,
+        vehicleId: data.vehicleId,
+        tips: data.tips,
+        userId: data.userId,
+        promoCode: data.promoCode
+      });
 
-    let request = this.requestsRepository.create(data);
+      data.cost = costObj.total;
 
-    return await this.requestsRepository.save(request).catch((err) => {
+      const request = queryRunner.manager.create(ServiceRequest, data);
+
+      const savedRequest = await queryRunner.manager.save(request);
+      await queryRunner.commitTransaction();
+      await this.promoService.consumePromo(queryRunner, data.userId, data.promoCode);
+      return savedRequest;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
       console.log('Error creating request:');
       console.log(err);
-      throw new BadRequestException(request);
-    });
+      throw new BadRequestException(Request);
+    } finally {
+      await queryRunner.release();
+    }
   }
+
 
   async findAll(
     filters: {
@@ -110,7 +121,7 @@ export class ServiceRequestsService {
     const take = filters.take || 10;
     const skip = filters.skip || 0;
 
-    let isFirstWhere: boolean = true;
+    let isFirstWhere = true;
 
     let query: any = this.requestsRepository
       .createQueryBuilder('req')
@@ -168,10 +179,10 @@ export class ServiceRequestsService {
     }
 
     if (filters.fromDate) {
-      let startDate = new Date(filters.fromDate);
+      const startDate = new Date(filters.fromDate);
       startDate.setHours(0, 0, 0, 0);
 
-      let innerQuery = new Brackets((qb) => {
+      const innerQuery = new Brackets((qb) => {
         qb.where('req.requestedDate >= :fromDate', {
           fromDate: startDate,
         })
@@ -188,9 +199,9 @@ export class ServiceRequestsService {
     }
 
     if (filters.toDate) {
-      let endDate = new Date(filters.toDate);
+      const endDate = new Date(filters.toDate);
       endDate.setHours(23, 59, 59, 999);
-      let innerQuery = new Brackets((qb) => {
+      const innerQuery = new Brackets((qb) => {
         qb.where('req.requestedDate <= :toDate', {
           toDate: endDate,
         })
@@ -209,7 +220,7 @@ export class ServiceRequestsService {
     if (currentEmployee && currentEmployee.role == EmployeeRole.DRIVER) {
       // if employee is driver => he will be able to see his requests or non assigned ones
       // TODO: query to be tested
-      let innerQuery = new Brackets((qb) => {
+      const innerQuery = new Brackets((qb) => {
         qb.where('req.employeeId = :eid', {
           eid: currentEmployee.id,
         }).orWhere('req.employeeId is null');
@@ -323,8 +334,8 @@ export class ServiceRequestsService {
     totalLBP: number;
   }> {
 
-    let total: number = 0;
-    let totalLBP: number = 0;
+    let total = 0;
+    let totalLBP = 0;
 
     const exchangeRateSetting: Setting = await this.settingsRepository
       .findOneOrFail({
@@ -335,7 +346,7 @@ export class ServiceRequestsService {
       .catch((err) => {
         throw new BadRequestException('Error calculating prices', err);
       });
-    const exchangeRate: number = Number(exchangeRateSetting.value);
+    const exchangeRate = Number(exchangeRateSetting.value);
 
     const serviceType = await this.serviceTypesService.findOneByIdOrFail(
       data.serviceTypeId,
@@ -347,8 +358,8 @@ export class ServiceRequestsService {
       const vehicle = await this.vehiclesService.findOneByIdOrFail(
         data.vehicleId,
       );
-      let key = vehicle.type + '_COST';
-      let setting = await this.settingsService.findByKey(key);
+      const key = vehicle.type + '_COST';
+      const setting = await this.settingsService.findByKey(key);
       if (setting && setting.value != null) {
         total += Number(setting.value);
         totalLBP += exchangeRate * Number(setting.value);
@@ -358,8 +369,8 @@ export class ServiceRequestsService {
     total += data.tips;
     totalLBP += exchangeRate * serviceType.price;
 
-    let discountAmount: number = 0;
-    let promoIsValid: boolean;
+    let discountAmount = 0;
+    let promoIsValid = false;
     const promo = await this.promoService.findOne(data.promoCode);
     promoIsValid = await this.promoService.checkValidity(data.userId, data.promoCode);
 
