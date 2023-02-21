@@ -79,14 +79,18 @@ export class OrdersService {
     }
   }
 
-  async findAll(queryParams: { userId?: string }) {
+  async findAll(queryParams: { take: number; skip: number; userId?: string }) {
+    const take = queryParams.take || 10;
+    const skip = queryParams.skip || 0;
     let query = this.ordersRepository.createQueryBuilder('order');
 
     if (queryParams.userId) {
-      query = query.where('order.userId = :uid', { uid: queryParams.userId });
+      query = query.where('order.userId = :uid', {
+        uid: queryParams.userId,
+      });
     }
 
-    return await query.getMany();
+    return await query.skip(skip).take(take).getManyAndCount();
   }
 
   async findOne(id: number) {

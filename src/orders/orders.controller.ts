@@ -28,8 +28,8 @@ import { OrdersService } from './orders.service';
 export class OrdersController {
   constructor(
     private readonly ordersService: OrdersService,
-    private dataSource: DataSource
-  ) { }
+    private dataSource: DataSource,
+  ) {}
 
   @UseGuards(IsUserGuard)
   @Post()
@@ -47,10 +47,13 @@ export class OrdersController {
     @Query()
     params: {
       userId?: string;
+      take: number;
+      skip: number;
     },
     @CurrentUser() user: User,
   ) {
     if (user) params.userId = user.id;
+
     return await this.ordersService.findAll(params);
   }
 
@@ -77,7 +80,10 @@ export class OrdersController {
   @Post('calculate-total')
   async getTotal(@Body() data: CreateOrderDto) {
     const queryRunner = this.dataSource.createQueryRunner();
-    return await this.ordersService.calculateTotal(data, data.orderItems, queryRunner);
+    return await this.ordersService.calculateTotal(
+      data,
+      data.orderItems,
+      queryRunner,
+    );
   }
-
 }

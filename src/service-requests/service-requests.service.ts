@@ -386,6 +386,7 @@ export class ServiceRequestsService {
       if (promoIsValid && promo.discountAmount)
         discountAmount = promo.discountAmount;
     }
+    
     total -= discountAmount;
     // todo: check for fees or other costs in case of payment by credit cards
     return { total, totalLBP };
