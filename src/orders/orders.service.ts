@@ -59,14 +59,14 @@ export class OrdersService {
 
             await queryRunner.manager.save(OrderItem, items).catch((err) => {
                 console.log(err);
-                throw new BadRequestException('Error saving items !');
+                throw new BadRequestException('Error saving items!');
             });
 
             await queryRunner.manager
                 .update(Order, { id: order.id }, { total: total })
                 .catch((err) => {
                     console.log(err);
-                    throw new BadRequestException('Error Order Creation  !');
+                    throw new BadRequestException('Error Order Creation!');
                 });
             await queryRunner.commitTransaction();
             return order;
@@ -79,15 +79,23 @@ export class OrdersService {
         }
     }
 
-    async findAll(queryParams: { userId?: string }) {
-        let query = this.ordersRepository.createQueryBuilder('order');
+    async findAll(queryParams: { 
+      take: number,
+      skip: number,
+      userId?: string
+     }) {
+       const take = queryParams.take || 10;
+       const skip = queryParams.skip || 0;
+       let query = this.ordersRepository.createQueryBuilder('order');
 
-        if (queryParams.userId) {
-            query = query.where('order.userId = :uid', { uid: queryParams.userId });
-        }
+       if (queryParams.userId) {
+         query = query.where('order.userId = :uid', {
+           uid: queryParams.userId,
+         });
+       }
 
-        return await query.getMany();
-    }
+       return await query.skip(skip).take(take).getManyAndCount();
+     }
 
     async findOne(id: number) {
         return await this.ordersRepository

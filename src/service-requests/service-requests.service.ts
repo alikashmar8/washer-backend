@@ -2,27 +2,26 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AddressesService } from 'src/addresses/addresses.service';
+import { Address } from 'src/addresses/entities/address.entity';
 import { BranchesService } from 'src/branches/branches.service';
+import { Branch } from 'src/branches/entities/branch.entity';
+import { EXCHANGE_RATE } from 'src/common/constants';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { RequestStatus } from 'src/common/enums/request-status.enum';
 import { calculateDistance } from 'src/common/utils/functions';
 import { Employee } from 'src/employees/entities/employee.entity';
+import { PromosService } from 'src/promos/promos.service';
 import { ServiceTypesService } from 'src/service-types/service-types.service';
+import { Setting } from 'src/settings/entities/setting.entity';
 import { SettingsService } from 'src/settings/settings.service';
 import { User } from 'src/users/entities/user.entity';
 import { VehiclesService } from 'src/vehicles/vehicles.service';
 import { Brackets, DataSource, Repository } from 'typeorm';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
+import { UpdateServiceRequestPaymentStatusDto } from './dto/update-service-request-payment-status.dto';
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
 import { UpdateServiceRequestDto } from './dto/update-service-request.dto';
 import { ServiceRequest } from './entities/service-request.entity';
-import { UpdateServiceRequestPaymentStatusDto } from './dto/update-service-request-payment-status.dto';
-import { Setting } from 'src/settings/entities/setting.entity';
-import { EXCHANGE_RATE } from 'src/common/constants';
-import { Promo } from 'src/promos/entities/promo.entity';
-import { PromosService } from 'src/promos/promos.service';
-import { Branch } from 'src/branches/entities/branch.entity';
-import { Address } from 'src/addresses/entities/address.entity';
 
 @Injectable()
 export class ServiceRequestsService {
