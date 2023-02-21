@@ -1,28 +1,26 @@
-
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AddressesService } from 'src/addresses/addresses.service';
+import { Address } from 'src/addresses/entities/address.entity';
 import { BranchesService } from 'src/branches/branches.service';
+import { Branch } from 'src/branches/entities/branch.entity';
+import { EXCHANGE_RATE } from 'src/common/constants';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { RequestStatus } from 'src/common/enums/request-status.enum';
 import { calculateDistance } from 'src/common/utils/functions';
 import { Employee } from 'src/employees/entities/employee.entity';
+import { PromosService } from 'src/promos/promos.service';
 import { ServiceTypesService } from 'src/service-types/service-types.service';
+import { Setting } from 'src/settings/entities/setting.entity';
 import { SettingsService } from 'src/settings/settings.service';
 import { User } from 'src/users/entities/user.entity';
 import { VehiclesService } from 'src/vehicles/vehicles.service';
 import { Brackets, DataSource, Repository } from 'typeorm';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
+import { UpdateServiceRequestPaymentStatusDto } from './dto/update-service-request-payment-status.dto';
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
 import { UpdateServiceRequestDto } from './dto/update-service-request.dto';
 import { ServiceRequest } from './entities/service-request.entity';
-import { UpdateServiceRequestPaymentStatusDto } from './dto/update-service-request-payment-status.dto';
-import { Setting } from 'src/settings/entities/setting.entity';
-import { EXCHANGE_RATE } from 'src/common/constants';
-import { Promo } from 'src/promos/entities/promo.entity';
-import { PromosService } from 'src/promos/promos.service';
-import { Branch } from 'src/branches/entities/branch.entity';
-import { Address } from 'src/addresses/entities/address.entity';
 
 @Injectable()
 export class ServiceRequestsService {
@@ -38,19 +36,22 @@ export class ServiceRequestsService {
     private settingsRepository: Repository<Setting>,
     private promoService: PromosService,
     private dataSource: DataSource,
-  ) { }
+  ) {}
 
   async create(data: CreateServiceRequestDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.startTransaction();
     try {
-
-      const branches = await queryRunner.manager.find(Branch, { relations: ['address'] });
+      const branches = await queryRunner.manager.find(Branch, {
+        relations: ['address'],
+      });
       let branch: any = {};
       const initialDistance = 99999999;
       branch.distance = initialDistance;
 
-      const requestAddress = await queryRunner.manager.findOneOrFail(Address, { where: { id: data.addressId } });
+      const requestAddress = await queryRunner.manager.findOneOrFail(Address, {
+        where: { id: data.addressId },
+      });
 
       branches.forEach((b) => {
         const dist = calculateDistance(
@@ -80,7 +81,7 @@ export class ServiceRequestsService {
         vehicleId: data.vehicleId,
         tips: data.tips,
         userId: data.userId,
-        promoCode: data.promoCode
+        promoCode: data.promoCode,
       });
 
       data.cost = costObj.total;
@@ -89,7 +90,11 @@ export class ServiceRequestsService {
 
       const savedRequest = await queryRunner.manager.save(request);
       await queryRunner.commitTransaction();
-      await this.promoService.consumePromo(queryRunner, data.userId, data.promoCode);
+      await this.promoService.consumePromo(
+        queryRunner,
+        data.userId,
+        data.promoCode,
+      );
       return savedRequest;
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -100,7 +105,6 @@ export class ServiceRequestsService {
       await queryRunner.release();
     }
   }
-
 
   async findAll(
     filters: {
@@ -328,12 +332,11 @@ export class ServiceRequestsService {
     promoCode?: string;
     vehicleId?: string;
     tips: number;
-    userId: string
+    userId: string;
   }): Promise<{
     total: number;
     totalLBP: number;
   }> {
-
     let total = 0;
     let totalLBP = 0;
 
@@ -372,10 +375,13 @@ export class ServiceRequestsService {
     let discountAmount = 0;
     let promoIsValid = false;
     const promo = await this.promoService.findOne(data.promoCode);
-    promoIsValid = await this.promoService.checkValidity(data.userId, data.promoCode);
+    promoIsValid = await this.promoService.checkValidity(
+      data.userId,
+      data.promoCode,
+    );
 
     if (promoIsValid && promo.discountPercentage) {
-      discountAmount = total * promo.discountPercentage / 100;
+      discountAmount = (total * promo.discountPercentage) / 100;
     } else {
       if (promoIsValid && promo.discountAmount)
         discountAmount = promo.discountAmount;
