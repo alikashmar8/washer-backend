@@ -1,7 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { query } from 'express';
 import { User } from 'src/users/entities/user.entity';
-import { DeepPartial, Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { CreatePromoDto } from './dto/create-promo.dto';
 import { UpdatePromoDto } from './dto/update-promo.dto';
 import { Promo } from './entities/promo.entity';
@@ -11,7 +12,9 @@ export class PromosService {
   constructor(
     @InjectRepository(Promo)
     private promosRepository: Repository<Promo>,
-  ) {}
+
+
+  ) { }
 
   async create(createPromoDto: CreatePromoDto) {
     return await this.promosRepository.save(createPromoDto).catch((err) => {
@@ -56,9 +59,9 @@ export class PromosService {
     });
   }
 
-  async findOne(id: string, relations?: string[]): Promise<Promo> {
+  async findOne(code: string, relations?: string[]): Promise<Promo> {
     return await this.promosRepository.findOne({
-      where: { id },
+      where: { code: code },
       relations,
     });
   }
@@ -86,26 +89,20 @@ export class PromosService {
         userId,
       },
     });
-    console.log('Valid check 1');
-    console.log(promoCheck);
-    if (!promoCheck) {
-      console.log('!promoCheck ');
+
+
+    if (!promoCheck)
       return false;
-    }
-    if (!promoCheck.isActive) {
-      console.log('!promoCheck.isActive ');
+
+    if (!promoCheck.isActive)
       return false;
-    }
-    if (promoCheck.numberOfUsage >= promoCheck.limit) {
-      console.log('promoCheck.numberOfUsage >= promoCheck.limit ');
+
+    if (promoCheck.numberOfUsage >= promoCheck.limit)
       return false;
-    }
-    if (promoCheck.expiryDate && promoCheck.expiryDate <= new Date()) {
-      console.log(
-        'promoCheck.expiryDate && (promoCheck.expiryDate <= new Date()) ',
-      );
+
+    if (promoCheck.expiryDate && promoCheck.expiryDate <= new Date())
       return false;
-    }
+
     return true;
   }
 
@@ -123,23 +120,28 @@ export class PromosService {
     return promo;
   }
 
-  async consumePromo(userId: string, promoCode: string) {
-    const promo = this.promosRepository
-      .findOne({
+  async consumePromo(queryRunner: QueryRunner, userId: string, promoCode: string) {
+
+
+    try {
+      await queryRunner.startTransaction();
+
+      const promo = await queryRunner.manager.findOne(Promo, {
         where: [{ userId, code: promoCode }],
-      })
-      .catch((err) => {
-        console.log(err);
-        throw new BadRequestException('Error finding promo!');
       });
 
-    if ((await promo).numberOfUsage > (await promo).limit)
-      throw new BadRequestException('Number of usage exceeds limit!');
-    else {
-      await this.promosRepository.update(
-        { id: (await promo).id },
-        { numberOfUsage: (await promo).numberOfUsage + 1 },
-      );
+      if (promo.numberOfUsage >= promo.limit) {
+        await queryRunner.rollbackTransaction();
+        throw new BadRequestException('Number of usage exceeds limit!');
+      } else {
+        await queryRunner.manager.update(Promo, { id: promo.id }, { numberOfUsage: promo.numberOfUsage + 1 });
+
+        await queryRunner.commitTransaction();
+      }
+    } catch (err) {
+      console.log(err);
+      throw new BadRequestException('Error finding or updating promo!');
     }
   }
+
 }

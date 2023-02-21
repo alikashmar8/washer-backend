@@ -1,21 +1,22 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Patch,
-    Post,
-    Query,
-    UseGuards,
-    UsePipes,
-    ValidationPipe,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { IsUserGuard } from 'src/auth/guards/is-user.guard';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { User } from 'src/users/entities/user.entity';
+import { DataSource } from 'typeorm';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrdersService } from './orders.service';
@@ -25,7 +26,10 @@ import { OrdersService } from './orders.service';
 @UsePipes(new ValidationPipe({ transform: true }))
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly ordersService: OrdersService,
+    private dataSource: DataSource
+  ) { }
 
   @UseGuards(IsUserGuard)
   @Post()
@@ -72,6 +76,8 @@ export class OrdersController {
   @UseGuards(IsUserGuard)
   @Post('calculate-total')
   async getTotal(@Body() data: CreateOrderDto) {
-    return await this.ordersService.calculateTotal(data, data.orderItems);
+    const queryRunner = this.dataSource.createQueryRunner();
+    return await this.ordersService.calculateTotal(data, data.orderItems, queryRunner);
   }
+
 }
