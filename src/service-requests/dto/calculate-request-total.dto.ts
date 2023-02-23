@@ -1,9 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-    IsNotEmpty,
-    IsNumber,
-    IsOptional
-} from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 import { Promo } from 'src/promos/entities/promo.entity';
 
 export class CalculateRequestTotal {
@@ -23,6 +19,11 @@ export class CalculateRequestTotal {
   @IsNotEmpty()
   @IsNumber()
   tips: number;
+
+  @ApiProperty({ type: Number })
+  @IsNotEmpty()
+  @IsNumber()
+  quantity: number;
 
   userId: string;
 }

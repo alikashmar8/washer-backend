@@ -51,6 +51,21 @@ export class OrdersService {
         items,
         queryRunner,
       );
+
+      let promoIsValid = false;
+
+      promoIsValid = await this.promoService.checkValidity(
+        createOrderDto.userId,
+        createOrderDto.promoCode,
+      );
+
+      if (promoIsValid == true)
+        this.promoService.consumePromo(
+          queryRunner,
+          createOrderDto.userId,
+          createOrderDto.promoCode,
+        );
+
       order.total = total;
 
       if (discountAmount != null) order.discountAmount = discountAmount;
@@ -115,12 +130,21 @@ export class OrdersService {
 
   async calculateTotal(
     orderData: CreateOrderDto,
-    orderItems: OrderItem[],
+    items: OrderItem[],
     queryRunner: QueryRunner,
   ): Promise<{ total: number; discountAmount: number }> {
     let total = 0;
 
-    orderItems.forEach((item) => {
+    items = await Promise.all(
+      items.map(async (item) => {
+        const product = await queryRunner.manager.findOneOrFail(Product, {
+          where: { id: item.productId },
+        });
+        item.price = product.price;
+        return item;
+      }),
+    );
+    items.forEach((item) => {
       total += item.price * item.quantity;
     });
 
@@ -133,23 +157,10 @@ export class OrdersService {
       orderData.promoCode,
     );
 
-    if (promoIsValid && promo.discountPercentage) {
+    if (promoIsValid && promo.discountPercentage)
       discountAmount = (total * promo.discountPercentage) / 100;
-      this.promoService.consumePromo(
-        queryRunner,
-        orderData.userId,
-        orderData.promoCode,
-      );
-    } else {
-      if (promoIsValid && promo.discountAmount) {
-        discountAmount = promo.discountAmount;
-        this.promoService.consumePromo(
-          queryRunner,
-          orderData.userId,
-          orderData.promoCode,
-        );
-      }
-    }
+    else if (promoIsValid && promo.discountAmount)
+      discountAmount = promo.discountAmount;
 
     total -= discountAmount;
     return { total, discountAmount };

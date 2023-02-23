@@ -82,6 +82,7 @@ export class ServiceRequestsService {
         tips: data.tips,
         userId: data.userId,
         promoCode: data.promoCode,
+        quantity: data.quantity,
       });
 
       data.cost = costObj.total;
@@ -89,15 +90,27 @@ export class ServiceRequestsService {
       const request = queryRunner.manager.create(ServiceRequest, data);
 
       const savedRequest = await queryRunner.manager.save(request);
-      await queryRunner.commitTransaction();
-      await this.promoService.consumePromo(
-        queryRunner,
+
+      let promoIsValid = false;
+
+      promoIsValid = await this.promoService.checkValidity(
         data.userId,
         data.promoCode,
       );
+
+      if (promoIsValid == true)
+        await this.promoService.consumePromo(
+          queryRunner,
+          data.userId,
+          data.promoCode,
+        );
+
+      await queryRunner.commitTransaction();
+
       return savedRequest;
     } catch (err) {
       await queryRunner.rollbackTransaction();
+
       console.log('Error creating request:');
       console.log(err);
       throw new BadRequestException(Request);
@@ -333,6 +346,7 @@ export class ServiceRequestsService {
     vehicleId?: string;
     tips: number;
     userId: string;
+    quantity: number;
   }): Promise<{
     total: number;
     totalLBP: number;
@@ -354,8 +368,14 @@ export class ServiceRequestsService {
     const serviceType = await this.serviceTypesService.findOneByIdOrFail(
       data.serviceTypeId,
     );
-    total += serviceType.price;
-    totalLBP += exchangeRate * serviceType.price;
+
+    if (serviceType.showQuantityInput == true) {
+      total += serviceType.price * data.quantity;
+      totalLBP += exchangeRate * serviceType.price * data.quantity;
+    } else {
+      total += serviceType.price;
+      totalLBP += exchangeRate * serviceType.price;
+    }
 
     if (data.vehicleId) {
       const vehicle = await this.vehiclesService.findOneByIdOrFail(
@@ -365,11 +385,11 @@ export class ServiceRequestsService {
       const setting = await this.settingsService.findByKey(key);
       if (setting && setting.value != null) {
         total += Number(setting.value);
+
         totalLBP += exchangeRate * Number(setting.value);
       }
     }
 
-    total += data.tips;
     totalLBP += exchangeRate * serviceType.price;
 
     let discountAmount = 0;
@@ -386,8 +406,10 @@ export class ServiceRequestsService {
       if (promoIsValid && promo.discountAmount)
         discountAmount = promo.discountAmount;
     }
-    
+
     total -= discountAmount;
+    total += data.tips;
+
     // todo: check for fees or other costs in case of payment by credit cards
     return { total, totalLBP };
   }
