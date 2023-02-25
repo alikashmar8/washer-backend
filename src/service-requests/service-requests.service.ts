@@ -369,13 +369,9 @@ export class ServiceRequestsService {
       data.serviceTypeId,
     );
 
-    if (serviceType.showQuantityInput == true) {
-      total += serviceType.price * data.quantity;
-      totalLBP += exchangeRate * serviceType.price * data.quantity;
-    } else {
-      total += serviceType.price;
-      totalLBP += exchangeRate * serviceType.price;
-    }
+    let quantity = 0;
+    quantity = serviceType.showQuantityInput ? data.quantity : 1;
+    total += serviceType.price * quantity;
 
     if (data.vehicleId) {
       const vehicle = await this.vehiclesService.findOneByIdOrFail(
@@ -385,12 +381,8 @@ export class ServiceRequestsService {
       const setting = await this.settingsService.findByKey(key);
       if (setting && setting.value != null) {
         total += Number(setting.value);
-
-        totalLBP += exchangeRate * Number(setting.value);
       }
     }
-
-    totalLBP += exchangeRate * serviceType.price;
 
     let discountAmount = 0;
     let promoIsValid = false;
@@ -411,6 +403,7 @@ export class ServiceRequestsService {
     total += data.tips;
 
     // todo: check for fees or other costs in case of payment by credit cards
+    totalLBP = total * exchangeRate;
     return { total, totalLBP };
   }
 

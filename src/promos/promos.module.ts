@@ -6,10 +6,9 @@ import { Promo } from './entities/promo.entity';
 import { EmployeesService } from 'src/employees/employees.service';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
-import { User } from 'src/users/entities/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Promo, Employee, DeviceToken, User])],
+  imports: [TypeOrmModule.forFeature([Promo, Employee, DeviceToken])],
   controllers: [PromosController],
   providers: [PromosService, EmployeesService],
 })
