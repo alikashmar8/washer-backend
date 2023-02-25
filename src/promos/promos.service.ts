@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { User } from 'src/users/entities/user.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { CreatePromoDto } from './dto/create-promo.dto';
 import { UpdatePromoDto } from './dto/update-promo.dto';
@@ -10,11 +11,16 @@ export class PromosService {
   constructor(
     @InjectRepository(Promo)
     private promosRepository: Repository<Promo>,
-
-
-  ) { }
+  ) {}
 
   async create(createPromoDto: CreatePromoDto) {
+    const promo = await this.promosRepository.findOne({
+      where: { code: createPromoDto.code, userId: createPromoDto.userId },
+    });
+    if (promo) {
+      throw new BadRequestException('promo code already exits!');
+    }
+
     return await this.promosRepository.save(createPromoDto).catch((err) => {
       console.log(err);
       throw new BadRequestException('Error creating promo code!');
@@ -88,15 +94,11 @@ export class PromosService {
       },
     });
 
+    if (!promoCheck) return false;
 
-    if (!promoCheck)
-      return false;
+    if (!promoCheck.isActive) return false;
 
-    if (!promoCheck.isActive)
-      return false;
-
-    if (promoCheck.numberOfUsage >= promoCheck.limit)
-      return false;
+    if (promoCheck.numberOfUsage >= promoCheck.limit) return false;
 
     if (promoCheck.expiryDate && promoCheck.expiryDate <= new Date())
       return false;
@@ -118,28 +120,28 @@ export class PromosService {
     return promo;
   }
 
-  async consumePromo(queryRunner: QueryRunner, userId: string, promoCode: string) {
-
-
+  async consumePromo(
+    queryRunner: QueryRunner,
+    userId: string,
+    promoCode: string,
+  ) {
     try {
-      await queryRunner.startTransaction();
-
       const promo = await queryRunner.manager.findOne(Promo, {
         where: [{ userId, code: promoCode }],
       });
 
       if (promo.numberOfUsage >= promo.limit) {
-        await queryRunner.rollbackTransaction();
         throw new BadRequestException('Number of usage exceeds limit!');
       } else {
-        await queryRunner.manager.update(Promo, { id: promo.id }, { numberOfUsage: promo.numberOfUsage + 1 });
-
-        await queryRunner.commitTransaction();
+        await queryRunner.manager.update(
+          Promo,
+          { id: promo.id },
+          { numberOfUsage: promo.numberOfUsage + 1 },
+        );
       }
     } catch (err) {
       console.log(err);
       throw new BadRequestException('Error finding or updating promo!');
     }
   }
-
 }

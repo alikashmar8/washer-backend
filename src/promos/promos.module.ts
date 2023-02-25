@@ -10,6 +10,6 @@ import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
 @Module({
   imports: [TypeOrmModule.forFeature([Promo, Employee, DeviceToken])],
   controllers: [PromosController],
-  providers: [PromosService, EmployeesService]
+  providers: [PromosService, EmployeesService],
 })
-export class PromosModule { }
+export class PromosModule {}

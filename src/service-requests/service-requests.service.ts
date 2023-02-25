@@ -1,4 +1,3 @@
-
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AddressesService } from 'src/addresses/addresses.service';
@@ -37,19 +36,22 @@ export class ServiceRequestsService {
     private settingsRepository: Repository<Setting>,
     private promoService: PromosService,
     private dataSource: DataSource,
-  ) { }
+  ) {}
 
   async create(data: CreateServiceRequestDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.startTransaction();
     try {
-
-      const branches = await queryRunner.manager.find(Branch, { relations: ['address'] });
+      const branches = await queryRunner.manager.find(Branch, {
+        relations: ['address'],
+      });
       let branch: any = {};
       const initialDistance = 99999999;
       branch.distance = initialDistance;
 
-      const requestAddress = await queryRunner.manager.findOneOrFail(Address, { where: { id: data.addressId } });
+      const requestAddress = await queryRunner.manager.findOneOrFail(Address, {
+        where: { id: data.addressId },
+      });
 
       branches.forEach((b) => {
         const dist = calculateDistance(
@@ -79,7 +81,8 @@ export class ServiceRequestsService {
         vehicleId: data.vehicleId,
         tips: data.tips,
         userId: data.userId,
-        promoCode: data.promoCode
+        promoCode: data.promoCode,
+        quantity: data.quantity,
       });
 
       data.cost = costObj.total;
@@ -87,11 +90,27 @@ export class ServiceRequestsService {
       const request = queryRunner.manager.create(ServiceRequest, data);
 
       const savedRequest = await queryRunner.manager.save(request);
+
+      let promoIsValid = false;
+
+      promoIsValid = await this.promoService.checkValidity(
+        data.userId,
+        data.promoCode,
+      );
+
+      if (promoIsValid == true)
+        await this.promoService.consumePromo(
+          queryRunner,
+          data.userId,
+          data.promoCode,
+        );
+
       await queryRunner.commitTransaction();
-      await this.promoService.consumePromo(queryRunner, data.userId, data.promoCode);
+
       return savedRequest;
     } catch (err) {
       await queryRunner.rollbackTransaction();
+
       console.log('Error creating request:');
       console.log(err);
       throw new BadRequestException(Request);
@@ -99,7 +118,6 @@ export class ServiceRequestsService {
       await queryRunner.release();
     }
   }
-
 
   async findAll(
     filters: {
@@ -327,12 +345,12 @@ export class ServiceRequestsService {
     promoCode?: string;
     vehicleId?: string;
     tips: number;
-    userId: string
+    userId: string;
+    quantity: number;
   }): Promise<{
     total: number;
     totalLBP: number;
   }> {
-
     let total = 0;
     let totalLBP = 0;
 
@@ -350,8 +368,10 @@ export class ServiceRequestsService {
     const serviceType = await this.serviceTypesService.findOneByIdOrFail(
       data.serviceTypeId,
     );
-    total += serviceType.price;
-    totalLBP += exchangeRate * serviceType.price;
+
+    let quantity = 0;
+    quantity = serviceType.showQuantityInput ? data.quantity : 1;
+    total += serviceType.price * quantity;
 
     if (data.vehicleId) {
       const vehicle = await this.vehiclesService.findOneByIdOrFail(
@@ -361,27 +381,29 @@ export class ServiceRequestsService {
       const setting = await this.settingsService.findByKey(key);
       if (setting && setting.value != null) {
         total += Number(setting.value);
-        totalLBP += exchangeRate * Number(setting.value);
       }
     }
-
-    total += data.tips;
-    totalLBP += exchangeRate * serviceType.price;
 
     let discountAmount = 0;
     let promoIsValid = false;
     const promo = await this.promoService.findOne(data.promoCode);
-    promoIsValid = await this.promoService.checkValidity(data.userId, data.promoCode);
+    promoIsValid = await this.promoService.checkValidity(
+      data.userId,
+      data.promoCode,
+    );
 
     if (promoIsValid && promo.discountPercentage) {
-      discountAmount = total * promo.discountPercentage / 100;
+      discountAmount = (total * promo.discountPercentage) / 100;
     } else {
       if (promoIsValid && promo.discountAmount)
         discountAmount = promo.discountAmount;
     }
-    
+
     total -= discountAmount;
+    total += data.tips;
+
     // todo: check for fees or other costs in case of payment by credit cards
+    totalLBP = total * exchangeRate;
     return { total, totalLBP };
   }
 
