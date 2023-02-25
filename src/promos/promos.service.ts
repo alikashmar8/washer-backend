@@ -10,7 +10,7 @@ import { Promo } from './entities/promo.entity';
 export class PromosService {
   constructor(
     @InjectRepository(Promo)
-    private promosRepository: Repository<Promo>, // @InjectRepository(User) // private usersRepository: Repository<User>,
+    private promosRepository: Repository<Promo>,
   ) {}
 
   async create(createPromoDto: CreatePromoDto) {
@@ -19,11 +19,12 @@ export class PromosService {
     });
     if (promo) {
       throw new BadRequestException('promo code already exits!');
-    } else
-      return await this.promosRepository.save(createPromoDto).catch((err) => {
-        console.log(err);
-        throw new BadRequestException('Error creating promo code!');
-      });
+    }
+
+    return await this.promosRepository.save(createPromoDto).catch((err) => {
+      console.log(err);
+      throw new BadRequestException('Error creating promo code!');
+    });
   }
 
   async findAll(queryParams: {

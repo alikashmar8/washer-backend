@@ -78,7 +78,11 @@ export class OrdersService {
       });
 
       await queryRunner.manager
-        .update(Order, { id: order.id }, { total: total })
+        .update(
+          Order,
+          { id: order.id },
+          { total: total, discountAmount: order.discountAmount },
+        )
         .catch((err) => {
           console.log(err);
           throw new BadRequestException('Error Order Creation  !');
@@ -110,11 +114,11 @@ export class OrdersService {
 
   async findOne(id: number) {
     return await this.ordersRepository
-      .findOne({
+      .findOneOrFail({
         where: { id },
       })
-      .catch((err) => {
-        throw new BadRequestException('Order not found!', err);
+      .catch(() => {
+        throw new BadRequestException('Order not found!');
       });
   }
 
