@@ -10,33 +10,20 @@ import { Promo } from './entities/promo.entity';
 export class PromosService {
   constructor(
     @InjectRepository(Promo)
-    private promosRepository: Repository<Promo>,
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    private promosRepository: Repository<Promo>, // @InjectRepository(User) // private usersRepository: Repository<User>,
   ) {}
 
   async create(createPromoDto: CreatePromoDto) {
-    const currUser = await this.usersRepository.findOne({
-      where: { id: createPromoDto.userId },
-      relations: ['promos'],
+    const promo = await this.promosRepository.findOne({
+      where: { code: createPromoDto.code, userId: createPromoDto.userId },
     });
-    // const promo = await this.promosRepository.findOne({ where: { code: createPromoDto.code } });
-    let codeExisted = false;
-    console.log(currUser);
-    if (currUser && currUser.promos) {
-      console.log('1');
-      const userPromos: Promo[] = currUser.promos;
-      userPromos.forEach((promo) => {
-        if (promo.code === createPromoDto.code) codeExisted = true;
+    if (promo) {
+      throw new BadRequestException('promo code already exits!');
+    } else
+      return await this.promosRepository.save(createPromoDto).catch((err) => {
+        console.log(err);
+        throw new BadRequestException('Error creating promo code!');
       });
-
-      if (codeExisted)
-        throw new BadRequestException('promo code already exits!');
-    }
-    return await this.promosRepository.save(createPromoDto).catch((err) => {
-      console.log(err);
-      throw new BadRequestException('Error creating promo code!');
-    });
   }
 
   async findAll(queryParams: {
