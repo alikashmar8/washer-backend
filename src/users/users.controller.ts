@@ -1,4 +1,3 @@
-import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import {
   Body,
   Controller,
@@ -6,17 +5,15 @@ import {
   Get,
   Param,
   Patch,
-  Post,
   Query,
-  UseGuards,
+  UseGuards
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { CreateUserDto } from './dto/create-user.dto';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { IsEmployeeGuard } from 'src/auth/guards/is-employee.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @ApiTags('Users')
 @ApiBearerAuth('access_token')
@@ -29,23 +26,23 @@ export class UsersController {
   //   return this.usersService.create(createUserDto);
   // }
 
-  
   @Roles(EmployeeRole.ADMIN)
   @UseGuards(RolesGuard)
   @Get()
   async findAll(
-    @Query() queryParams: {
-      take: number,
-      skip: number,
-      search: number
-    }
+    @Query() queryParams: { take: number; skip: number; search: number },
   ) {
     return await this.usersService.findAll(queryParams);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    return await this.usersService.findOneOrFail(id, [
+      'addresses',
+      'promos',
+      'vehicles',
+      'wallet',
+    ]);
   }
 
   @Patch(':id')

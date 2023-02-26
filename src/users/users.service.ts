@@ -109,10 +109,6 @@ export class UsersService {
     };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
-
   update(id: number, updateUserDto: UpdateUserDto) {
     return `This action updates a #${id} user`;
   }
@@ -131,5 +127,16 @@ export class UsersService {
       relations: ['user'],
     });
     return deviceToken.user;
+  }
+  
+  async findOneOrFail(id: string, relations?: string[]) {
+    return await this.usersRepository
+      .findOneOrFail({
+        where: { id },
+        relations,
+      })
+      .catch((err) => {
+        throw new BadRequestException('User not found!', err);
+      });
   }
 }

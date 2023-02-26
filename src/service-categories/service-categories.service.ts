@@ -13,7 +13,7 @@ export class ServiceCategoriesService {
     private serviceCategoriesRepository: Repository<ServiceCategory>,
   ) {}
 
-  async create(data: CreateServiceCategoryDto) {    
+  async create(data: CreateServiceCategoryDto) {
     return await this.serviceCategoriesRepository.save(data).catch((err) => {
       console.log(err);
       throw new BadRequestException('Error adding category!');
@@ -29,8 +29,9 @@ export class ServiceCategoriesService {
     const take = queryParams.take || 10;
     const skip = queryParams.skip || 0;
     let isFirstWhere = true;
-    let query: any =
-      this.serviceCategoriesRepository.createQueryBuilder('category');
+    let query: any = this.serviceCategoriesRepository
+      .createQueryBuilder('category')
+      .leftJoinAndSelect('category.serviceTypes', 'type');
     if (queryParams.isActive != null) {
       if (typeof queryParams.isActive == 'string') {
         if (queryParams.isActive == 'true') {
