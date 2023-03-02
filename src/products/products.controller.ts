@@ -13,7 +13,7 @@ import {
     UseGuards,
     UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { IsEmployeeGuard } from 'src/auth/guards/is-employee.guard';
@@ -29,14 +29,14 @@ import { ProductsService } from './products.service';
 
 @ApiTags('Products')
 @ApiBearerAuth('access_token')
-//  @UseGuards(AuthGuard)
 @Controller('products')
 export class ProductsController {
     constructor(private readonly productsService: ProductsService) { }
 
     @UseInterceptors(
-        FileInterceptor(
+        FilesInterceptor(
             'images',
+            10,
             getMulterSettings({ destination: './public/uploads/products' }),
         ))
     @ApiConsumes('multipart/form-data')
