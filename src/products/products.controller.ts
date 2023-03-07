@@ -13,7 +13,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { IsEmployeeGuard } from 'src/auth/guards/is-employee.guard';
@@ -29,41 +29,38 @@ import { ProductsService } from './products.service';
 
 @ApiTags('Products')
 @ApiBearerAuth('access_token')
-//  @UseGuards(AuthGuard)
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
-  @UseInterceptors(
-    FileInterceptor(
-      'images',
-      getMulterSettings({ destination: './public/uploads/products' }),
-    ),
-  )
-  @ApiConsumes('multipart/form-data')
-  @UseGuards(IsEmployeeGuard)
-  @Post()
-  async create(
-    @Body() createProductDto: CreateProductDto,
-    @UploadedFiles() images: any,
-  ) {
-    console.log('c1');
-    if (!images) {
-      throw new BadRequestException('product images are required!');
-    } else {
-      console.log('c2');
-      const imageList = images.map((image) => image.path);
-      createProductDto.images = imageList;
+    @UseInterceptors(
+        FilesInterceptor(
+            'images',
+            10,
+            getMulterSettings({ destination: './public/uploads/products' }),
+        ))
+    @ApiConsumes('multipart/form-data')
+    @UseGuards(IsEmployeeGuard)
+    @Post()
+    async create(
+        @Body() createProductDto: CreateProductDto,
+        @UploadedFiles() images: Express.Multer.File[],
+    ) {
+        if (!images) {
+            throw new BadRequestException('product images are required!');
+        } else {
+            const imageList = images.map(image => image.path)
+            createProductDto.images = imageList;
+        }
+
+        // todo: check files type & test api
+        return await this.productsService.create(createProductDto);
     }
-    console.log('c3');
-    // todo: check files type & test api
-    return await this.productsService.create(createProductDto);
-  }
-  @UseGuards(AuthGuard)
-  @Get()
-  async findAll() {
-    return await this.productsService.findAll(['images']);
-  }
+    @UseGuards(AuthGuard)
+    @Get()
+    async findAll() {
+        return await this.productsService.findAll(['images']);
+    }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
