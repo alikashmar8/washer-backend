@@ -38,5 +38,13 @@ export class CreateVehicleDto {
 
   userId: string;
 
+
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    required: true,
+    description: 'Vehicle image',
+    example: 'image.png',
+  })
   photo?: string;
 }
