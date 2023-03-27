@@ -16,9 +16,21 @@ import { LogoutDTO } from './dtos/logout.dto';
 import { RegisterUserDTO } from './dtos/register.dto';
 import { UpdatePasswordDTO } from './dtos/update-password-dto';
 import { uuid } from 'uuidv4';
+import { isWhatsappReady, getWhatsappQrCode, sendWhatsappMessage } from './whatsapp';
 
 @Injectable()
 export class AuthService {
+  async sendWhatsappMessage() {
+    return await sendWhatsappMessage("+96170089069", "Hellooo");
+  }
+  async getWhatsappQrCode() {
+    return getWhatsappQrCode();
+  }
+  async checkWhatsappStatus() {
+    console.log("whatsapp");
+    
+    return await isWhatsappReady()
+  }
   constructor(
     private usersService: UsersService,
     private employeesService: EmployeesService,
