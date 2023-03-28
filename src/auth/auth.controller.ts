@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Param,
   Patch,
   Post,
@@ -89,5 +90,22 @@ export class AuthController {
     @Body() body: UpdatePasswordDTO,
   ) {
     return await this.authService.updateEmployeePassword(id, body);
+  }
+
+  @Get('whatsapp/status')
+  async checkWhatsapp() {
+    return await this.authService.checkWhatsappStatus();
+  }
+
+  @UseGuards(IsEmployeeGuard)
+  @Get('whatsapp/qrCode')
+  async getWhatsappQrCode() {
+    return this.authService.getWhatsappQrCode();
+  }
+
+  @Get('whatsapp/sendTestMessage')
+  async sendWhatsappMessage() 
+  {
+    return this.authService.sendWhatsappMessage();
   }
 }
