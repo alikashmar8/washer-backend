@@ -3,7 +3,7 @@ import {
   Body,
   Controller,
   Delete,
-  Get, Param,
+  Get, NotFoundException, Param,
   Patch,
   Post,
   Query,
@@ -15,6 +15,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import * as path from 'path';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -72,10 +73,37 @@ export class AdsController {
     return await this.adsService.update(id, updateAdDto);
   }
 
-  @Roles(EmployeeRole.ADMIN)
-  @UseGuards(RolesGuard)
+  // @Roles(EmployeeRole.ADMIN)
+  // @UseGuards(RolesGuard)
+  // @Delete(':id')
+  // async remove(@Param('id') id: string) {
+  //   return await this.adsService.remove(id);
+  // }
+
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return await this.adsService.remove(id);
+@ApiBearerAuth('access_token')
+@Roles(EmployeeRole.ADMIN)
+@UseGuards(RolesGuard)
+async delete(@Param('id') id: string) {
+  const ad = await this.adsService.findOneByIdOrFail(id);
+
+  if (!ad) {
+    throw new NotFoundException('Ad not found!');
   }
+  
+  if (ad.image) {
+    const imagePath = path.join(process.cwd(), ad.image);
+    console.log('Image path:', imagePath);
+
+    try {
+      await this.adsService.deleteImage(id, imagePath);
+    } catch (err) {
+      console.error(`Error deleting image file: ${err.message}`);
+    }
+  }
+  
+  await this.adsService.remove(id);
+}
+
+
 }

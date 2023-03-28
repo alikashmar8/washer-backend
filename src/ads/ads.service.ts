@@ -1,9 +1,14 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { unlinkSync } from 'fs';
+import { join } from 'path';
 import { Repository } from 'typeorm';
 import { CreateAdDto } from './dto/create-ad.dto';
 import { UpdateAdDto } from './dto/update-ad.dto';
 import { Ad } from './entities/ad.entity';
+import * as fs from 'fs';
+import * as path from 'path';
+
 
 @Injectable()
 export class AdsService {
@@ -59,4 +64,25 @@ export class AdsService {
       throw new BadRequestException('Ad not found!', err);
     });
   }
+
+  async deleteImage(id: string, imagePath: string) {
+    const ad = await this.findOneByIdOrFail(id);
+    if (!ad) {
+      throw new NotFoundException('Ad not found');
+    }
+    if (ad.image) {
+      try {
+        if (fs.existsSync(imagePath)) {
+          // file exists, delete it
+          console.log('Checked imagePath');
+          fs.unlinkSync(imagePath);
+        } else {
+          console.log(`File does not exist: ${imagePath}`);
+        }
+      } catch (err) {
+        console.error(`Error deleting image file: ${err.message}`);
+      }
+    }
+  }
+  
 }
