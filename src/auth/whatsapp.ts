@@ -1,4 +1,4 @@
-const { Client } = require('whatsapp-web.js');
+import { Client } from 'whatsapp-web.js';
 
 let qrCode = '';
 

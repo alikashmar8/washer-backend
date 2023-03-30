@@ -97,7 +97,7 @@ export class AuthController {
     return await this.authService.checkWhatsappStatus();
   }
 
-  @UseGuards(IsEmployeeGuard)
+  // @UseGuards(IsEmployeeGuard)
   @Get('whatsapp/qrCode')
   async getWhatsappQrCode() {
     return this.authService.getWhatsappQrCode();

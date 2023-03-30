@@ -25,7 +25,7 @@ import {
 @Injectable()
 export class AuthService {
   async sendWhatsappMessage() {
-    return await sendWhatsappMessage('+96170089069', 'Hellooo');
+    return await sendWhatsappMessage('+96176625278', 'Hellooo');
   }
 
   async getWhatsappQrCode() {
@@ -48,11 +48,15 @@ export class AuthService {
     if (!code) return false;
 
     const user = await this.usersRepository.findOne({ where: { id } });
+    console.log(user.mobileVerificationCode);
+    console.log(code);
     if (user.mobileVerificationCode == code) {
+      console.log("entered if");
       user.isMobileVerified = true;
       user.mobileVerificationDate = new Date();
       return true;
     }
+    console.log("Didn't enter");
     return false;
   }
   async sendCodeByWhatsapp(code: string, mobile: string) {
