@@ -19,6 +19,8 @@ import { RegisterUserDTO } from './dtos/register.dto';
 import { UpdatePasswordDTO } from './dtos/update-password-dto';
 import { IsEmployeeGuard } from './guards/is-employee.guard';
 import { IsUserGuard } from './guards/is-user.guard';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { User } from 'src/users/entities/user.entity';
 @ApiTags('Auth')
 @Controller('auth')
 @UsePipes(new ValidationPipe())
@@ -104,37 +106,22 @@ export class AuthController {
   }
 
   @Get('whatsapp/sendTestMessage')
-  async sendWhatsappMessage() 
-  {
+  async sendWhatsappMessage() {
     return this.authService.sendWhatsappMessage();
   }
 
-  @Get('whatsapp/generateCode/:id')
-  async generateWhatsappCode(
-    @Param('id') id: string,
-  ) 
-  {
-    return this.authService.generateWhatsappCode(id);
+  @UseGuards(IsUserGuard)
+  @Get('sendMobileVerificationCode')
+  async sendMobileVerificationCode(@CurrentUser() user: User) {
+    return await this.authService.sendMobileVerificationCode(user.id);
   }
 
-  @Post('whatsapp/checkValidity/:id')
+  @UseGuards(IsUserGuard)
+  @Post('verifyMobileNumber')
   async checkValidWhatsAppCode(
-    @Param('id') id:string,
-    @Body() code: string,
-  ) 
-  {
-    return this.authService.checkValidWhatsAppCode(id,code);
+    @CurrentUser() user: User,
+    @Body('code') code: string,
+  ) {
+    return await this.authService.verifyMobileNumber(user.id, code);
   }
-
-  @Post('whatsapp/sendCode')
-  async sendCodeByWhatsapp(
-    @Body() code: string,
-    @Body() mobile:string
-  ) 
-  {
-    return this.authService.sendCodeByWhatsapp(code,mobile);
-  }
-
- 
-
 }

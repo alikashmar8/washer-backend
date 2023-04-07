@@ -32,15 +32,22 @@ export function getWhatsappQrCode() {
   return qrCode;
 }
 
-export async function sendWhatsappMessage(number, message) {
+export async function sendWhatsappMessage(number: string, message: string) {
   const isReady = await isWhatsappReady();
   if (!isReady){
     return false;
   }
   // Getting chatId from the number.
   // we have to delete "+" from the beginning and add "@c.us" at the end of the number.
-  const chatId = number.substring(1) + '@c.us';
+  const firstChar = number.charAt(0);
+  let chatId
+  if (firstChar == '+')
+    chatId = number.substring(1) + '@c.us';
+  else 
+    chatId = number + '@c.us';
   const res = await client.sendMessage(chatId, message);
+  console.log("Whatsapp sending message response");
+  console.log(res);
   return res.getInfo();
 }
 

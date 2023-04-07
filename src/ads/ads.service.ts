@@ -1,18 +1,23 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { unlinkSync } from 'fs';
-import { join } from 'path';
+import * as fs from 'fs';
 import { Repository } from 'typeorm';
 import { CreateAdDto } from './dto/create-ad.dto';
 import { UpdateAdDto } from './dto/update-ad.dto';
 import { Ad } from './entities/ad.entity';
-import * as fs from 'fs';
 import * as path from 'path';
-
+import { AppService } from 'src/app.service';
 
 @Injectable()
 export class AdsService {
-  constructor(@InjectRepository(Ad) private adsRepository: Repository<Ad>) {}
+  constructor(
+    @InjectRepository(Ad) private adsRepository: Repository<Ad>,
+    private appsService: AppService,
+  ) {}
   async create(createAdDto: CreateAdDto) {
     return await this.adsRepository.save(createAdDto).catch((error) => {
       console.log(error);
@@ -54,35 +59,32 @@ export class AdsService {
   }
 
   async remove(id: string) {
-    return await this.adsRepository.delete(id).catch((err) => {
-      throw new BadRequestException('Error deleting ad!', err);
-    });
-  }
-
-  async findOneByIdOrFail(id: string) {
-    return await this.adsRepository.findOneByOrFail({ id }).catch((err) => {
-      throw new BadRequestException('Ad not found!', err);
-    });
-  }
-
-  async deleteImage(id: string, imagePath: string) {
     const ad = await this.findOneByIdOrFail(id);
-    if (!ad) {
-      throw new NotFoundException('Ad not found');
-    }
-    if (ad.image) {
-      try {
-        if (fs.existsSync(imagePath)) {
-          // file exists, delete it
-          console.log('Checked imagePath');
-          fs.unlinkSync(imagePath);
-        } else {
-          console.log(`File does not exist: ${imagePath}`);
+    const image = ad.image;
+
+    return await this.adsRepository
+      .delete(id)
+      .catch((err) => {
+        throw new BadRequestException('Error deleting ad!', err);
+      })
+      .then(async () => {
+        if (image) {
+          const imagePath = path.join(process.cwd(), image);
+          console.log('Image path:', imagePath);
+          try {
+            await this.appsService.deleteFile(imagePath);
+          } catch (err) {
+            console.error(err);
+          }
         }
-      } catch (err) {
-        console.error(`Error deleting image file: ${err.message}`);
-      }
-    }
+      });
   }
-  
+
+  async findOneByIdOrFail(id: string, relations?: string[]) {
+    return await this.adsRepository
+      .findOneOrFail({ where: { id: id }, relations: relations })
+      .catch((err) => {
+        throw new BadRequestException('Ad not found!', err);
+      });
+  }
 }
