@@ -1,8 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsEnum, IsNotEmpty,
+  IsEnum,
+  IsNotEmpty,
   IsNumber,
-  IsOptional, IsString, Length
+  IsOptional,
+  IsString,
+  Length,
 } from 'class-validator';
 import { Category } from 'src/categories/entities/category.entity';
 import { Currency } from 'src/common/enums/currency.enum';
@@ -54,9 +57,6 @@ export class CreateProductDto {
   @IsOptional()
   currency?: Currency;
 
-
-
-
   @ApiProperty({
     enum: ProductCategory,
     required: true,
@@ -75,6 +75,4 @@ export class CreateProductDto {
   })
   @IsOptional()
   images: any[];
-
-
 }

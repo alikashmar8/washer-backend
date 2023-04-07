@@ -17,7 +17,7 @@ import {
   UsePipes,
 } from '@nestjs/common/decorators';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { IsUserGuard } from 'src/auth/guards/is-user.guard';
 import { CurrentEmployee } from 'src/common/decorators/current-employee.decorator';
@@ -35,13 +35,22 @@ import { VehiclesService } from './vehicles.service';
 export class VehiclesController {
   constructor(private readonly vehiclesService: VehiclesService) {}
 
+  @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor(
       'photo',
       getMulterSettings({ destination: './public/uploads/vehicles' }),
     ),
   )
-  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        createVehicleDto: { type: 'string' },
+        photo: { type: 'string', format: 'binary' },
+      },
+    },
+  })
   @UseGuards(IsUserGuard)
   @Post()
   async create(

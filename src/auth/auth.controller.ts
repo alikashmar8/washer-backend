@@ -97,7 +97,7 @@ export class AuthController {
     return await this.authService.checkWhatsappStatus();
   }
 
-  @UseGuards(IsEmployeeGuard)
+  // @UseGuards(IsEmployeeGuard)
   @Get('whatsapp/qrCode')
   async getWhatsappQrCode() {
     return this.authService.getWhatsappQrCode();
@@ -108,4 +108,33 @@ export class AuthController {
   {
     return this.authService.sendWhatsappMessage();
   }
+
+  @Get('whatsapp/generateCode/:id')
+  async generateWhatsappCode(
+    @Param('id') id: string,
+  ) 
+  {
+    return this.authService.generateWhatsappCode(id);
+  }
+
+  @Post('whatsapp/checkValidity/:id')
+  async checkValidWhatsAppCode(
+    @Param('id') id:string,
+    @Body() code: string,
+  ) 
+  {
+    return this.authService.checkValidWhatsAppCode(id,code);
+  }
+
+  @Post('whatsapp/sendCode')
+  async sendCodeByWhatsapp(
+    @Body() code: string,
+    @Body() mobile:string
+  ) 
+  {
+    return this.authService.sendCodeByWhatsapp(code,mobile);
+  }
+
+ 
+
 }

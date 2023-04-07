@@ -10,27 +10,63 @@ import { EmployeesService } from 'src/employees/employees.service';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
-import { DataSource, Repository } from 'typeorm';
+import { Code, DataSource, Repository } from 'typeorm';
 import { LoginDTO } from './dtos/login.dto';
 import { LogoutDTO } from './dtos/logout.dto';
 import { RegisterUserDTO } from './dtos/register.dto';
 import { UpdatePasswordDTO } from './dtos/update-password-dto';
 import { uuid } from 'uuidv4';
-import { isWhatsappReady, getWhatsappQrCode, sendWhatsappMessage } from './whatsapp';
+import {
+  isWhatsappReady,
+  getWhatsappQrCode,
+  sendWhatsappMessage,
+} from './whatsapp';
 
 @Injectable()
 export class AuthService {
   async sendWhatsappMessage() {
-    return await sendWhatsappMessage("+96170089069", "Hellooo");
+    return await sendWhatsappMessage('+96176625278', 'Hellooo');
   }
+
   async getWhatsappQrCode() {
     return getWhatsappQrCode();
   }
+
   async checkWhatsappStatus() {
-    console.log("whatsapp");
-    
-    return await isWhatsappReady()
+    console.log('whatsapp');
+
+    return await isWhatsappReady();
   }
+
+  async generateWhatsappCode(id: string) {
+    const mobileVerificationCode = '123456';
+    await this.usersRepository.update(id, { mobileVerificationCode });
+    return mobileVerificationCode;
+  }
+
+  async checkValidWhatsAppCode(id: string, code: string): Promise<boolean> {
+    if (!code) return false;
+
+    const user = await this.usersRepository.findOne({ where: { id } });
+    console.log(user.mobileVerificationCode);
+    console.log(code);
+    if (user.mobileVerificationCode == code) {
+      console.log("entered if");
+      user.isMobileVerified = true;
+      user.mobileVerificationDate = new Date();
+      return true;
+    }
+    console.log("Didn't enter");
+    return false;
+  }
+  async sendCodeByWhatsapp(code: string, mobile: string) {
+    if (!code) throw new BadRequestException("Code not valid!");
+    if (!mobile) throw new BadRequestException("mobile not valid!");
+
+    return await sendWhatsappMessage(mobile, code);
+    
+  }
+
   constructor(
     private usersService: UsersService,
     private employeesService: EmployeesService,
@@ -99,7 +135,7 @@ export class AuthService {
     if (!data.email && !data.username && !data.phoneNumber)
       throw new BadRequestException('Error empty credentials!');
 
-    let user: User;
+    let user: User = null;
 
     user = data.email
       ? await this.usersService.findByEmail(data.email)
@@ -142,7 +178,7 @@ export class AuthService {
     if (!data.email && !data.username && !data.phoneNumber)
       throw new BadRequestException('Error empty credentials!');
 
-    let employee: Employee;
+    let employee: Employee = null;
 
     employee = data.email
       ? await this.employeesService.findByEmailOrFail(data.email)
@@ -180,7 +216,7 @@ export class AuthService {
   }
 
   async updateUserPassword(id: string, body: UpdatePasswordDTO) {
-    let user: User = await this.usersService.findById(id);
+    const user: User = await this.usersService.findById(id);
 
     const match = await argon.verify(user.password, body.oldPassword);
 
@@ -198,7 +234,7 @@ export class AuthService {
   }
 
   async updateEmployeePassword(id: string, body: UpdatePasswordDTO) {
-    let employee: Employee = await this.employeesService.findById(id);
+    const employee: Employee = await this.employeesService.findById(id);
 
     const match = await argon.verify(employee.password, body.oldPassword);
 
@@ -216,7 +252,7 @@ export class AuthService {
   }
 
   async logout(body: LogoutDTO) {
-    let deviceToken = await this.deviceTokensRepository
+    const deviceToken = await this.deviceTokensRepository
       .findOneOrFail({
         where: {
           token: body.token,

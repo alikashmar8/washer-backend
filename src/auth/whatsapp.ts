@@ -1,6 +1,6 @@
-const { Client } = require('whatsapp-web.js');
+import { Client } from 'whatsapp-web.js';
 
-var qrCode = '';
+let qrCode = '';
 
 const client = new Client({
   takeoverOnConflict: true,
@@ -41,6 +41,6 @@ export async function sendWhatsappMessage(number, message) {
   // we have to delete "+" from the beginning and add "@c.us" at the end of the number.
   const chatId = number.substring(1) + '@c.us';
   const res = await client.sendMessage(chatId, message);
-  return res.getInfo()
+  return res.getInfo();
 }
 

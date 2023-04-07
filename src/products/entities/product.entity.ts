@@ -2,7 +2,6 @@ import { Category } from 'src/categories/entities/category.entity';
 import { Currency } from 'src/common/enums/currency.enum';
 import { OrderItem } from 'src/orders/entities/orderItem.entity';
 
-
 import {
   Column,
   CreateDateColumn,
@@ -45,7 +44,6 @@ export class Product {
   @UpdateDateColumn()
   updatedAt: Date;
 
-
   @OneToMany((type) => ProductImage, (image) => image.product)
   images: ProductImage[];
 
@@ -53,19 +51,13 @@ export class Product {
   // @JoinColumn({ name: 'shopId' })
   // shop: Shop;
 
-
-
   @OneToMany((type) => OrderItem, (orderItem) => orderItem.product)
   orderItems: OrderItem[];
 
-  @ManyToOne(type => Category, category => category.products)
-  @JoinColumn({ name: "category_id" })
+  @ManyToOne((type) => Category, (category) => category.products)
+  @JoinColumn({ name: 'category_id' })
   category: Category;
-
 
   @Column({ nullable: false, default: 0 })
   views: number;
-
-
-
 }
