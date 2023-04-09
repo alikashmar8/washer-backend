@@ -14,7 +14,7 @@ export class EmployeesService {
   constructor(
     @InjectRepository(Employee) private employeesRepository: Repository<Employee>,
     @InjectRepository(DeviceToken) private deviceTokensRepository: Repository<DeviceToken>,
-    private readonly entityManager: EntityManager,
+
   ) { }
 
 

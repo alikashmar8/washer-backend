@@ -9,8 +9,6 @@ import {
 } from 'class-validator';
 import { Category } from 'src/categories/entities/category.entity';
 import { Currency } from 'src/common/enums/currency.enum';
-import { Product } from '../entities/product.entity';
-import { ProductCategory } from '../enums/product-category.enum';
 
 export class CreateProductDto {
   @ApiProperty({
@@ -57,14 +55,18 @@ export class CreateProductDto {
   @IsOptional()
   currency?: Currency;
 
-  @ApiProperty({
-    enum: ProductCategory,
-    required: true,
-    nullable: false,
-    example: ProductCategory.PLANT,
-  })
+  @ApiProperty()
   @IsNotEmpty()
-  category: Category;
+  categoryId:string
+
+  // @ApiProperty({
+  //   enum: ProductCategory,
+  //   required: true,
+  //   nullable: false,
+  //   example: ProductCategory.PLANT,
+  // })
+  // @IsNotEmpty()
+  // category: Category;
 
   @ApiProperty({
     type: 'array',

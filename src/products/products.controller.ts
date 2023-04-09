@@ -1,3 +1,4 @@
+import { IsUserGuard } from './../auth/guards/is-user.guard';
 import {
   BadRequestException,
   Body,
@@ -26,6 +27,8 @@ import { User } from 'src/users/entities/user.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductsService } from './products.service';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @ApiTags('Products')
 @ApiBearerAuth('access_token')
@@ -72,32 +75,27 @@ export class ProductsController {
   //   return this.productsService.update(+id, updateProductDto);
   // }
 
-
-  @UseGuards(AuthGuard)
+  // review updateDto ma
+  
+  @Roles(EmployeeRole.ADMIN)
+  @UseGuards(RolesGuard)
   @Patch(':id')
   async update(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
     @CurrentEmployee() employee: Employee,
   ) {
-    if (employee && !EmployeeRole.ADMIN.includes(employee.role)) {
-      throw new HttpException(
-        'You are not allowed to perform this action',
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
-
     return await this.productsService.update(id, updateProductDto);
   }
 
-  @UseGuards(AuthGuard)
-  @Patch(':id')
+  @UseGuards(IsUserGuard)
+  @Patch(':id/views')
   async updateProductView(@Param('id') id: number, @CurrentUser() user: User) {
-    if (user) {
-      return await this.productsService.updateProductView(id);
-    }
+    return await this.productsService.updateProductView(id);
   }
 
+  @Roles(EmployeeRole.ADMIN)
+  @UseGuards(RolesGuard)
   @Delete(':id')
   async remove(@Param('id') id: string) {
     const product =  await this.findOne(id);

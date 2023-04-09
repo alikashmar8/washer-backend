@@ -7,6 +7,7 @@ import { Setting } from './settings/entities/setting.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CAR_COST, EXCHANGE_RATE, RANGE_COST, VAN_COST, TRUCK_COST, MOTORCYCLE_COST } from './common/constants';
+import * as fs from 'fs';
 
 @Injectable()
 export class AppService {
@@ -79,4 +80,21 @@ export class AppService {
       'PAYMENT_METHODS': PaymentType
     }
   }
+
+  
+  async deleteFile(filePath: string) {
+      try {
+        if (fs.existsSync(filePath)) {
+          // file exists, delete it
+          console.log('Checked filePath');
+          fs.unlinkSync(filePath);
+        } else {
+          console.log(`File does not exist: ${filePath}`);
+        }
+      } catch (err) {
+        console.error(`Error deleting image file: ${err.message}`);
+      }
+    }
+
+
 }

@@ -12,6 +12,8 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { User } from 'src/users/entities/user.entity';
 import { AuthService } from './auth.service';
 import { LoginDTO } from './dtos/login.dto';
 import { LogoutDTO } from './dtos/logout.dto';
@@ -97,44 +99,35 @@ export class AuthController {
     return await this.authService.checkWhatsappStatus();
   }
 
-  // @UseGuards(IsEmployeeGuard)
+  @UseGuards(IsEmployeeGuard)
   @Get('whatsapp/qrCode')
   async getWhatsappQrCode() {
     return this.authService.getWhatsappQrCode();
   }
 
+  @UseGuards(IsEmployeeGuard)
+  @Get('whatsapp/terminate')
+  async terminateWhatsapp() {
+    return await this.authService.terminateWhatsapp();
+  }
+
   @Get('whatsapp/sendTestMessage')
-  async sendWhatsappMessage() 
-  {
-    return this.authService.sendWhatsappMessage();
+  async sendWhatsappMessage() {
+    return this.authService.sendWhatsappTestMessage();
   }
 
-  @Get('whatsapp/generateCode/:id')
-  async generateWhatsappCode(
-    @Param('id') id: string,
-  ) 
-  {
-    return this.authService.generateWhatsappCode(id);
+  @UseGuards(IsUserGuard)
+  @Get('sendMobileVerificationCode')
+  async sendMobileVerificationCode(@CurrentUser() user: User) {
+    return await this.authService.sendMobileVerificationCode(user.id);
   }
 
-  @Post('whatsapp/checkValidity/:id')
+  @UseGuards(IsUserGuard)
+  @Post('verifyMobileNumber')
   async checkValidWhatsAppCode(
-    @Param('id') id:string,
-    @Body() code: string,
-  ) 
-  {
-    return this.authService.checkValidWhatsAppCode(id,code);
+    @CurrentUser() user: User,
+    @Body('code') code: string,
+  ) {
+    return await this.authService.verifyMobileNumber(user.id, code);
   }
-
-  @Post('whatsapp/sendCode')
-  async sendCodeByWhatsapp(
-    @Body() code: string,
-    @Body() mobile:string
-  ) 
-  {
-    return this.authService.sendCodeByWhatsapp(code,mobile);
-  }
-
- 
-
 }

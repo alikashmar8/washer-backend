@@ -10,6 +10,8 @@ import { Product } from './entities/product.entity';
 import { ImageFileService } from './imageFile.service';
 import * as path from 'path';
 import { Currency } from 'src/common/enums/currency.enum';
+import * as fs from 'fs';
+
 
 @Injectable()
 export class ProductsService {
@@ -38,7 +40,7 @@ export class ProductsService {
       product.description = createProductDto.description;
       product.price = createProductDto.price;
       product.currency = createProductDto.currency || Currency.LBP;
-      product.category = createProductDto.category;
+      // product.category = createProductDto.category;
       product.views = 0;
       const createdProduct = await queryRunner.manager
         .getRepository(Product)
@@ -144,8 +146,8 @@ export class ProductsService {
     return await this.productRepository.save(product);
   }
 
-  async findOneByIdOrFail(id: string) {
-    return await this.productRepository.findOneByOrFail( {id} ).catch((err) => {
+  async findOneByIdOrFail(id: number) {
+    return await this.productRepository.findOneByOrFail({id}).catch((err) => {
       throw new BadRequestException('Product not found!', err);
     });
   }
@@ -157,7 +159,7 @@ export class ProductsService {
     });
   }
 
-  async deleteImage(id: string, imagePath: string) {
+  async deleteImage(id: number, imagePath: string) {
     const product = await this.findOneByIdOrFail(id);
     if (!product) {
       throw new NotFoundException('Employee not found');

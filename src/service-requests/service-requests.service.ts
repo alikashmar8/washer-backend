@@ -44,6 +44,9 @@ export class ServiceRequestsService {
     try {
       const branches = await queryRunner.manager.find(Branch, {
         relations: ['address'],
+        where: {
+          isActive: true
+        }
       });
       let branch: any = {};
       const initialDistance = 99999999;
@@ -350,9 +353,10 @@ export class ServiceRequestsService {
   }): Promise<{
     total: number;
     totalLBP: number;
+    discountAmount: number;
+    discountAmountLBP: number;
   }> {
     let total = 0;
-    let totalLBP = 0;
 
     const exchangeRateSetting: Setting = await this.settingsRepository
       .findOneOrFail({
@@ -403,8 +407,9 @@ export class ServiceRequestsService {
     total += data.tips;
 
     // todo: check for fees or other costs in case of payment by credit cards
-    totalLBP = total * exchangeRate;
-    return { total, totalLBP };
+    const totalLBP = total * exchangeRate;
+    const discountAmountLBP = discountAmount * exchangeRate;
+    return { total, totalLBP, discountAmount, discountAmountLBP };
   }
 
   async updatePaymentStatus(

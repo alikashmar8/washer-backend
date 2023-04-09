@@ -17,8 +17,8 @@ export class Category extends BaseEntity {
   @Column({ nullable: false })
   name: string;
 
-  @Column({ nullable: false })
-  icon: string;
+  @Column({ nullable: true })
+  icon?: string;
 
   @ManyToOne((type) => Category, (category) => category.children, {
     onDelete: 'CASCADE',
@@ -36,6 +36,6 @@ export class Category extends BaseEntity {
   @JoinColumn({ name: 'categoryId' })
   children?: Category[];
 
-  @Column({ nullable: false })
+  @Column({ default:false })
   isActive: boolean;
 }

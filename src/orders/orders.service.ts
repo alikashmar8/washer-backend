@@ -101,7 +101,7 @@ export class OrdersService {
   async findAll(queryParams: { take: number; skip: number; userId?: string }) {
     const take = queryParams.take || 10;
     const skip = queryParams.skip || 0;
-    let query = this.ordersRepository.createQueryBuilder('order');
+    let query: any = this.ordersRepository.createQueryBuilder('order');
 
     if (queryParams.userId) {
       query = query.where('order.userId = :uid', {
@@ -109,7 +109,12 @@ export class OrdersService {
       });
     }
 
-    return await query.skip(skip).take(take).getManyAndCount();
+    query = await query.skip(skip).take(take).getManyAndCount();
+
+    return {
+      data: query[0],
+      count: query[1],
+    };
   }
 
   async findOne(id: number) {

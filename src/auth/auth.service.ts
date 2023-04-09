@@ -10,63 +10,23 @@ import { EmployeesService } from 'src/employees/employees.service';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
-import { Code, DataSource, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { uuid } from 'uuidv4';
 import { LoginDTO } from './dtos/login.dto';
 import { LogoutDTO } from './dtos/logout.dto';
 import { RegisterUserDTO } from './dtos/register.dto';
 import { UpdatePasswordDTO } from './dtos/update-password-dto';
-import { uuid } from 'uuidv4';
 import {
-  isWhatsappReady,
   getWhatsappQrCode,
+  isWhatsappReady,
   sendWhatsappMessage,
+  sendWhatsappTestMessage,
+  terminateWhatsappConfiguration,
 } from './whatsapp';
 
 @Injectable()
 export class AuthService {
-  async sendWhatsappMessage() {
-    return await sendWhatsappMessage('+96176625278', 'Hellooo');
-  }
-
-  async getWhatsappQrCode() {
-    return getWhatsappQrCode();
-  }
-
-  async checkWhatsappStatus() {
-    console.log('whatsapp');
-
-    return await isWhatsappReady();
-  }
-
-  async generateWhatsappCode(id: string) {
-    const mobileVerificationCode = '123456';
-    await this.usersRepository.update(id, { mobileVerificationCode });
-    return mobileVerificationCode;
-  }
-
-  async checkValidWhatsAppCode(id: string, code: string): Promise<boolean> {
-    if (!code) return false;
-
-    const user = await this.usersRepository.findOne({ where: { id } });
-    console.log(user.mobileVerificationCode);
-    console.log(code);
-    if (user.mobileVerificationCode == code) {
-      console.log("entered if");
-      user.isMobileVerified = true;
-      user.mobileVerificationDate = new Date();
-      return true;
-    }
-    console.log("Didn't enter");
-    return false;
-  }
-  async sendCodeByWhatsapp(code: string, mobile: string) {
-    if (!code) throw new BadRequestException("Code not valid!");
-    if (!mobile) throw new BadRequestException("mobile not valid!");
-
-    return await sendWhatsappMessage(mobile, code);
-    
-  }
-
+  
   constructor(
     private usersService: UsersService,
     private employeesService: EmployeesService,
@@ -78,6 +38,71 @@ export class AuthService {
     @InjectRepository(Employee)
     private employeesRepository: Repository<Employee>,
   ) {}
+
+  async sendWhatsappTestMessage() {
+    return await sendWhatsappTestMessage();
+  }
+
+  async getWhatsappQrCode() {
+    const qrCode = getWhatsappQrCode();
+    return { qrCode };
+  }
+
+  async checkWhatsappStatus() {
+    return await isWhatsappReady();
+  }
+
+  async sendMobileVerificationCode(id: string) {
+    const user = await this.usersService.findOneOrFail(id);
+    if (!user || !user.phoneNumber || user.isMobileVerified)
+      throw new BadRequestException('Invalid User!');
+
+    const verificationCode: number = Math.floor(
+      100000 + Math.random() * 900000,
+    );
+    const verificationCodeExpires: Date = new Date();
+    const expirationTime = 2 * 24 * 60 * 60 * 1000;
+    verificationCodeExpires.setTime(
+      verificationCodeExpires.getTime() + expirationTime,
+    );
+
+    user.mobileVerificationCode = verificationCode.toString();
+    user.mobileVerificationCodeExpiry = verificationCodeExpires;
+
+    await this.usersRepository.save(user).catch((err) => {
+      throw new BadRequestException('Error updating user', err);
+    });
+    return await sendWhatsappMessage(
+      user.phoneNumber.toString(),
+      'You verification code is: ' + verificationCode,
+    );
+  }
+
+  async verifyMobileNumber(id: string, code: string): Promise<boolean> {
+    if (!code) return false;
+
+    const user = await this.usersService.findOneOrFail(id);
+
+    if (user.isMobileVerified)
+      throw new BadRequestException('Mobile already verified');
+
+    if (user.mobileVerificationCode != code) {
+      throw new BadRequestException('Invalid code');
+    }
+
+    const todayDate = new Date();
+    if (todayDate > user.mobileVerificationCodeExpiry) {
+      throw new BadRequestException('Verification code expired');
+    }
+
+    user.isMobileVerified = true;
+    user.mobileVerificationDate = new Date();
+    await this.usersRepository.save(user).catch((err) => {
+      throw new BadRequestException(err);
+    });
+
+    return true;
+  }
 
   async registerUser(data: RegisterUserDTO) {
     const exists =
@@ -263,5 +288,9 @@ export class AuthService {
       });
 
     return await this.deviceTokensService.remove(deviceToken.id);
+  }
+
+  async terminateWhatsapp() {
+    return await terminateWhatsappConfiguration();
   }
 }
