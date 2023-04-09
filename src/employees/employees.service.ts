@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeviceTokenStatus } from 'src/common/enums/device-token-status.enum';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
@@ -7,6 +7,7 @@ import { Brackets, EntityManager, Repository } from 'typeorm';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { Employee } from './entities/employee.entity';
+import * as fs from 'fs';
 
 @Injectable()
 export class EmployeesService {
@@ -76,7 +77,7 @@ export class EmployeesService {
   }
   async create(data: CreateEmployeeDto) {
 
-    let employee = this.employeesRepository.create(data);
+    const employee = this.employeesRepository.create(data);
     return await this.employeesRepository.save(employee).catch((err) => {
       console.log(err);
       throw new BadRequestException('Error creating employee!');
@@ -114,7 +115,7 @@ export class EmployeesService {
     }
 
     if (queryParams.branchId) {
-      let queryString = 'employee.branchId = ' + queryParams.branchId;
+      const queryString = 'employee.branchId = ' + queryParams.branchId;
       if (isFirstWhere) {
         isFirstWhere = false;
         query = query.where(queryString);
@@ -137,7 +138,7 @@ export class EmployeesService {
     }
 
     if (queryParams.isActive == true || queryParams.isActive == false) {
-      let queryString = 'employee.isActive = ' + queryParams.isActive;
+      const queryString = 'employee.isActive = ' + queryParams.isActive;
     }
     if (queryParams.isActive != null) {
       if (typeof queryParams.isActive == 'string') {
@@ -160,7 +161,7 @@ export class EmployeesService {
     }
 
     if (queryParams.search) {
-      let innerQuery = new Brackets((qb) => {
+      const innerQuery = new Brackets((qb) => {
         qb.where('employee.firstName like :name', {
           name: `%${queryParams.search}%`,
         })
@@ -231,4 +232,31 @@ export class EmployeesService {
     employee.currentLongitude = longitude;
     return await this.employeesRepository.save(employee);
   }
+
+  async findOneByIdOrFail(id: string) {
+    return await this.employeesRepository.findOneByOrFail({ id }).catch((err) => {
+      throw new BadRequestException('Employee not found!', err);
+    });
+  }
+
+  async deleteImage(id: string, imagePath: string) {
+    const employee = await this.findOneByIdOrFail(id);
+    if (!employee) {
+      throw new NotFoundException('Employee not found');
+    }
+    if (employee.photo) {
+      try {
+        if (fs.existsSync(imagePath)) {
+          // file exists, delete it
+          console.log('Checked imagePath');
+          fs.unlinkSync(imagePath);
+        } else {
+          console.log(`File does not exist: ${imagePath}`);
+        }
+      } catch (err) {
+        console.error(`Error deleting image file: ${err.message}`);
+      }
+    }
+  }
+  
 }

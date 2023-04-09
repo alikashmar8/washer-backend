@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { User } from 'src/users/entities/user.entity';
@@ -144,10 +144,36 @@ export class ProductsService {
     return await this.productRepository.save(product);
   }
 
-  async remove(id: number) {
-    return await this.productRepository.delete({ id }).catch((err) => {
+  async findOneByIdOrFail(id: string) {
+    return await this.productRepository.findOneByOrFail( {id} ).catch((err) => {
+      throw new BadRequestException('Product not found!', err);
+    });
+  }
+
+  async remove(id: string) {
+    return await this.productRepository.delete(id).catch((err) => {
       console.log(err);
       throw new BadRequestException('Error deleting product');
     });
+  }
+
+  async deleteImage(id: string, imagePath: string) {
+    const product = await this.findOneByIdOrFail(id);
+    if (!product) {
+      throw new NotFoundException('Employee not found');
+    }
+    if (product.images) {
+      try {
+        if (fs.existsSync(imagePath)) {
+          // file exists, delete it
+          console.log('Checked imagePath');
+          fs.unlinkSync(imagePath);
+        } else {
+          console.log(`File does not exist: ${imagePath}`);
+        }
+      } catch (err) {
+        console.error(`Error deleting image file: ${err.message}`);
+      }
+    }
   }
 }

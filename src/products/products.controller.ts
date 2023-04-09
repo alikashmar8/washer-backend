@@ -72,7 +72,7 @@ export class ProductsController {
   //   return this.productsService.update(+id, updateProductDto);
   // }
 
-  // review updateDto ma
+
   @UseGuards(AuthGuard)
   @Patch(':id')
   async update(
@@ -100,6 +100,7 @@ export class ProductsController {
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    return await this.productsService.remove(+id);
+    const product =  await this.findOne(id);
+    return await this.productsService.remove(id);
   }
 }
