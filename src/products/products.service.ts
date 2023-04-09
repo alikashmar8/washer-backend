@@ -38,7 +38,7 @@ export class ProductsService {
       product.description = createProductDto.description;
       product.price = createProductDto.price;
       product.currency = createProductDto.currency || Currency.LBP;
-      product.category = createProductDto.category;
+      // product.category = createProductDto.category;
       product.views = 0;
       const createdProduct = await queryRunner.manager
         .getRepository(Product)

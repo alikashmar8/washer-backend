@@ -12,6 +12,8 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { User } from 'src/users/entities/user.entity';
 import { AuthService } from './auth.service';
 import { LoginDTO } from './dtos/login.dto';
 import { LogoutDTO } from './dtos/logout.dto';
@@ -19,8 +21,6 @@ import { RegisterUserDTO } from './dtos/register.dto';
 import { UpdatePasswordDTO } from './dtos/update-password-dto';
 import { IsEmployeeGuard } from './guards/is-employee.guard';
 import { IsUserGuard } from './guards/is-user.guard';
-import { CurrentUser } from 'src/common/decorators/current-user.decorator';
-import { User } from 'src/users/entities/user.entity';
 @ApiTags('Auth')
 @Controller('auth')
 @UsePipes(new ValidationPipe())
@@ -99,15 +99,21 @@ export class AuthController {
     return await this.authService.checkWhatsappStatus();
   }
 
-  // @UseGuards(IsEmployeeGuard)
+  @UseGuards(IsEmployeeGuard)
   @Get('whatsapp/qrCode')
   async getWhatsappQrCode() {
     return this.authService.getWhatsappQrCode();
   }
 
+  @UseGuards(IsEmployeeGuard)
+  @Get('whatsapp/terminate')
+  async terminateWhatsapp() {
+    return await this.authService.terminateWhatsapp();
+  }
+
   @Get('whatsapp/sendTestMessage')
   async sendWhatsappMessage() {
-    return this.authService.sendWhatsappMessage();
+    return this.authService.sendWhatsappTestMessage();
   }
 
   @UseGuards(IsUserGuard)

@@ -20,10 +20,13 @@ import {
   getWhatsappQrCode,
   isWhatsappReady,
   sendWhatsappMessage,
+  sendWhatsappTestMessage,
+  terminateWhatsappConfiguration,
 } from './whatsapp';
 
 @Injectable()
 export class AuthService {
+  
   constructor(
     private usersService: UsersService,
     private employeesService: EmployeesService,
@@ -36,12 +39,13 @@ export class AuthService {
     private employeesRepository: Repository<Employee>,
   ) {}
 
-  async sendWhatsappMessage() {
-    return await sendWhatsappMessage('+96176625278', 'Hellooo');
+  async sendWhatsappTestMessage() {
+    return await sendWhatsappTestMessage();
   }
 
   async getWhatsappQrCode() {
-    return getWhatsappQrCode();
+    const qrCode = getWhatsappQrCode();
+    return { qrCode };
   }
 
   async checkWhatsappStatus() {
@@ -284,5 +288,9 @@ export class AuthService {
       });
 
     return await this.deviceTokensService.remove(deviceToken.id);
+  }
+
+  async terminateWhatsapp() {
+    return await terminateWhatsappConfiguration();
   }
 }
