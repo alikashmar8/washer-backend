@@ -3,7 +3,7 @@ import {
     IsNotEmpty,
     IsOptional,
     Length,
-    IsBooleanString
+    IsBoolean
   } from 'class-validator';
 
 export class CreateCategoryDto {
@@ -15,7 +15,7 @@ export class CreateCategoryDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsBooleanString()
+  @IsBoolean()
   isActive?: boolean;
 
 }

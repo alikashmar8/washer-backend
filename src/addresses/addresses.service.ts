@@ -41,9 +41,6 @@ export class AddressesService {
 
     return await query.getMany();
   }
-  findOne(id: number) {
-    return `This action returns a #${id} address`;
-  }
 
   async update(id: string, updateAddressDto: UpdateAddressDto) {
     return await this.addressesRepository

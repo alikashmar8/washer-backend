@@ -37,9 +37,9 @@ export class ProductsService {
     try {
       const product = await queryRunner.manager
         .getRepository(Product)
-        .save(createProductDto);
+        .save(product);
 
-      const savedImages = await Promise.all(
+        const savedImages = await Promise.all(
         createProductDto.images.map(async (image) => {
           const savedImage = await this.imageFileService.saveImage(image);
           const productImage = new ProductImage();
@@ -47,19 +47,19 @@ export class ProductsService {
           productImage.image =
             this.productImagesPath + '/' + savedImage.filename;
 
-          await queryRunner.manager
+            await queryRunner.manager
             .getRepository(ProductImage)
             .save(productImage);
           return productImage;
         }),
       );
 
-      product.images = savedImages;
+      createdProduct.images = savedImages;
 
       await queryRunner.commitTransaction();
       await queryRunner.release();
 
-      return product;
+      return createdProduct;
     } catch (error) {
       console.log(error);
       await queryRunner.rollbackTransaction();
@@ -97,10 +97,44 @@ export class ProductsService {
     }
 */
 
-  async findAll(relations?: string[]) {
-    return await this.productRepository.find({
-      relations: relations,
-    });
+  async findAll(queryParams: {
+    search?: string;
+    isActive?: boolean;
+    take?: number;
+    skip?: number;
+  }) {
+    const take = queryParams.take || 10;
+    const skip = queryParams.skip || 0;
+
+    let query: any = this.productRepository
+      .createQueryBuilder('product')
+      .where('product.id IS NOT NULL');
+
+    if (queryParams.isActive != null) {
+      if (typeof queryParams.isActive == 'string') {
+        if (queryParams.isActive == 'true') {
+          queryParams.isActive = true;
+        } else if (queryParams.isActive == 'false') {
+          queryParams.isActive = false;
+        }
+      }
+      query = query.andWhere('product.isActive = :isActive', {
+        isActive: queryParams.isActive,
+      });
+    }
+
+    if (queryParams.search) {
+      query = query.andWhere('product.name LIKE :search', {
+        search: '%' + queryParams.search + '%',
+      });
+    }
+
+    query = await query.skip(skip).take(take).getManyAndCount();
+
+    return {
+      data: query[0],
+      count: query[1],
+    };
   }
 
   async findOne(id: number, relations?: string[]) {

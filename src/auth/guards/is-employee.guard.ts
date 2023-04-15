@@ -20,16 +20,21 @@ export class IsEmployeeGuard implements CanActivate {
     const token = authorization.split(' ')[1];
 
     if (!token) {
-      console.log("TOKEN FALSE");
       return false;
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin
     try {
       const employee = await this.employeesService.findOneByToken(token);
       if (!employee) return false;
 
       request.employee = employee;
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin
       return true;
     } catch (err) {
       throw new HttpException('Token Invalid', HttpStatus.FORBIDDEN);

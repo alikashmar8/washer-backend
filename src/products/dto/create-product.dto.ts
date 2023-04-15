@@ -2,12 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEnum,
   IsNotEmpty,
-  IsNumber,
+  IsNumberString,
   IsOptional,
   IsString,
   Length,
 } from 'class-validator';
-import { Category } from 'src/categories/entities/category.entity';
 import { Currency } from 'src/common/enums/currency.enum';
 
 export class CreateProductDto {
@@ -40,7 +39,7 @@ export class CreateProductDto {
     required: true,
     example: 100,
   })
-  @IsNumber()
+  @IsNumberString()
   @IsNotEmpty()
   price: number;
 
