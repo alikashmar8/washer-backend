@@ -35,7 +35,14 @@ export class ProductsService {
     await queryRunner.startTransaction();
 
     try {
-      const product = await queryRunner.manager
+      const product = new Product();
+      product.title = createProductDto.title;
+      product.description = createProductDto.description;
+      product.price = createProductDto.price;
+      product.currency = createProductDto.currency || Currency.LBP;
+      // product.category = createProductDto.category;
+      product.views = 0;
+      const createdProduct = await queryRunner.manager
         .getRepository(Product)
         .save(product);
 
@@ -43,7 +50,7 @@ export class ProductsService {
         createProductDto.images.map(async (image) => {
           const savedImage = await this.imageFileService.saveImage(image);
           const productImage = new ProductImage();
-          productImage.productId = product.id;
+          productImage.productId = createdProduct.id;
           productImage.image =
             this.productImagesPath + '/' + savedImage.filename;
 

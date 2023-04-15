@@ -403,7 +403,14 @@ export class ServiceRequestsService {
         discountAmount = promo.discountAmount;
     }
 
-    total -= discountAmount;
+    
+    if(total < discountAmount ){
+      total =0;
+      discountAmount = total;
+    }else{
+      total -= discountAmount;
+    }
+    
     total += data.tips;
 
     // todo: check for fees or other costs in case of payment by credit cards
