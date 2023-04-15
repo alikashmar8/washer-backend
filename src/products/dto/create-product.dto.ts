@@ -57,16 +57,8 @@ export class CreateProductDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  categoryId:string
+  category_id:string;
 
-  // @ApiProperty({
-  //   enum: ProductCategory,
-  //   required: true,
-  //   nullable: false,
-  //   example: ProductCategory.PLANT,
-  // })
-  // @IsNotEmpty()
-  // category: Category;
 
   @ApiProperty({
     type: 'array',

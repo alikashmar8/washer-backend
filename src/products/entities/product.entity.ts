@@ -54,6 +54,8 @@ export class Product {
   orderItems: OrderItem[];
 
   @ManyToOne((type) => Category, (category) => category.products)
+  category_id:string;
+
   @JoinColumn({ name: 'category_id' })
   category: Category;
 

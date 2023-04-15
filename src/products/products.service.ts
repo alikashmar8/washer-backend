@@ -33,27 +33,20 @@ export class ProductsService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-    console.log('1');
+
     try {
-      const product = new Product();
-      product.title = createProductDto.title;
-      product.description = createProductDto.description;
-      product.price = createProductDto.price;
-      product.currency = createProductDto.currency || Currency.LBP;
-      // product.category = createProductDto.category;
-      product.views = 0;
-      const createdProduct = await queryRunner.manager
+      const product = await queryRunner.manager
         .getRepository(Product)
-        .save(product);
-      console.log('2');
+        .save(createProductDto);
+
       const savedImages = await Promise.all(
         createProductDto.images.map(async (image) => {
           const savedImage = await this.imageFileService.saveImage(image);
           const productImage = new ProductImage();
-          productImage.productId = createdProduct.id;
+          productImage.productId = product.id;
           productImage.image =
             this.productImagesPath + '/' + savedImage.filename;
-          console.log('3');
+
           await queryRunner.manager
             .getRepository(ProductImage)
             .save(productImage);
@@ -61,12 +54,12 @@ export class ProductsService {
         }),
       );
 
-      createdProduct.images = savedImages;
-      console.log('4');
+      product.images = savedImages;
+
       await queryRunner.commitTransaction();
       await queryRunner.release();
-      console.log('5');
-      return createdProduct;
+
+      return product;
     } catch (error) {
       console.log(error);
       await queryRunner.rollbackTransaction();
