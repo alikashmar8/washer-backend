@@ -1,32 +1,23 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { User } from 'src/users/entities/user.entity';
+import * as fs from 'fs';
+import { Currency } from 'src/common/enums/currency.enum';
 import { DataSource, Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductImage } from './entities/product-image.entity';
 import { Product } from './entities/product.entity';
-import { ImageFileService } from './imageFile.service';
-import * as path from 'path';
-import { Currency } from 'src/common/enums/currency.enum';
-import * as fs from 'fs';
-
 
 @Injectable()
 export class ProductsService {
-  private readonly productImagesPath = path.join(
-    __dirname,
-    '..',
-    'public',
-    'uploads',
-    'products',
-  );
-
   constructor(
     @InjectRepository(Product) private productRepository: Repository<Product>,
     private dataSource: DataSource,
-    private imageFileService: ImageFileService,
   ) {}
 
   async create(createProductDto: CreateProductDto) {
@@ -35,38 +26,30 @@ export class ProductsService {
     await queryRunner.startTransaction();
 
     try {
-      const product = new Product();
-      product.title = createProductDto.title;
-      product.description = createProductDto.description;
-      product.price = createProductDto.price;
-      product.currency = createProductDto.currency || Currency.LBP;
-      // product.category = createProductDto.category;
-      product.views = 0;
-      const createdProduct = await queryRunner.manager
+      const product = await queryRunner.manager
         .getRepository(Product)
-        .save(product);
+        .save(createProductDto);
 
-        const savedImages = await Promise.all(
-        createProductDto.images.map(async (image) => {
-          const savedImage = await this.imageFileService.saveImage(image);
-          const productImage = new ProductImage();
-          productImage.productId = createdProduct.id;
-          productImage.image =
-            this.productImagesPath + '/' + savedImage.filename;
+      let savedImages = [];
+      createProductDto.images.forEach(async (image) => {
+        const productImage = await queryRunner.manager
+          .getRepository(ProductImage)
+          .save({
+            image: image,
+            productId: product.id,
+          });
+        savedImages.push(productImage);
+      });
 
-            await queryRunner.manager
-            .getRepository(ProductImage)
-            .save(productImage);
-          return productImage;
-        }),
-      );
+      product.images = savedImages;
 
-      createdProduct.images = savedImages;
+      // TODO: remove next line -probably not needed-
+      await queryRunner.manager.getRepository(Product).save(product);
 
       await queryRunner.commitTransaction();
       await queryRunner.release();
 
-      return createdProduct;
+      return product;
     } catch (error) {
       console.log(error);
       await queryRunner.rollbackTransaction();
@@ -115,6 +98,8 @@ export class ProductsService {
 
     let query: any = this.productRepository
       .createQueryBuilder('product')
+      .leftJoinAndSelect('product.images', 'image')
+      .leftJoinAndSelect('product.category', 'category')
       .where('product.id IS NOT NULL');
 
     if (queryParams.isActive != null) {
@@ -144,19 +129,7 @@ export class ProductsService {
     };
   }
 
-  async findOne(id: number, relations?: string[]) {
-    return await this.productRepository
-      .findOneOrFail({
-        where: [{ id: id }],
-        relations: relations,
-      })
-      .catch((err) => {
-        console.log(err);
-        throw new BadRequestException('Product not found');
-      });
-  }
-
-  async update(id: string, updateProductDto: UpdateProductDto) {
+  async update(id: string, updateProductDto: UpdateProductDto) {    
     return await this.productRepository
       .update(id, updateProductDto)
       .catch((err) => {
@@ -165,25 +138,18 @@ export class ProductsService {
       });
   }
 
-  async updateProductView(id: number) {
-    const product = await this.productRepository
-      .findOneOrFail({
-        where: { id },
-      })
-      .catch((err) => {
-        console.log(err);
-        throw new BadRequestException("Can't find product !");
-      });
-
+  async updateProductView(id: string) {
+    const product = await this.findOneByIdOrFail(id);
     product.views++;
-
     return await this.productRepository.save(product);
   }
 
-  async findOneByIdOrFail(id: number) {
-    return await this.productRepository.findOneByOrFail({id}).catch((err) => {
-      throw new BadRequestException('Product not found!', err);
-    });
+  async findOneByIdOrFail(id: string, relations?: string[]) {
+    return await this.productRepository
+      .findOneOrFail({ where: { id: id }, relations: relations })
+      .catch((err) => {
+        throw new BadRequestException('Product not found!', err);
+      });
   }
 
   async remove(id: string) {
@@ -193,7 +159,7 @@ export class ProductsService {
     });
   }
 
-  async deleteImage(id: number, imagePath: string) {
+  async deleteImage(id: string, imagePath: string) {
     const product = await this.findOneByIdOrFail(id);
     if (!product) {
       throw new NotFoundException('Employee not found');

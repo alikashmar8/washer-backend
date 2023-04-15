@@ -7,18 +7,17 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
+  UpdateDateColumn
 } from 'typeorm';
 import { ProductImage } from './product-image.entity';
 
 @Entity('products')
 export class Product {
   @PrimaryGeneratedColumn('uuid')
-  id: number;
+  id: string;
 
   @Column({ nullable: false })
   title: string;
@@ -36,6 +35,22 @@ export class Product {
     default: Currency.LBP,
   })
   currency: Currency;
+  
+  @Column({ nullable: false, default: 0 })
+  views: number;
+  
+  @Column({ nullable: false })
+  categoryId?: string;
+
+  @OneToMany((type) => ProductImage, (image) => image.product)
+  images: ProductImage[];
+
+  @OneToMany((type) => OrderItem, (orderItem) => orderItem.product)
+  orderItems: OrderItem[];
+
+  @ManyToOne((type) => Category, (category) => category.products)
+  @JoinColumn({ name: 'categoryId' })
+  category: Category;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -43,20 +58,4 @@ export class Product {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany((type) => ProductImage, (image) => image.product)
-  images: ProductImage[];
-
-  // @ManyToOne((type) => Shop, (shop) => shop.products, { onDelete: 'CASCADE' })
-  // @JoinColumn({ name: 'shopId' })
-  // shop: Shop;
-
-  @OneToMany((type) => OrderItem, (orderItem) => orderItem.product)
-  orderItems: OrderItem[];
-
-  @ManyToOne((type) => Category, (category) => category.products)
-  @JoinColumn({ name: 'category_id' })
-  category: Category;
-
-  @Column({ nullable: false, default: 0 })
-  views: number;
 }

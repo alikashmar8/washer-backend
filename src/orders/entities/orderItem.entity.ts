@@ -20,7 +20,7 @@ export class OrderItem {
 
   // TODO: check deleting product logic // protect or cascade ?
   @Column({ nullable: false })
-  productId: number;
+  productId: string;
 
   @ManyToOne((type) => Order, (order) => order.orderItems, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'orderId' })

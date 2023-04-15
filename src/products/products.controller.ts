@@ -17,7 +17,6 @@ import {
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { IsEmployeeGuard } from 'src/auth/guards/is-employee.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { CurrentEmployee } from 'src/common/decorators/current-employee.decorator';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
@@ -46,7 +45,8 @@ export class ProductsController {
     ),
   )
   @ApiConsumes('multipart/form-data')
-  @UseGuards(IsEmployeeGuard)
+  @Roles(EmployeeRole.ADMIN)
+  @UseGuards(RolesGuard)
   @Post()
   async create(
     @Body() createProductDto: CreateProductDto,
@@ -79,7 +79,10 @@ export class ProductsController {
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return await this.productsService.findOne(+id, ['images']);
+    return await this.productsService.findOneByIdOrFail(id, [
+      'images',
+      'category',
+    ]);
   }
 
   // @Patch(':id')
@@ -88,7 +91,14 @@ export class ProductsController {
   // }
 
   // review updateDto ma
-
+  @UseInterceptors(
+    FilesInterceptor(
+      'images[]',
+      10,
+      getMulterSettings({ destination: './public/uploads/products' }),
+    ),
+  )
+  @ApiConsumes('multipart/form-data')
   @Roles(EmployeeRole.ADMIN)
   @UseGuards(RolesGuard)
   @Patch(':id')
@@ -102,7 +112,7 @@ export class ProductsController {
 
   @UseGuards(IsUserGuard)
   @Patch(':id/views')
-  async updateProductView(@Param('id') id: number, @CurrentUser() user: User) {
+  async updateProductView(@Param('id') id: string, @CurrentUser() user: User) {
     return await this.productsService.updateProductView(id);
   }
 

@@ -75,8 +75,8 @@ export class EmployeesService {
         );
       });
   }
-  async create(data: CreateEmployeeDto) {
 
+  async create(data: CreateEmployeeDto) {
     const employee = this.employeesRepository.create(data);
     return await this.employeesRepository.save(employee).catch((err) => {
       console.log(err);
