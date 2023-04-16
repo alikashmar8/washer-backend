@@ -72,11 +72,11 @@ export class ServiceTypesController {
   @Roles(EmployeeRole.ADMIN)
   @UseGuards(RolesGuard)
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateServiceTypeDto: UpdateServiceTypeDto,
   ) {
-    return this.serviceTypesService.update(id, updateServiceTypeDto);
+    return await this.serviceTypesService.update(id, updateServiceTypeDto);
   }
 
   @Delete(':id')

@@ -58,11 +58,11 @@ export class EmployeesController {
     @CurrentEmployee() employee: Employee,
     @UploadedFile() photo: Express.Multer.File,
   ) {
-    if (!photo) {
-      throw new BadRequestException('Ad image is required!');
-    } else {
-      createEmployeeDto.photo = photo.path;
-    }
+    // if (!photo) {
+    //   throw new BadRequestException('Employee photo is required!');
+    // } else {
+    //   createEmployeeDto.photo = photo.path;
+    // }
     if (
       employee.role != EmployeeRole.ADMIN &&
       createEmployeeDto.role == EmployeeRole.ADMIN
