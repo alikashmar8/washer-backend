@@ -8,13 +8,14 @@ import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { Employee } from './entities/employee.entity';
 import * as fs from 'fs';
+import { AppService } from 'src/app.service';
 
 @Injectable()
 export class EmployeesService {
   constructor(
     @InjectRepository(Employee) private employeesRepository: Repository<Employee>,
     @InjectRepository(DeviceToken) private deviceTokensRepository: Repository<DeviceToken>,
-
+    private appService: AppService
   ) { }
 
 

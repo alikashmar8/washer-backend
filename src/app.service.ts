@@ -1,27 +1,35 @@
-import { Injectable } from '@nestjs/common';
-import { BranchesService } from './branches/branches.service';
-import { EmployeeRole } from './common/enums/employee-role.enum';
-import { EmployeesService } from './employees/employees.service';
-import { PaymentType } from './common/enums/payment-type.enum';
-import { Setting } from './settings/entities/setting.entity';
-import { Repository } from 'typeorm';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CAR_COST, EXCHANGE_RATE, RANGE_COST, VAN_COST, TRUCK_COST, MOTORCYCLE_COST } from './common/constants';
 import * as fs from 'fs';
-import { UsersService } from './users/users.service';
+import { Repository } from 'typeorm';
+import { BranchesService } from './branches/branches.service';
+import {
+  CAR_COST,
+  EXCHANGE_RATE,
+  MOTORCYCLE_COST,
+  RANGE_COST,
+  TRUCK_COST,
+  VAN_COST,
+} from './common/constants';
 import { Currency } from './common/enums/currency.enum';
+import { EmployeeRole } from './common/enums/employee-role.enum';
+import { PaymentType } from './common/enums/payment-type.enum';
+import { Employee } from './employees/entities/employee.entity';
+import { Setting } from './settings/entities/setting.entity';
+import { UsersService } from './users/users.service';
 
 @Injectable()
 export class AppService {
   constructor(
     private branchesService: BranchesService,
-    private employeesService: EmployeesService,
     private usersService: UsersService,
-    @InjectRepository(Setting) private settingsRepository: Repository<Setting>
+    @InjectRepository(Setting) private settingsRepository: Repository<Setting>,
+    @InjectRepository(Employee)
+    private employeesRepository: Repository<Employee>,
   ) {}
 
   async initData(): Promise<void | PromiseLike<void>> {
-    await this.employeesService.create({
+    const employee = this.employeesRepository.create({
       firstName: 'Admin',
       lastName: 'Admin',
       password: 'P@ssw0rd',
@@ -30,6 +38,10 @@ export class AppService {
       email: 'admin@revojok.com',
       branchId: null,
       phoneNumber: '12345678',
+    });
+    await this.employeesRepository.save(employee).catch((err) => {
+      console.log(err);
+      throw new BadRequestException('Error creating employee!');
     });
 
     await this.usersService.create({
@@ -43,7 +55,7 @@ export class AppService {
         balance: 0,
         currency: Currency.LBP,
       },
-    })
+    });
 
     await this.branchesService.create({
       description: 'Beirut branch 1',
@@ -61,57 +73,54 @@ export class AppService {
     });
 
     await this.settingsRepository.save([
-      { 
+      {
         key: EXCHANGE_RATE,
-        value: '40000'
+        value: '40000',
       },
-      { 
+      {
         key: CAR_COST,
-        value: '10'
+        value: '10',
       },
-      { 
+      {
         key: VAN_COST,
-        value: '20'
+        value: '20',
       },
-      { 
+      {
         key: RANGE_COST,
-        value: '15'
+        value: '15',
       },
-      { 
+      {
         key: TRUCK_COST,
-        value: '30'
+        value: '30',
       },
-      { 
+      {
         key: MOTORCYCLE_COST,
-        value: '5'
+        value: '5',
       },
-    ])
+    ]);
   }
-  
+
   getHello(): string {
     return 'Hello World!';
   }
 
   async getAllConstants() {
     return {
-      'PAYMENT_METHODS': PaymentType
-    }
+      PAYMENT_METHODS: PaymentType,
+    };
   }
 
-  
   async deleteFile(filePath: string) {
-      try {
-        if (fs.existsSync(filePath)) {
-          // file exists, delete it
-          console.log('Checked filePath');
-          fs.unlinkSync(filePath);
-        } else {
-          console.log(`File does not exist: ${filePath}`);
-        }
-      } catch (err) {
-        console.error(`Error deleting image file: ${err.message}`);
+    try {
+      if (fs.existsSync(filePath)) {
+        // file exists, delete it
+        console.log('Checked filePath');
+        fs.unlinkSync(filePath);
+      } else {
+        console.log(`File does not exist: ${filePath}`);
       }
+    } catch (err) {
+      console.error(`Error deleting image file: ${err.message}`);
     }
-
-
+  }
 }

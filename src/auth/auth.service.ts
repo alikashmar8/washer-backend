@@ -23,15 +23,16 @@ import {
   sendWhatsappTestMessage,
   terminateWhatsappConfiguration,
 } from './whatsapp';
+import { MailService } from 'src/common/mail/mail.service';
 
 @Injectable()
 export class AuthService {
-  
   constructor(
     private usersService: UsersService,
     private employeesService: EmployeesService,
     private deviceTokensService: DeviceTokensService,
     private dataSource: DataSource,
+    private mailService: MailService,
     @InjectRepository(DeviceToken)
     private deviceTokensRepository: Repository<DeviceToken>,
     @InjectRepository(User) private usersRepository: Repository<User>,
@@ -292,5 +293,20 @@ export class AuthService {
 
   async terminateWhatsapp() {
     return await terminateWhatsappConfiguration();
+  }
+
+  async sendTestEmail() {
+    try {
+      return this.mailService.send({
+        from: process.env.MAIL_FROM_USER,
+        to: 'alikashmar888888888@gmail.com',
+        subject: 'Test Email From Washer Backend',
+        text: 'This is a test email from the Washer Backend!',
+        html: 'This is a test email from the Washer Backend!',
+      });
+    } catch (err) {
+      console.log(err);
+      throw new BadRequestException('Error sending test email');
+    }
   }
 }

@@ -1,5 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppService } from 'src/app.service';
+import { BranchesService } from 'src/branches/branches.service';
+import { Branch } from 'src/branches/entities/branch.entity';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
 import { EmployeesService } from 'src/employees/employees.service';
 import { Employee } from 'src/employees/entities/employee.entity';
@@ -18,9 +21,16 @@ import { ServiceTypesService } from './service-types.service';
       DeviceToken,
       Employee,
       Setting,
+      Branch,
     ]),
   ],
   controllers: [ServiceTypesController],
-  providers: [ServiceTypesService, UsersService, EmployeesService],
+  providers: [
+    ServiceTypesService,
+    UsersService,
+    EmployeesService,
+    AppService,
+    BranchesService,
+  ],
 })
 export class ServiceTypesModule {}
