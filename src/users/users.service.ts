@@ -49,8 +49,13 @@ export class UsersService {
         throw new BadRequestException(`User ${username} not found!`);
       });
   }
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  
+  async create(data: CreateUserDto) {
+    const user = this.usersRepository.create(data);
+    return await this.usersRepository.save(user).catch((err) => {
+      console.log(err);
+      throw new BadRequestException('Error creating user!');
+    });
   }
 
   async findAll(filters: {

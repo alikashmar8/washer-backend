@@ -7,7 +7,6 @@ import { Employee } from 'src/employees/entities/employee.entity';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 import { Product } from './entities/product.entity';
-import { ImageFileService } from './imageFile.service';
 import { ProductsController } from './products.controller';
 import { ProductsService } from './products.service';
 
@@ -19,7 +18,6 @@ import { ProductsService } from './products.service';
     UsersService,
     DeviceTokensService,
     EmployeesService,
-    ImageFileService,
   ],
 })
 export class ProductsModule {}

@@ -35,6 +35,8 @@ import { WalletsModule } from './wallets/wallets.module';
 import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
 import { OrdersModule } from './orders/orders.module';
+import { AdsService } from './ads/ads.service';
+import { ProductsService } from './products/products.service';
 
 
 @Module({
@@ -76,6 +78,6 @@ import { OrdersModule } from './orders/orders.module';
     OrdersModule,
   ],
   controllers: [AppController],
-  providers: [AppService, BranchesService, EmployeesService, UsersService],
+  providers: [AppService, BranchesService, EmployeesService, UsersService,AdsService,ProductsService],
 })
 export class AppModule { }

@@ -16,7 +16,6 @@ import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { IsUserGuard } from 'src/auth/guards/is-user.guard';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { User } from 'src/users/entities/user.entity';
-import { DataSource } from 'typeorm';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrdersService } from './orders.service';
@@ -26,10 +25,7 @@ import { OrdersService } from './orders.service';
 @UsePipes(new ValidationPipe({ transform: true }))
 @Controller('orders')
 export class OrdersController {
-  constructor(
-    private readonly ordersService: OrdersService,
-    private dataSource: DataSource,
-  ) {}
+  constructor(private readonly ordersService: OrdersService) {}
 
   @UseGuards(IsUserGuard)
   @Post()
@@ -47,6 +43,7 @@ export class OrdersController {
     @Query()
     params: {
       userId?: string;
+      search?: string;
       take: number;
       skip: number;
     },
@@ -60,7 +57,7 @@ export class OrdersController {
   @Get(':id')
   @UseGuards(AuthGuard)
   async findOne(@Param('id') id: string) {
-    return await this.ordersService.findOne(+id);
+    return await this.ordersService.findOneByIdOrFail(+id, ['orderItems', 'user'])
   }
 
   @Patch(':id')
@@ -68,7 +65,7 @@ export class OrdersController {
     @Param('id') id: string,
     @Body() updateOrderDto: UpdateOrderDto,
   ) {
-    return await this.ordersService.update(+id, updateOrderDto);
+    return await this.ordersService.update(id, updateOrderDto);
   }
 
   @Delete(':id')
@@ -79,11 +76,6 @@ export class OrdersController {
   @UseGuards(IsUserGuard)
   @Post('calculate-total')
   async getTotal(@Body() data: CreateOrderDto) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    return await this.ordersService.calculateTotal(
-      data,
-      data.orderItems,
-      queryRunner,
-    );
+    return await this.ordersService.calculateTotal(data, data.orderItems);
   }
 }

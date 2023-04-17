@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { BranchesService } from './branches/branches.service';
 import { EmployeeRole } from './common/enums/employee-role.enum';
 import { EmployeesService } from './employees/employees.service';
@@ -8,12 +8,16 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CAR_COST, EXCHANGE_RATE, RANGE_COST, VAN_COST, TRUCK_COST, MOTORCYCLE_COST } from './common/constants';
 import * as fs from 'fs';
+import { UsersService } from './users/users.service';
+import { Currency } from './common/enums/currency.enum';
+import path from 'path';
 
 @Injectable()
 export class AppService {
   constructor(
     private branchesService: BranchesService,
     private employeesService: EmployeesService,
+    private usersService: UsersService,
     @InjectRepository(Setting) private settingsRepository: Repository<Setting>
   ) {}
 
@@ -28,6 +32,19 @@ export class AppService {
       branchId: null,
       phoneNumber: '12345678',
     });
+
+    await this.usersService.create({
+      firstName: 'First',
+      lastName: 'Customer',
+      password: 'P@ssw0rd',
+      username: 'firstCustomer',
+      email: 'firstcustomer@revojok.com',
+      phoneNumber: '96178914474',
+      wallet: {
+        balance: 0,
+        currency: Currency.LBP,
+      },
+    })
 
     await this.branchesService.create({
       description: 'Beirut branch 1',
@@ -46,7 +63,7 @@ export class AppService {
     await this.settingsRepository.save([
       { 
         key: EXCHANGE_RATE,
-        value: '40000'
+        value: '100000'
       },
       { 
         key: CAR_COST,
@@ -96,5 +113,33 @@ export class AppService {
       }
     }
 
+
+    async updateFile(
+      id: string,
+      filePropertyName: string,
+      newFile: Express.Multer.File,
+      repository: Repository<any>
+    ) {
+      const entity = await repository.findOne({where:{id:id}});
+      if (!entity) {
+        throw new NotFoundException(`Entity with ID ${id} not found`);
+      }
+    
+    
+      const oldFile = entity[filePropertyName];
+    
+      await repository.update(id, { [filePropertyName]: newFile.path });
+    
+      if (oldFile) {
+        const oldFilePath = path.join(process.cwd(), oldFile);
+        console.log(`Old ${filePropertyName} path:`, oldFilePath);
+        try {
+          await this.deleteFile(oldFilePath);
+        } catch (err) {
+          console.error(`Failed to delete old ${filePropertyName} file ${oldFile}: ${err}`);
+        }
+      }
+    }
+    
 
 }

@@ -2,11 +2,13 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from 'src/products/entities/product.entity';
 import { PromosService } from 'src/promos/promos.service';
-import { DataSource, QueryRunner, Repository } from 'typeorm';
+import { Brackets, DataSource, Repository } from 'typeorm';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { CreateOrderItemDto } from './dto/create-orderItem.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/orderItem.entity';
+import { OrderStatus } from './enums/order-status.enum';
 
 @Injectable()
 export class OrdersService {
@@ -49,7 +51,6 @@ export class OrdersService {
       const { total, discountAmount } = await this.calculateTotal(
         createOrderDto,
         items,
-        queryRunner,
       );
 
       let promoIsValid = false;
@@ -85,7 +86,7 @@ export class OrdersService {
         )
         .catch((err) => {
           console.log(err);
-          throw new BadRequestException('Error Order Creation  !');
+          throw new BadRequestException('Error Order Creation!');
         });
       await queryRunner.commitTransaction();
       return order;
@@ -98,15 +99,54 @@ export class OrdersService {
     }
   }
 
-  async findAll(queryParams: { take: number; skip: number; userId?: string }) {
+  async findAll(queryParams: {
+    take: number;
+    skip: number;
+    userId?: string;
+    search?: string;
+  }) {
     const take = queryParams.take || 10;
     const skip = queryParams.skip || 0;
-    let query: any = this.ordersRepository.createQueryBuilder('order');
+
+    let query: any = this.ordersRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.user', 'user')
+      .where('order.id IS NOT NULL');
 
     if (queryParams.userId) {
-      query = query.where('order.userId = :uid', {
+      query = query.andWhere('order.userId = :uid', {
         uid: queryParams.userId,
       });
+    }
+
+    if (queryParams.search) {
+      const innerQuery = new Brackets((qb) => {
+        qb.where('user.firstName like :name', {
+          name: `%${queryParams.search}%`,
+        })
+          .orWhere('user.lastName like :name', {
+            name: `%${queryParams.search}%`,
+          })
+          .orWhere('user.username like :username', {
+            username: `%${queryParams.search}%`,
+          })
+          .orWhere('user.email like :email', {
+            email: `%${queryParams.search}%`,
+          })
+          .orWhere('order.id like :id', {
+            id: `%${queryParams.search}%`,
+          })
+          .orWhere('order.total like :total', {
+            total: `%${queryParams.search}%`,
+          })
+          .orWhere('order.status like :status', {
+            status: `%${queryParams.search}%`,
+          })
+          .orWhere('order.createdAt like :date', {
+            date: `%${queryParams.search}%`,
+          });
+      });
+      query = query.andWhere(innerQuery);
     }
 
     query = await query.skip(skip).take(take).getManyAndCount();
@@ -117,19 +157,37 @@ export class OrdersService {
     };
   }
 
-  async findOne(id: number) {
+  async findOneByIdOrFail(id: number, relations?: string[]) {
     return await this.ordersRepository
-      .findOneOrFail({
-        where: { id },
-      })
-      .catch(() => {
-        throw new BadRequestException('Order not found!');
+      .findOneOrFail({ where: { id: id }, relations })
+      .catch((err) => {
+        throw new BadRequestException('Order not found!', err);
       });
   }
 
-  update(id: number, updateOrderDto: UpdateOrderDto) {
-    return `This action updates a #${id} order`;
+  async update(id: string, updateOrderDto: UpdateOrderDto) {    
+    return await this.ordersRepository
+      .update(id, updateOrderDto)
+      .catch((err) => {
+        console.log(err);
+        throw new BadRequestException('Error updating order!');
+      });
   }
+
+  async updateStatus(id: string, status: OrderStatus) {    
+    return await this.ordersRepository
+      .createQueryBuilder()
+      .update()
+      .set({ status: status })
+      .where("id = :id", { id: id })
+      .execute()
+      .catch((err) => {
+        console.log(err);
+        throw new BadRequestException('Error updating order status!');
+      });
+  }
+  
+
 
   async remove(id: number) {
     return await this.ordersRepository.delete(id).catch(() => {
@@ -139,14 +197,13 @@ export class OrdersService {
 
   async calculateTotal(
     orderData: CreateOrderDto,
-    items: OrderItem[],
-    queryRunner: QueryRunner,
+    items: CreateOrderItemDto[],
   ): Promise<{ total: number; discountAmount: number }> {
     let total = 0;
 
     items = await Promise.all(
       items.map(async (item) => {
-        const product = await queryRunner.manager.findOneOrFail(Product, {
+        const product = await this.productsRepository.findOneOrFail({
           where: { id: item.productId },
         });
         item.price = product.price;

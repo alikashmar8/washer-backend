@@ -11,6 +11,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import {
+  Patch,
   Query,
   UploadedFile,
   UseGuards,
@@ -27,6 +28,7 @@ import { Employee } from 'src/employees/entities/employee.entity';
 import { User } from 'src/users/entities/user.entity';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { VehiclesService } from './vehicles.service';
+import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 
 @ApiTags('Vehicles')
 @ApiBearerAuth('access_token')
@@ -89,10 +91,24 @@ export class VehiclesController {
   //   return this.vehiclesService.findOne(+id);
   // }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateVehicleDto: UpdateVehicleDto) {
-  //   return this.vehiclesService.update(+id, updateVehicleDto);
-  // }
+  @UseInterceptors(
+    FileInterceptor(
+      'photo',
+      getMulterSettings({ destination: './public/uploads/vehicles' }),
+    ),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBearerAuth('access_token')
+  @UseGuards(IsUserGuard)
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() updateVehicleDto: UpdateVehicleDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (file) await this.vehiclesService.updateImage(id, file);
+    return this.vehiclesService.update(+id, updateVehicleDto);
+  }
 
   @UseGuards(IsUserGuard)
   @Delete(':id')
@@ -104,5 +120,25 @@ export class VehiclesController {
       );
 
     return await this.vehiclesService.remove(id);
+  }
+
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor(
+      'photo',
+      getMulterSettings({ destination: './public/uploads/vehicles' }),
+    ),
+  )
+  @UseGuards(IsUserGuard)
+  @Patch('id/image')
+  async updateAdImage(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Image file is missing');
+    }
+
+    return this.vehiclesService.updateImage(id, file);
   }
 }

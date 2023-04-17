@@ -6,6 +6,8 @@ import { UpdateServiceTypeDto } from './dto/update-service-type.dto';
 import { ServiceType } from './entities/service-type.entity';
 import { Setting } from 'src/settings/entities/setting.entity';
 import { EXCHANGE_RATE } from 'src/common/constants';
+import path from 'path';
+import { AppService } from 'src/app.service';
 
 @Injectable()
 export class ServiceTypesService {
@@ -14,6 +16,7 @@ export class ServiceTypesService {
     private serviceTypesRepository: Repository<ServiceType>,
     @InjectRepository(Setting)
     private settingsRepository: Repository<Setting>,
+    private appsService: AppService,
   ) {}
 
   async create(data: CreateServiceTypeDto) {
@@ -51,7 +54,7 @@ export class ServiceTypesService {
     }
 
     if (queryParams.search) {
-      let innerQuery = new Brackets((qb) => {
+      const innerQuery = new Brackets((qb) => {
         qb.where('type.name like :name', {
           name: `%${queryParams.search}%`,
         })
@@ -71,7 +74,7 @@ export class ServiceTypesService {
     }
 
     if (queryParams.serviceCategoryId) {
-      let queryString = 'type.serviceCategoryId = ' + queryParams.serviceCategoryId;
+      const queryString = 'type.serviceCategoryId = ' + queryParams.serviceCategoryId;
       if (isFirstWhere) {
         isFirstWhere = false;
         query = query.where(queryString);
@@ -89,7 +92,7 @@ export class ServiceTypesService {
     }).catch( err => {
       throw new BadRequestException('Error calculating prices', err);
     })
-    const exchangeRate: number = Number(exchangeRateSetting.value);
+    const exchangeRate = Number(exchangeRateSetting.value);
     
     query[0].forEach((element) => {
       element.priceLBP = element.price * exchangeRate;
@@ -123,9 +126,34 @@ export class ServiceTypesService {
   }
 
   async remove(id: string) {
-    // TODO: delete icon file
-    return await this.serviceTypesRepository.delete(id).catch((err) => {
-      throw new BadRequestException('Error removing service type!', err);
-    });
+    const service = await this.findOneByIdOrFail(id);
+    const icon = service.icon;
+
+    return await this.serviceTypesRepository
+      .delete(id)
+      .catch((err) => {
+        throw new BadRequestException('Error deleting service!', err);
+      })
+      .then(async () => {
+        if (icon) {
+          const imagePath = path.join(process.cwd(), icon);
+          console.log('Image path:', imagePath);
+          try {
+            await this.appsService.deleteFile(imagePath);
+          } catch (err) {
+            console.error(err);
+          }
+        }
+      });
+  }
+
+  async updateImage(id: string, newImage?: Express.Multer.File) {
+    //TODO to handle err in newImage
+    return await this.appsService.updateFile(
+      id,
+      'image',
+      newImage,
+      this.serviceTypesRepository
+    );
   }
 }

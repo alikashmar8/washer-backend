@@ -112,13 +112,24 @@ export class EmployeesController {
   }
 
 
-
+  @Roles(EmployeeRole.ADMIN, EmployeeRole.BRANCH_EMPLOYEE)
+  @UseGuards(RolesGuard)
+  @UseInterceptors(
+    FileInterceptor(
+      'photo',
+      getMulterSettings({ destination: './public/uploads/employees' }),
+    ),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBearerAuth('access_token')
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateEmployeeDto: UpdateEmployeeDto,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
-    return this.employeesService.update(+id, updateEmployeeDto);
+    if (file) await this.employeesService.updateImage(id, file);
+    return this.employeesService.update(id, updateEmployeeDto);
   }
 
 
@@ -133,21 +144,12 @@ export class EmployeesController {
         'You are not allowed to perform this action!',
       );
     }
-    const employeeToDelete = await this.employeesService.findByIdOrFail(id);
+    const deleteEmployee = await this.employeesService.findByIdOrFail(id);
     if (employee.role == EmployeeRole.BRANCH_EMPLOYEE) {
-      if (employee.branchId != employeeToDelete.branchId) {
+      if (employee.branchId != deleteEmployee.branchId) {
         return new UnauthorizedException(
           'You are not allowed to perform this action!',
         );
-      }
-    }
-    if(employeeToDelete.photo){
-      const imagePath = path.join(process.cwd(), employeeToDelete.photo);
-    
-      try {
-        await this.employeesService.deleteImage(id, imagePath);
-      } catch (err) {
-        console.error(`Error deleting image file: ${err.message}`);
       }
     }
     return await this.employeesService.remove(id);

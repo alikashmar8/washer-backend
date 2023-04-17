@@ -44,6 +44,14 @@ export class CreateProductDto {
   price: number;
 
   @ApiProperty({
+    type: Boolean,
+    required: true,
+    nullable:false,
+    default:true
+  })
+  isActive:boolean;
+
+  @ApiProperty({
     enum: Currency,
     required: false,
     example: Currency.LBP,
@@ -56,7 +64,7 @@ export class CreateProductDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  category_id:string;
+  categoryId:string;
 
 
   @ApiProperty({

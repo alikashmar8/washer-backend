@@ -71,11 +71,20 @@ export class ServiceTypesController {
 
   @Roles(EmployeeRole.ADMIN)
   @UseGuards(RolesGuard)
+  @UseInterceptors(
+    FileInterceptor(
+      'icon',
+      getMulterSettings({ destination: './public/uploads/service-types' }),
+    ),
+  )
+  @ApiConsumes('multipart/form-data')
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateServiceTypeDto: UpdateServiceTypeDto,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
+    if (file) await this.serviceTypesService.updateImage(id, file);
     return this.serviceTypesService.update(id, updateServiceTypeDto);
   }
 

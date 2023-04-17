@@ -47,7 +47,7 @@ export class BranchesController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateBranchDto: UpdateBranchDto) {
-    return this.branchesService.update(+id, updateBranchDto);
+    return this.branchesService.update(id, updateBranchDto);
   }
 
   @Roles(EmployeeRole.ADMIN)
