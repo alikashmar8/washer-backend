@@ -14,6 +14,17 @@ export class PromosService {
   ) {}
 
   async create(createPromoDto: CreatePromoDto) {
+    if (
+      (createPromoDto.discountAmount || createPromoDto.discountPercentage) ==
+      null
+    )
+      throw new BadRequestException(
+        'Neither Discount Amount nor Percentage were filled!',
+      );
+    if (createPromoDto.limit <= 0) throw new BadRequestException('Limit Error');
+    if (createPromoDto.expiryDate < new Date())
+      throw new BadRequestException('Expiry Date Error');
+
     const promo = await this.promosRepository.findOne({
       where: { code: createPromoDto.code, userId: createPromoDto.userId },
     });

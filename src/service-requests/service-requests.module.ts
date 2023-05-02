@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AddressesService } from 'src/addresses/addresses.service';
 import { Address } from 'src/addresses/entities/address.entity';
+import { AppService } from 'src/app.service';
 import { BranchesService } from 'src/branches/branches.service';
 import { Branch } from 'src/branches/entities/branch.entity';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
@@ -47,6 +48,7 @@ import { ServiceRequestsService } from './service-requests.service';
     VehiclesService,
     SettingsService,
     PromosService,
+    AppService,
   ],
 })
 export class ServiceRequestsModule {}

@@ -85,6 +85,9 @@ export class AddressesController {
         HttpStatus.UNAUTHORIZED,
       );
     }
+    console.log("updateAddressDto");
+    console.log(updateAddressDto);
+    
     return await this.addressesService.update(id, updateAddressDto);
   }
 
@@ -96,5 +99,11 @@ export class AddressesController {
     @CurrentEmployee() employee: Employee,
   ) {
     return await this.addressesService.remove(id, user, employee);
+  }
+
+  @UseGuards(AuthGuard)
+  @Get(':id')
+  async getById(id: string) {
+    return await this.addressesService.findByIdOrFail(id, ['user', 'branch'])
   }
 }

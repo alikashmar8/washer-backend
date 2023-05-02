@@ -31,5 +31,7 @@ export class IsEmployeeGuard implements CanActivate {
     } catch (err) {
       throw new HttpException('Token Invalid', HttpStatus.FORBIDDEN);
     }
+
   }
+  
 }

@@ -20,4 +20,12 @@ export default () => ({
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
     privateKey: process.env.FIREBASE_PRIVATE_KEY,
   },
+  mail: {
+    host: process.env.MAIL_HOST,
+    port: process.env.MAIL_PORT,
+    ignoreTLS: process.env.MAIL_IGNORE_TLS,
+    secure: process.env.MAIL_SECURE,
+    user: process.env.MAIL_IGNORE_USER,
+    pass: process.env.MAIL_IGNORE_PASS,
+  },
 });

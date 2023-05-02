@@ -32,7 +32,7 @@ import { UpdateLocationDto } from './dto/update-location.dto';
 import { EmployeesService } from './employees.service';
 import { Employee } from './entities/employee.entity';
 import geoip from 'geoip-lite';
-
+import * as path from 'path';
 
 @ApiTags('Employees')
 @UsePipes(new ValidationPipe())
@@ -59,7 +59,7 @@ export class EmployeesController {
     @UploadedFile() photo: Express.Multer.File,
   ) {
     // if (!photo) {
-    //   throw new BadRequestException('Ad image is required!');
+    //   throw new BadRequestException('Employee photo is required!');
     // } else {
     //   createEmployeeDto.photo = photo.path;
     // }
@@ -127,18 +127,27 @@ export class EmployeesController {
   @UseGuards(IsEmployeeGuard)
   @Delete(':id')
   async remove(@Param('id') id: string, @CurrentEmployee() employee: Employee) {
+    console.log(employee);
     if (employee.role == EmployeeRole.DRIVER && employee.id == id) {
       return new UnauthorizedException(
         'You are not allowed to perform this action!',
       );
     }
-
+    const employeeToDelete = await this.employeesService.findByIdOrFail(id);
     if (employee.role == EmployeeRole.BRANCH_EMPLOYEE) {
-      const employeeToDelete = await this.employeesService.findByIdOrFail(id);
       if (employee.branchId != employeeToDelete.branchId) {
         return new UnauthorizedException(
           'You are not allowed to perform this action!',
         );
+      }
+    }
+    if(employeeToDelete.photo){
+      const imagePath = path.join(process.cwd(), employeeToDelete.photo);
+    
+      try {
+        await this.employeesService.deleteImage(id, imagePath);
+      } catch (err) {
+        console.error(`Error deleting image file: ${err.message}`);
       }
     }
     return await this.employeesService.remove(id);

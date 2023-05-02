@@ -2,7 +2,6 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AddressesService } from 'src/addresses/addresses.service';
 import { Address } from 'src/addresses/entities/address.entity';
-import { BranchesService } from 'src/branches/branches.service';
 import { Branch } from 'src/branches/entities/branch.entity';
 import { EXCHANGE_RATE } from 'src/common/constants';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
@@ -25,7 +24,6 @@ import { ServiceRequest } from './entities/service-request.entity';
 @Injectable()
 export class ServiceRequestsService {
   constructor(
-    private branchesService: BranchesService,
     private addressesService: AddressesService,
     private vehiclesService: VehiclesService,
     private serviceTypesService: ServiceTypesService,
@@ -34,6 +32,8 @@ export class ServiceRequestsService {
     private requestsRepository: Repository<ServiceRequest>,
     @InjectRepository(Setting)
     private settingsRepository: Repository<Setting>,
+    @InjectRepository(Branch)
+    private branchesRepository: Repository<Branch>,
     private promoService: PromosService,
     private dataSource: DataSource,
   ) {}
@@ -42,8 +42,11 @@ export class ServiceRequestsService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.startTransaction();
     try {
-      const branches = await queryRunner.manager.find(Branch, {
+      const branches = await this.branchesRepository.find({
         relations: ['address'],
+        where: {
+          isActive: true,
+        },
       });
       let branch: any = {};
       const initialDistance = 99999999;
@@ -350,9 +353,10 @@ export class ServiceRequestsService {
   }): Promise<{
     total: number;
     totalLBP: number;
+    discountAmount: number;
+    discountAmountLBP: number;
   }> {
     let total = 0;
-    let totalLBP = 0;
 
     const exchangeRateSetting: Setting = await this.settingsRepository
       .findOneOrFail({
@@ -403,8 +407,9 @@ export class ServiceRequestsService {
     total += data.tips;
 
     // todo: check for fees or other costs in case of payment by credit cards
-    totalLBP = total * exchangeRate;
-    return { total, totalLBP };
+    const totalLBP = total * exchangeRate;
+    const discountAmountLBP = discountAmount * exchangeRate;
+    return { total, totalLBP, discountAmount, discountAmountLBP };
   }
 
   async updatePaymentStatus(

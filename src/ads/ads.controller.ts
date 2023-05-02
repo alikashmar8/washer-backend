@@ -3,7 +3,8 @@ import {
   Body,
   Controller,
   Delete,
-  Get, Param,
+  Get,
+  Param,
   Patch,
   Post,
   Query,
@@ -11,7 +12,7 @@ import {
   UseGuards,
   UseInterceptors,
   UsePipes,
-  ValidationPipe
+  ValidationPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
@@ -72,10 +73,11 @@ export class AdsController {
     return await this.adsService.update(id, updateAdDto);
   }
 
+  @Delete(':id')
+  @ApiBearerAuth('access_token')
   @Roles(EmployeeRole.ADMIN)
   @UseGuards(RolesGuard)
-  @Delete(':id')
-  async remove(@Param('id') id: string) {
+  async delete(@Param('id') id: string) {
     return await this.adsService.remove(id);
   }
 }

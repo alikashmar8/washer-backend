@@ -2,25 +2,22 @@ import { Category } from 'src/categories/entities/category.entity';
 import { Currency } from 'src/common/enums/currency.enum';
 import { OrderItem } from 'src/orders/entities/orderItem.entity';
 
-
 import {
   Column,
   CreateDateColumn,
   Entity,
   JoinColumn,
-  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
+  UpdateDateColumn
 } from 'typeorm';
-import { ProductCategory } from '../enums/product-category.enum';
 import { ProductImage } from './product-image.entity';
 
 @Entity('products')
 export class Product {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ nullable: false })
   title: string;
@@ -38,34 +35,27 @@ export class Product {
     default: Currency.LBP,
   })
   currency: Currency;
+  
+  @Column({ nullable: false, default: 0 })
+  views: number;
+  
+  @Column({ nullable: false })
+  categoryId?: string;
+
+  @OneToMany((type) => ProductImage, (image) => image.product)
+  images: ProductImage[];
+
+  @OneToMany((type) => OrderItem, (orderItem) => orderItem.product)
+  orderItems: OrderItem[];
+
+  @ManyToOne((type) => Category, (category) => category.products)
+  @JoinColumn({ name: 'categoryId' })
+  category: Category;
 
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
-
-
-  @OneToMany((type) => ProductImage, (image) => image.product)
-  images: ProductImage[];
-
-  // @ManyToOne((type) => Shop, (shop) => shop.products, { onDelete: 'CASCADE' })
-  // @JoinColumn({ name: 'shopId' })
-  // shop: Shop;
-
-
-
-  @OneToMany((type) => OrderItem, (orderItem) => orderItem.product)
-  orderItems: OrderItem[];
-
-  @ManyToOne(type => Category, category => category.products)
-  @JoinColumn({ name: "category_id" })
-  category: Category;
-
-
-  @Column({ nullable: false, default: 0 })
-  views: number;
-
-
 
 }

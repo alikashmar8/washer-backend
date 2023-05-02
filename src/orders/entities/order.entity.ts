@@ -45,7 +45,6 @@ export class Order {
   @Column({ nullable: true })
   discountAmount?: number;
 
-
   @CreateDateColumn()
   createdAt: Date;
 

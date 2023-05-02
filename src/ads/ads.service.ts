@@ -1,13 +1,23 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as fs from 'fs';
 import { Repository } from 'typeorm';
 import { CreateAdDto } from './dto/create-ad.dto';
 import { UpdateAdDto } from './dto/update-ad.dto';
 import { Ad } from './entities/ad.entity';
+import * as path from 'path';
+import { AppService } from 'src/app.service';
 
 @Injectable()
 export class AdsService {
-  constructor(@InjectRepository(Ad) private adsRepository: Repository<Ad>) {}
+  constructor(
+    @InjectRepository(Ad) private adsRepository: Repository<Ad>,
+    private appsService: AppService,
+  ) {}
   async create(createAdDto: CreateAdDto) {
     return await this.adsRepository.save(createAdDto).catch((error) => {
       console.log(error);
@@ -49,14 +59,32 @@ export class AdsService {
   }
 
   async remove(id: string) {
-    return await this.adsRepository.delete(id).catch((err) => {
-      throw new BadRequestException('Error deleting ad!', err);
-    });
+    const ad = await this.findOneByIdOrFail(id);
+    const image = ad.image;
+
+    return await this.adsRepository
+      .delete(id)
+      .catch((err) => {
+        throw new BadRequestException('Error deleting ad!', err);
+      })
+      .then(async () => {
+        if (image) {
+          const imagePath = path.join(process.cwd(), image);
+          console.log('Image path:', imagePath);
+          try {
+            await this.appsService.deleteFile(imagePath);
+          } catch (err) {
+            console.error(err);
+          }
+        }
+      });
   }
 
-  async findOneByIdOrFail(id: string) {
-    return await this.adsRepository.findOneByOrFail({ id }).catch((err) => {
-      throw new BadRequestException('Ad not found!', err);
-    });
+  async findOneByIdOrFail(id: string, relations?: string[]) {
+    return await this.adsRepository
+      .findOneOrFail({ where: { id: id }, relations: relations })
+      .catch((err) => {
+        throw new BadRequestException('Ad not found!', err);
+      });
   }
 }
