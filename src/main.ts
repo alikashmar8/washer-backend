@@ -5,11 +5,12 @@ import * as useragent from 'express-useragent';
 import * as firebaseAdmin from 'firebase-admin';
 import * as morgan from 'morgan';
 import { AppModule } from './app.module';
-
-
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
   const configService: ConfigService = app.get(ConfigService);
 
   app.use(
