@@ -1,0 +1,28 @@
+service: nestjs-project
+
+plugins:
+  # - serverless-plugin-typescript
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  ecr:
+    images:
+      appimage:
+        path: ./
+
+functions:
+  main:
+    image:
+      name: appimage
+      command:
+        - dist/lambda.handler
+      entryPoint:
+        - "/lambda-entrypoint.sh"
+    # handler: src/lambda.handler
+    events:
+      - http:
+          method: any
+          path: /{any+}
