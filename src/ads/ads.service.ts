@@ -54,6 +54,7 @@ export class AdsService {
 
   async update(id: string, data: UpdateAdDto) {
     return await this.adsRepository.update(id, data).catch((err) => {
+      console.log(err);
       throw new BadRequestException('Error updating ad!', err);
     });
   }
