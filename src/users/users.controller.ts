@@ -1,3 +1,4 @@
+import { CreateUserChatDto } from './../chats/dto/create-user-chat.dto';
 import {
   Body,
   Controller,
@@ -5,8 +6,9 @@ import {
   Get,
   Param,
   Patch,
+  Post,
   Query,
-  UseGuards
+  UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
@@ -14,6 +16,10 @@ import { Roles } from 'src/common/decorators/roles.decorator';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { IsUserGuard } from 'src/auth/guards/is-user.guard';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { User } from './entities/user.entity';
 
 @ApiTags('Users')
 @ApiBearerAuth('access_token')
@@ -35,6 +41,7 @@ export class UsersController {
     return await this.usersService.findAll(queryParams);
   }
 
+  @UseGuards(AuthGuard)
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return await this.usersService.findOneOrFail(id, [
@@ -45,13 +52,36 @@ export class UsersController {
     ]);
   }
 
+  @UseGuards(AuthGuard)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(+id, updateUserDto);
   }
 
+  @UseGuards(AuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
+  }
+
+  @UseGuards(IsUserGuard)
+  @Post(':id/chats')
+  async addNewChat(
+    @Param('id') id: string,
+    body: CreateUserChatDto,
+    @CurrentUser() user: User,
+  ) {
+    body.userId = user.id;
+    return await this.usersService.createChat(body);
+  }
+
+  @UseGuards(IsUserGuard)
+  @Get(':id/chats')
+  async getAllChats(
+    @Param('id') id: string,
+    body: CreateUserChatDto,
+    @CurrentUser() user: User,
+  ) {
+    return await this.usersService.getUserChats(user.id);
   }
 }

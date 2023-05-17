@@ -14,6 +14,8 @@ import { BranchesModule } from './branches/branches.module';
 import { BranchesService } from './branches/branches.service';
 import { Branch } from './branches/entities/branch.entity';
 import { CategoriesModule } from './categories/categories.module';
+import { ChatsModule } from './chats/chats.module';
+import { Chat } from './chats/entities/chat.entity';
 import { MailModule } from './common/mail/mail.module';
 import { ConsoleCommandsModule } from './console-commands/console-commands.module';
 import { CreditCardsModule } from './credit-cards/credit-cards.module';
@@ -56,6 +58,7 @@ import { WalletsModule } from './wallets/wallets.module';
       User,
       Setting,
       Employee,
+      Chat,
     ]),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '../public'), // added ../ to get one folder back
@@ -110,6 +113,7 @@ import { WalletsModule } from './wallets/wallets.module';
     CategoriesModule,
     OrdersModule,
     MailModule,
+    ChatsModule,
   ],
   controllers: [AppController],
   providers: [AppService, BranchesService, EmployeesService, UsersService],

@@ -17,9 +17,13 @@ import { PaymentType } from './common/enums/payment-type.enum';
 import { Employee } from './employees/entities/employee.entity';
 import { Setting } from './settings/entities/setting.entity';
 import { UsersService } from './users/users.service';
+import { Chat } from './chats/entities/chat.entity';
 
 @Injectable()
 export class AppService {
+  createMessage(payload: Chat) {
+    throw new Error('Method not implemented.');
+  }
   constructor(
     private branchesService: BranchesService,
     private usersService: UsersService,

@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppService } from 'src/app.service';
 import { BranchesService } from 'src/branches/branches.service';
 import { Branch } from 'src/branches/entities/branch.entity';
+import { Chat } from 'src/chats/entities/chat.entity';
 import { DeviceTokensService } from 'src/device-tokens/device-tokens.service';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
 import { EmployeesService } from 'src/employees/employees.service';
@@ -24,6 +25,7 @@ import { ProductsService } from './products.service';
       Employee,
       Setting,
       Branch,
+      Chat,
     ]),
   ],
   controllers: [ProductsController],
