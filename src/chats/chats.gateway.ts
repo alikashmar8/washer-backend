@@ -1,20 +1,21 @@
-import { ChatsService } from './chats.service';
-import { NestGateway } from '@nestjs/websockets/interfaces/nest-gateway.interface.d';
+import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import {
-  ConnectedSocket,
-  MessageBody,
-  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  SubscribeMessage,
+  OnGatewayInit,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  ConnectedSocket,
+  MessageBody,
 } from '@nestjs/websockets';
-import { Bind, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
-import { Chat } from './entities/chat.entity';
-import { Socket } from 'socket.io';
-import { Server } from 'typeorm';
+import { Server, Socket } from 'socket.io';
 import { WsGuard } from 'src/auth/guards/ws.guard';
-import { CreateMessageDto } from './dto/chat.dto';
-import { UsersService } from 'src/users/users.service';
+import { ChatsService } from 'src/chats/chats.service';
+import { CreateMessageDto } from 'src/chats/dto/chat.dto';
 import { EmployeesService } from 'src/employees/employees.service';
+import { UsersService } from 'src/users/users.service';
+
 
 @WebSocketGateway({
   cors: {
@@ -23,25 +24,32 @@ import { EmployeesService } from 'src/employees/employees.service';
   namespace: "chatGateway"
 })
 @UsePipes(new ValidationPipe())
-export class ChatsGateway implements NestGateway {
+export class ChatsGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   constructor(
     private chatsService: ChatsService,
     private usersService: UsersService,
-    private employeesService: EmployeesService
-    ) {}
+    private employeesService: EmployeesService,
+  ) {}
 
-  @WebSocketServer() wss: Server;
+  @WebSocketServer() server: Server;
 
-  afterInit(server: any) {
-    console.log('afterInit');
-    // console.log('afterInit', server);
+  // todo: delete connectedClients if not needed
+  private connectedClients: Map<string, string> = new Map();
+
+  afterInit(server: Server) {
+    console.log('WebSocket server initialized');
   }
 
-  handleConnection(client: any) {
-    console.log('Connected Client', client.id);
-    // process.nextTick(() => {
-    //   client.emit('allChats', "this.chatsService.getAllChats()");
-    // });
+  handleConnection(client: Socket, ...args: any[]) {
+    console.log(`Client connected: ${client.id}`);
+    this.connectedClients.set(client.id, null);
+  }
+
+  handleDisconnect(client: Socket) {
+    console.log(`Client disconnected: ${client.id}`);
+    this.connectedClients.delete(client.id);
   }
 
   @UseGuards(WsGuard)
@@ -50,48 +58,52 @@ export class ChatsGateway implements NestGateway {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: CreateMessageDto,
   ) {
+    console.log(
+      `Processing: Client ${client.id} sent message: ${data.message}`,
+    );
+    // get access token from headers
     const token = client.handshake.headers.authorization.split(' ')[1];
+    // get user that have this token
     const user = await this.usersService.findOneByToken(token);
     if (!user) return;
+    // assign user id in data to submit
     data.userId = user.id;
-    // create message
-    const chatMessage = await this.chatsService.createMessage(
-      data      
-    );
-
-    // const { chatId } = data;
-
-    // notify connected users
-    this.wss
-      // .to(chatId)
-      .emit('messages', { message: chatMessage });
+    // create message in database
+    const messageObj = await this.chatsService.createMessage(data);
+    const chat = await this.chatsService.findChatByIdOrFail(messageObj.chatId, [
+      'user',
+      'employee',
+    ]);
+    // emit message to related employee only
+    this.server.emit('messages-' + chat.employeeId, { messageObj });
   }
 
-  
   @UseGuards(WsGuard)
   @SubscribeMessage('employee_send_message')
   async handleEmployeeSendMessage(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: CreateMessageDto,
   ) {
+    console.log(
+      `Processing: Client ${client.id} sent message: ${data.message}`,
+    );
+    // get access token from headers
     const token = client.handshake.headers.authorization.split(' ')[1];
+    // get employee that have this token
     const employee = await this.employeesService.findOneByToken(token);
     if (!employee) return;
+    // assign employee id in data to submit
     data.employeeId = employee.id;
-    // create message
-    const chatMessage = await this.chatsService.createMessage(
-      data      
-    );
-
-    // const { chatId } = data;
-
-    // notify connected users
-    this.wss
-      // .to(chatId)
-      .emit('messages', { message: chatMessage });
+    // create message in database
+    const messageObj = await this.chatsService.createMessage(data);
+    const chat = await this.chatsService.findChatByIdOrFail(messageObj.chatId, [
+      'user',
+      'employee',
+    ]);
+    // emit message to related user only
+    this.server.emit('messages-' + chat.userId, { messageObj });
   }
 
-  handleDisconnect(client: any) {
-    console.log('Client Disconnected');
-  }
+  // todo: 1- check if notify on chat creation is needed
+  //       2- ?
 }
