@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { Vehicle } from './entities/vehicle.entity';
-import path from 'path';
+import * as path from 'path';
 import { AppService } from 'src/app.service';
 
 @Injectable()
@@ -83,7 +83,7 @@ export class VehiclesService {
     //TODO to handle err in newImage
     return await this.appsService.updateFile(
       id,
-      'image',
+      'photo',
       newImage,
       this.vehiclesRepository
     );

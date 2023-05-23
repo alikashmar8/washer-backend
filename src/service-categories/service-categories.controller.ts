@@ -12,7 +12,7 @@ import {
   UseGuards,
   UseInterceptors,
   UsePipes,
-  ValidationPipe
+  ValidationPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
@@ -71,14 +71,30 @@ export class ServiceCategoriesController {
     return await this.serviceCategoriesService.findOneByIdOrFail(id);
   }
 
+  @UseInterceptors(
+    FileInterceptor(
+      'icon',
+      getMulterSettings({ destination: './public/uploads/categories' }),
+    ),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBearerAuth('access_token')
   @Roles(EmployeeRole.ADMIN)
   @UseGuards(RolesGuard)
   @Patch(':id')
   async update(
     @Param('id') id: string,
-    @Body() updateServiceCategoryDto: UpdateServiceCategoryDto,
+    @Body() updateServiceCategoryDto?: UpdateServiceCategoryDto,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
     // todo: handle image update
+    if (file) {
+      console.log("Image to update exits")
+      await this.serviceCategoriesService.updateImage(id, file);
+    }else{
+      console.log("Image to update doesn't exits")
+      console.log("update dto:"+updateServiceCategoryDto);
+    }
     return await this.serviceCategoriesService.update(
       id,
       updateServiceCategoryDto,

@@ -36,6 +36,7 @@ import * as path from 'path';
 
 @ApiTags('Employees')
 @UsePipes(new ValidationPipe())
+@ApiBearerAuth('access_token')
 @Controller('employees')
 export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) { }
@@ -51,18 +52,17 @@ export class EmployeesController {
     ),
   )
   @ApiConsumes('multipart/form-data')
-  @ApiBearerAuth('access_token')
   @Post()
   async create(
     @Body() createEmployeeDto: CreateEmployeeDto,
     @CurrentEmployee() employee: Employee,
     @UploadedFile() photo: Express.Multer.File,
   ) {
-    if (!photo) {
-      throw new BadRequestException('Ad image is required!');
-    } else {
-      createEmployeeDto.photo = photo.path;
-    }
+    // if (!photo) {
+    //   throw new BadRequestException('Employee photo is required!');
+    // } else {
+    //   createEmployeeDto.photo = photo.path;
+    // }
     if (
       employee.role != EmployeeRole.ADMIN &&
       createEmployeeDto.role == EmployeeRole.ADMIN
@@ -70,6 +70,11 @@ export class EmployeesController {
       throw new UnauthorizedException(
         'You are not allowed to create admin users',
       );
+      if (!photo) {
+        throw new BadRequestException('Employee photo is required!');
+      } else {
+        createEmployeeDto.photo = photo.path;
+      }
     return await this.employeesService.create(createEmployeeDto);
   }
 
@@ -121,13 +126,13 @@ export class EmployeesController {
     ),
   )
   @ApiConsumes('multipart/form-data')
-  @ApiBearerAuth('access_token')
   @Patch(':id')
   async update(
     @Param('id') id: string,
-    @Body() updateEmployeeDto: UpdateEmployeeDto,
+    @Body() updateEmployeeDto?: UpdateEmployeeDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
+    console.log("data",updateEmployeeDto);
     if (file) await this.employeesService.updateImage(id, file);
     return this.employeesService.update(id, updateEmployeeDto);
   }

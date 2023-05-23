@@ -8,7 +8,7 @@ import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { Employee } from './entities/employee.entity';
 import * as fs from 'fs';
-import path from 'path';
+import * as path from 'path';
 import { AppService } from 'src/app.service';
 
 @Injectable()
@@ -16,8 +16,7 @@ export class EmployeesService {
   constructor(
     @InjectRepository(Employee) private employeesRepository: Repository<Employee>,
     @InjectRepository(DeviceToken) private deviceTokensRepository: Repository<DeviceToken>,
-    private appsService:AppService,
-
+    private appService: AppService
   ) { }
 
 
@@ -219,7 +218,7 @@ export class EmployeesService {
         if (photo) {
           const imagePath = path.join(process.cwd(), photo);
           try {
-            await this.appsService.deleteFile(imagePath);
+            await this.appService.deleteFile(imagePath);
           } catch (err) {
             console.error(err);
           }
@@ -262,7 +261,7 @@ export class EmployeesService {
 
   async updateImage(id: string, newImage?: Express.Multer.File) {
     //TODO to handle err in newImage
-    return await this.appsService.updateFile(
+    return await this.appService.updateFile(
       id,
       'image',
       newImage,

@@ -42,7 +42,7 @@ export class Product {
   @Column({nullable:false,type:'boolean',default:true})
   isActive:boolean;
   
-  @Column({ nullable: false ,default:""})
+  @Column({ nullable: false ,default:1})
   categoryId: string;
 
   @OneToMany((type) => ProductImage, (image) => image.product)

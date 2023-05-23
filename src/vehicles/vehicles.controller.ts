@@ -37,22 +37,13 @@ import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 export class VehiclesController {
   constructor(private readonly vehiclesService: VehiclesService) {}
 
-  @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor(
       'photo',
       getMulterSettings({ destination: './public/uploads/vehicles' }),
     ),
   )
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        createVehicleDto: { type: 'string' },
-        photo: { type: 'string', format: 'binary' },
-      },
-    },
-  })
+  @ApiConsumes('multipart/form-data')
   @UseGuards(IsUserGuard)
   @Post()
   async create(
@@ -103,9 +94,11 @@ export class VehiclesController {
   @Patch(':id')
   async update(
     @Param('id') id: string,
-    @Body() updateVehicleDto: UpdateVehicleDto,
+    @Body() updateVehicleDto?: UpdateVehicleDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
+    console.log("********************");
+    console.log("vehicleDTO:"+updateVehicleDto);
     if (file) await this.vehiclesService.updateImage(id, file);
     return this.vehiclesService.update(+id, updateVehicleDto);
   }
@@ -122,23 +115,5 @@ export class VehiclesController {
     return await this.vehiclesService.remove(id);
   }
 
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(
-    FileInterceptor(
-      'photo',
-      getMulterSettings({ destination: './public/uploads/vehicles' }),
-    ),
-  )
-  @UseGuards(IsUserGuard)
-  @Patch('id/image')
-  async updateAdImage(
-    @Param('id') id: string,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    if (!file) {
-      throw new BadRequestException('Image file is missing');
-    }
 
-    return this.vehiclesService.updateImage(id, file);
-  }
 }

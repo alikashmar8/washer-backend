@@ -23,15 +23,16 @@ import {
   sendWhatsappTestMessage,
   terminateWhatsappConfiguration,
 } from './whatsapp';
+import { MailService } from 'src/common/mail/mail.service';
 
 @Injectable()
 export class AuthService {
-  
   constructor(
     private usersService: UsersService,
     private employeesService: EmployeesService,
     private deviceTokensService: DeviceTokensService,
     private dataSource: DataSource,
+    private mailService: MailService,
     @InjectRepository(DeviceToken)
     private deviceTokensRepository: Repository<DeviceToken>,
     @InjectRepository(User) private usersRepository: Repository<User>,
@@ -78,6 +79,33 @@ export class AuthService {
     );
   }
 
+  async sendEmailVerificationCode(id: string) {
+    const user = await this.usersService.findOneOrFail(id);
+    if (!user || !user.email || user.isEmailVerified)
+      throw new BadRequestException('Invalid User!');
+
+    const verificationCode: number = Math.floor(
+      100000 + Math.random() * 900000,
+    );
+    const verificationCodeExpires: Date = new Date();
+    const expirationTime = 2 * 24 * 60 * 60 * 1000;
+    verificationCodeExpires.setTime(
+      verificationCodeExpires.getTime() + expirationTime,
+    );
+
+    user.emailVerificationCode = verificationCode.toString();
+    user.emailVerificationCodeExpiry = verificationCodeExpires;
+
+    await this.usersRepository.save(user).catch((err) => {
+      throw new BadRequestException('Error updating user', err);
+    });
+    //to send code to email
+    // return await sendWhatsappMessage(
+    //   user.phoneNumber.toString(),
+    //   'You verification code is: ' + verificationCode,
+    // );
+  }
+
   async verifyMobileNumber(id: string, code: string): Promise<boolean> {
     if (!code) return false;
 
@@ -97,6 +125,32 @@ export class AuthService {
 
     user.isMobileVerified = true;
     user.mobileVerificationDate = new Date();
+    await this.usersRepository.save(user).catch((err) => {
+      throw new BadRequestException(err);
+    });
+
+    return true;
+  }
+
+  async verifyEmail(id: string, code: string): Promise<boolean> {
+    if (!code) return false;
+
+    const user = await this.usersService.findOneOrFail(id);
+
+    if (user.isEmailVerified)
+      throw new BadRequestException('Email already verified');
+
+    if (user.emailVerificationCode != code) {
+      throw new BadRequestException('Invalid email');
+    }
+
+    const todayDate = new Date();
+    if (todayDate > user.emailVerificationCodeExpiry) {
+      throw new BadRequestException('Verification email expired');
+    }
+
+    user.isEmailVerified = true;
+    user.emailVerificationDate = new Date();
     await this.usersRepository.save(user).catch((err) => {
       throw new BadRequestException(err);
     });
@@ -292,5 +346,20 @@ export class AuthService {
 
   async terminateWhatsapp() {
     return await terminateWhatsappConfiguration();
+  }
+
+  async sendTestEmail() {
+    try {
+      return this.mailService.send({
+        from: process.env.MAIL_FROM_USER,
+        to: 'alikashmar888888888@gmail.com',
+        subject: 'Test Email From Washer Backend',
+        text: 'This is a test email from the Washer Backend!',
+        html: 'This is a test email from the Washer Backend!',
+      });
+    } catch (err) {
+      console.log(err);
+      throw new BadRequestException('Error sending test email');
+    }
   }
 }

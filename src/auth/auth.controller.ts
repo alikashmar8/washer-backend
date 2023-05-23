@@ -130,4 +130,9 @@ export class AuthController {
   ) {
     return await this.authService.verifyMobileNumber(user.id, code);
   }
+
+  @Get('sendTestEmail')
+  async sendTestEmail() {
+    return await this.authService.sendTestEmail();
+  }
 }

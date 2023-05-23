@@ -12,7 +12,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductImage } from './entities/product-image.entity';
 import { Product } from './entities/product.entity';
-import path from 'path';
+import * as path from 'path';
 import { AppService } from 'src/app.service';
 
 @Injectable()

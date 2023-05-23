@@ -52,9 +52,11 @@ export class ProductsController {
     @Body() createProductDto: CreateProductDto,
     @UploadedFiles() images: Express.Multer.File[],
   ) {
+    console.log("createDTO",createProductDto);
     if (!images || !images.length) {
       throw new BadRequestException('product images are required!');
     } else {
+      console.log("product 1");
       const imageList = images.map((image) => image.path);
       createProductDto.images = imageList;
     }

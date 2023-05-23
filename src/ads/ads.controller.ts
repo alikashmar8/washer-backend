@@ -79,9 +79,10 @@ export class AdsController {
   @Patch(':id')
   async update(
     @Param('id') id: string,
-    @Body() updateAdDto: UpdateAdDto,
+    @Body() updateAdDto?: UpdateAdDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
+    console.log(updateAdDto);
     if (file) await this.adsService.updateImage(id, file);
     return await this.adsService.update(id, updateAdDto);
   }

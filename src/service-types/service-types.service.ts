@@ -6,7 +6,7 @@ import { UpdateServiceTypeDto } from './dto/update-service-type.dto';
 import { ServiceType } from './entities/service-type.entity';
 import { Setting } from 'src/settings/entities/setting.entity';
 import { EXCHANGE_RATE } from 'src/common/constants';
-import path from 'path';
+import * as path from 'path';
 import { AppService } from 'src/app.service';
 
 @Injectable()
@@ -151,7 +151,7 @@ export class ServiceTypesService {
     //TODO to handle err in newImage
     return await this.appsService.updateFile(
       id,
-      'image',
+      'icon',
       newImage,
       this.serviceTypesRepository
     );

@@ -1,11 +1,15 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppService } from 'src/app.service';
+import { BranchesService } from 'src/branches/branches.service';
+import { Branch } from 'src/branches/entities/branch.entity';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
 import { EmployeesService } from 'src/employees/employees.service';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { Product } from 'src/products/entities/product.entity';
 import { Promo } from 'src/promos/entities/promo.entity';
 import { PromosService } from 'src/promos/promos.service';
+import { Setting } from 'src/settings/entities/setting.entity';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 import { Order } from './entities/order.entity';
@@ -14,8 +18,27 @@ import { OrdersController } from './orders.controller';
 import { OrdersService } from './orders.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Order, User, DeviceToken, Employee, OrderItem, Product, Promo])],
+  imports: [
+    TypeOrmModule.forFeature([
+      Order,
+      User,
+      DeviceToken,
+      Employee,
+      OrderItem,
+      Product,
+      Promo,
+      Setting,
+      Branch,
+    ]),
+  ],
   controllers: [OrdersController],
-  providers: [OrdersService, UsersService, EmployeesService, PromosService]
+  providers: [
+    OrdersService,
+    UsersService,
+    EmployeesService,
+    PromosService,
+    AppService,
+    BranchesService,
+  ],
 })
-export class OrdersModule { }
+export class OrdersModule {}
