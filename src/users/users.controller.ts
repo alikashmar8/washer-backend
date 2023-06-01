@@ -1,4 +1,3 @@
-import { CreateUserChatDto } from './../chats/dto/create-user-chat.dto';
 import {
   Body,
   Controller,
@@ -9,18 +8,22 @@ import {
   Post,
   Query,
   UseGuards,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { EmployeeRole } from 'src/common/enums/employee-role.enum';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { UsersService } from './users.service';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { IsUserGuard } from 'src/auth/guards/is-user.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { EmployeeRole } from 'src/common/enums/employee-role.enum';
+import { CreateUserChatDto } from './../chats/dto/create-user-chat.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { UsersService } from './users.service';
 
+@UsePipes(new ValidationPipe())
 @ApiTags('Users')
 @ApiBearerAuth('access_token')
 @Controller('users')

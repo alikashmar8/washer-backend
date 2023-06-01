@@ -21,11 +21,11 @@ export class Chat {
   @Column({ nullable: false })
   userId: string;
 
-  @Column({ nullable: false })
-  lastMessage: string;
+  @Column({ nullable: true })
+  lastMessage?: string;
 
-  @Column({ nullable: false })
-  lastMessageDate: Date;
+  @Column({ nullable: true })
+  lastMessageDate?: Date;
 
   @ManyToOne((type) => User, (user) => user.chats, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })

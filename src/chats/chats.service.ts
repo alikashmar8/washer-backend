@@ -2,8 +2,6 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm/repository/Repository';
 import { CreateMessageDto } from './dto/chat.dto';
-import { CreateChatDto } from './dto/create-chat.dto';
-import { UpdateChatDto } from './dto/update-chat.dto';
 import { Chat } from './entities/chat.entity';
 import { Message } from './entities/message.entity';
 
@@ -15,8 +13,17 @@ export class ChatsService {
   ) {}
 
   async createMessage(data: CreateMessageDto) {
+    this.chatsRepository
+      .update(data.chatId, {
+        lastMessage: data.message,
+        lastMessageDate: new Date(),
+      })
+      .catch((err) => {
+        console.log('error updating Chat after message sent!', err);
+      });
     return await this.chatsRepository.save(data);
   }
+  
   async findChatByIdOrFail(chatId: string, relations?: string[]) {
     return await this.chatsRepository
       .findOneOrFail({
@@ -28,23 +35,28 @@ export class ChatsService {
       });
   }
 
-  create(createChatDto: CreateChatDto) {
-    return 'This action adds a new chat';
-  }
-
-  findAll() {
-    return `This action returns all chats`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} chat`;
-  }
-
-  update(id: number, updateChatDto: UpdateChatDto) {
-    return `This action updates a #${id} chat`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} chat`;
+  async findChatMessages(
+    chatId: string,
+    filters: {
+      userId?: string;
+      employeeId?: string;
+      take?: number;
+      skip?: number;
+    },
+  ) {
+    const take = filters.take || 15;
+    const skip = filters.skip || 0;
+    return await this.messagesRepository.findAndCount({
+      where: {
+        chatId,
+        userId: filters.userId,
+        employeeId: filters.employeeId,
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+      skip: skip,
+      take: take,
+    });
   }
 }

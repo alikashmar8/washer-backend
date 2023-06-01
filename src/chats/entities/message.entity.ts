@@ -31,7 +31,7 @@ export class Message {
   isRead: boolean;
 
   @Column({ nullable: false })
-  chatId: number;
+  chatId: string;
 
   @Column({ nullable: true })
   userId?: string;
