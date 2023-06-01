@@ -1,23 +1,31 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as fs from 'fs';
+import { AppService } from 'src/app.service';
+import { Chat } from 'src/chats/entities/chat.entity';
 import { DeviceTokenStatus } from 'src/common/enums/device-token-status.enum';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
-import { Brackets, EntityManager, Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
+import { CreateEmployeeChatDTO } from './../chats/dto/create-employee-chat.dto';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { Employee } from './entities/employee.entity';
-import * as fs from 'fs';
-import { AppService } from 'src/app.service';
 
 @Injectable()
 export class EmployeesService {
   constructor(
-    @InjectRepository(Employee) private employeesRepository: Repository<Employee>,
-    @InjectRepository(DeviceToken) private deviceTokensRepository: Repository<DeviceToken>,
-    private appService: AppService
-  ) { }
-
+    @InjectRepository(Employee)
+    private employeesRepository: Repository<Employee>,
+    @InjectRepository(DeviceToken)
+    private deviceTokensRepository: Repository<DeviceToken>,
+    @InjectRepository(Chat) private chatsRepository: Repository<Chat>,
+    private appService: AppService,
+  ) {}
 
   async findById(id: string, relations?: string[]) {
     return await this.employeesRepository.findOne({
@@ -227,7 +235,9 @@ export class EmployeesService {
   ): Promise<Employee> {
     const employee = await this.employeesRepository.findOneById(id);
     if (!employee) {
-      throw new BadRequestException('Error updating location, employee not found');
+      throw new BadRequestException(
+        'Error updating location, employee not found',
+      );
     }
     employee.currentLatitude = latitude;
     employee.currentLongitude = longitude;
@@ -235,9 +245,11 @@ export class EmployeesService {
   }
 
   async findOneByIdOrFail(id: string) {
-    return await this.employeesRepository.findOneByOrFail({ id }).catch((err) => {
-      throw new BadRequestException('Employee not found!', err);
-    });
+    return await this.employeesRepository
+      .findOneByOrFail({ id })
+      .catch((err) => {
+        throw new BadRequestException('Employee not found!', err);
+      });
   }
 
   async deleteImage(id: string, imagePath: string) {
@@ -259,5 +271,29 @@ export class EmployeesService {
       }
     }
   }
-  
+
+  async createChat(body: CreateEmployeeChatDTO) {
+    const exists = await this.chatsRepository.findOne({
+      where: {
+        employeeId: body.employeeId,
+        userId: body.userId,
+      },
+    });
+
+    if (exists) throw new BadRequestException('Chat already exists');
+
+    return await this.chatsRepository.save({
+      employeeId: body.employeeId,
+      userId: body.userId,
+    });
+  }
+
+  async getEmployeeChats(id: string) {
+    return await this.chatsRepository.find({
+      where: {
+        employeeId: id,
+      },
+      relations: ['user', 'employee'],
+    });
+  }
 }
