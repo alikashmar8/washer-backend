@@ -21,7 +21,7 @@ export class ChatsService {
       .catch((err) => {
         console.log('error updating Chat after message sent!', err);
       });
-    return await this.chatsRepository.save(data);
+    return await this.messagesRepository.save(data);
   }
   
   async findChatByIdOrFail(chatId: string, relations?: string[]) {
