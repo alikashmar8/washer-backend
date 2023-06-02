@@ -2,7 +2,6 @@ import { Currency } from 'src/common/enums/currency.enum';
 import { Transaction } from 'src/transactions/entities/transaction.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
-  BaseEntity,
   Column,
   Entity,
   OneToMany,
@@ -11,8 +10,8 @@ import {
 } from 'typeorm';
 
 @Entity('wallets')
-export class Wallet extends BaseEntity {
-  @PrimaryGeneratedColumn('uuid')
+export class Wallet {
+  @PrimaryGeneratedColumn()
   id: string;
 
   @Column({ type: 'float', default: 0 })
