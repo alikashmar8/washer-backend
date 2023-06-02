@@ -27,7 +27,7 @@ export class Message {
   @Column({ nullable: true })
   audio?: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, default: false })
   isRead: boolean;
 
   @Column({ nullable: false })
