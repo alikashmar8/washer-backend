@@ -82,7 +82,6 @@ export class UsersController {
   @Get(':id/chats')
   async getAllChats(
     @Param('id') id: string,
-    @Body() body: CreateUserChatDto,
     @CurrentUser() user: User,
   ) {
     return await this.usersService.getUserChats(user.id);
