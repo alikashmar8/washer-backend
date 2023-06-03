@@ -1,5 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CreateUserChatDto } from 'src/chats/dto/create-user-chat.dto';
+import { Chat } from 'src/chats/entities/chat.entity';
 import { DeviceTokenStatus } from 'src/common/enums/device-token-status.enum';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
 import { Brackets, Repository } from 'typeorm';
@@ -11,6 +13,7 @@ import { User } from './entities/user.entity';
 export class UsersService {
   constructor(
     @InjectRepository(User) private usersRepository: Repository<User>,
+    @InjectRepository(Chat) private chatsRepository: Repository<Chat>,
     @InjectRepository(DeviceToken)
     private deviceTokensRepository: Repository<DeviceToken>,
   ) {}
@@ -49,7 +52,7 @@ export class UsersService {
         throw new BadRequestException(`User ${username} not found!`);
       });
   }
-  
+
   async create(data: CreateUserDto) {
     const user = this.usersRepository.create(data);
     return await this.usersRepository.save(user).catch((err) => {
@@ -133,7 +136,7 @@ export class UsersService {
     });
     return deviceToken.user;
   }
-  
+
   async findOneOrFail(id: string, relations?: string[]) {
     return await this.usersRepository
       .findOneOrFail({
@@ -143,5 +146,30 @@ export class UsersService {
       .catch((err) => {
         throw new BadRequestException('User not found!', err);
       });
+  }
+
+  async createChat(body: CreateUserChatDto) {
+    const exists = await this.chatsRepository.findOne({
+      where: {
+        employeeId: body.employeeId,
+        userId: body.userId,
+      },
+    });
+
+    if (exists) throw new BadRequestException('Chat already exists');
+
+    return await this.chatsRepository.save({
+      employeeId: body.employeeId,
+      userId: body.userId,
+    });
+  }
+
+  async getUserChats(id: string) {
+    return await this.chatsRepository.find({
+      where: {
+        userId: id,
+      },
+      relations: ['user', 'employee'],
+    });
   }
 }

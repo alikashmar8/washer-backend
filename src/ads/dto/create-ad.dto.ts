@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBooleanString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateAdDto {
   @ApiProperty()
@@ -19,7 +19,7 @@ export class CreateAdDto {
     default: false,
   })
   @IsOptional()
-  @IsBooleanString()
+  @IsBoolean()
   isActive?: boolean;
 
   @ApiProperty({

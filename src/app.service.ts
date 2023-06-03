@@ -21,9 +21,13 @@ import * as path from 'path';
 
 import { Employee } from './employees/entities/employee.entity';
 import { UsersService } from './users/users.service';
+import { Chat } from './chats/entities/chat.entity';
 
 @Injectable()
 export class AppService {
+  createMessage(payload: Chat) {
+    throw new Error('Method not implemented.');
+  }
   constructor(
     private branchesService: BranchesService,
     private usersService: UsersService,
@@ -138,16 +142,17 @@ export class AppService {
     ) {
       
       const entity = await repository.findOne({where:{id:id}});
+      console.log("entity: " , entity);
       if (!entity) {
         throw new NotFoundException(`Entity with ID ${id} not found`);
       }
-      
-    
-      const oldFile = entity[filePropertyName];
-    
+      const oldFile = entity.filePropertyName;
+    console.log("oldFile ",oldFile);
+
       await repository.update(id, { [filePropertyName]: newFile.path });
       console.log("check_3");
-      console.log(oldFile);
+
+      
       if (oldFile) {
         console.log(oldFile);
         const oldFilePath = path.join(process.cwd(), oldFile);

@@ -20,8 +20,11 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
+import geoip from 'geoip-lite';
+import * as path from 'path';
 import { IsEmployeeGuard } from 'src/auth/guards/is-employee.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { CreateEmployeeChatDTO } from 'src/chats/dto/create-employee-chat.dto';
 import { CurrentEmployee } from 'src/common/decorators/current-employee.decorator';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
@@ -31,17 +34,13 @@ import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { EmployeesService } from './employees.service';
 import { Employee } from './entities/employee.entity';
-import geoip from 'geoip-lite';
-import * as path from 'path';
 
 @ApiTags('Employees')
 @UsePipes(new ValidationPipe())
 @ApiBearerAuth('access_token')
 @Controller('employees')
 export class EmployeesController {
-  constructor(private readonly employeesService: EmployeesService) { }
-
-
+  constructor(private readonly employeesService: EmployeesService) {}
 
   @Roles(EmployeeRole.ADMIN, EmployeeRole.BRANCH_EMPLOYEE)
   @UseGuards(RolesGuard)
@@ -78,8 +77,6 @@ export class EmployeesController {
     return await this.employeesService.create(createEmployeeDto);
   }
 
-
-
   @Roles(EmployeeRole.ADMIN, EmployeeRole.BRANCH_EMPLOYEE)
   @UseGuards(RolesGuard)
   @ApiQuery({ name: 'take', example: 10, required: false })
@@ -109,16 +106,12 @@ export class EmployeesController {
     return this.employeesService.findAll(query, employee);
   }
 
-
-
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.employeesService.findOne(+id);
   }
 
-
-  @Roles(EmployeeRole.ADMIN, EmployeeRole.BRANCH_EMPLOYEE)
-  @UseGuards(RolesGuard)
+  @Patch(':id')
   @UseInterceptors(
     FileInterceptor(
       'photo',
@@ -126,19 +119,16 @@ export class EmployeesController {
     ),
   )
   @ApiConsumes('multipart/form-data')
-  @Patch(':id')
   async update(
     @Param('id') id: string,
     @Body() updateEmployeeDto?: UpdateEmployeeDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    console.log("data",updateEmployeeDto);
+    console.log("data ",updateEmployeeDto );
     if (file) await this.employeesService.updateImage(id, file);
+    else delete updateEmployeeDto.photo;
     return this.employeesService.update(id, updateEmployeeDto);
   }
-
-
-
 
   @UseGuards(IsEmployeeGuard)
   @Delete(':id')
@@ -149,9 +139,9 @@ export class EmployeesController {
         'You are not allowed to perform this action!',
       );
     }
-    const deleteEmployee = await this.employeesService.findByIdOrFail(id);
+    const employeeToDelete = await this.employeesService.findByIdOrFail(id);
     if (employee.role == EmployeeRole.BRANCH_EMPLOYEE) {
-      if (employee.branchId != deleteEmployee.branchId) {
+      if (employee.branchId != employeeToDelete.branchId) {
         return new UnauthorizedException(
           'You are not allowed to perform this action!',
         );
@@ -159,9 +149,6 @@ export class EmployeesController {
     }
     return await this.employeesService.remove(id);
   }
-
-
-
 
   @Patch('/:id/location')
   // @Roles(EmployeeRole.ADMIN, EmployeeRole.BRANCH_EMPLOYEE)
@@ -173,9 +160,12 @@ export class EmployeesController {
     @Body() location: UpdateLocationDto,
   ): Promise<Employee> {
     if (location.latitude && location.longitude) {
-      return this.employeesService.updateLocation(id, location.latitude, location.longitude);
+      return this.employeesService.updateLocation(
+        id,
+        location.latitude,
+        location.longitude,
+      );
     } else {
-
       const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
       const location = geoip.lookup(ip);
       if (location) {
@@ -183,11 +173,31 @@ export class EmployeesController {
         const longitude = location.ll[1];
         return this.employeesService.updateLocation(id, latitude, longitude);
       } else {
-        throw new HttpException('Unable to determine location from IP', HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          'Unable to determine location from IP',
+          HttpStatus.BAD_REQUEST,
+        );
       }
     }
   }
 
+  @UseGuards(IsEmployeeGuard)
+  @Post(':id/chats')
+  async addNewChat(
+    @Param('id') id: string,
+    body: CreateEmployeeChatDTO,
+    @CurrentEmployee() employee: Employee,
+  ) {
+    body.employeeId = employee.id;
+    return await this.employeesService.createChat(body);
+  }
 
-
+  @UseGuards(IsEmployeeGuard)
+  @Get(':id/chats')
+  async getAllChats(
+    @Param('id') id: string,
+    @CurrentEmployee() employee: Employee,
+  ) {
+    return await this.employeesService.getEmployeeChats(employee.id);
+  }
 }

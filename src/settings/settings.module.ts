@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppService } from 'src/app.service';
 import { BranchesService } from 'src/branches/branches.service';
 import { Branch } from 'src/branches/entities/branch.entity';
+import { Chat } from 'src/chats/entities/chat.entity';
 import { EmployeesService } from 'src/employees/employees.service';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { User } from 'src/users/entities/user.entity';
@@ -14,7 +15,14 @@ import { SettingsService } from './settings.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Setting, User, DeviceToken, Employee, Branch]),
+    TypeOrmModule.forFeature([
+      Setting,
+      User,
+      DeviceToken,
+      Employee,
+      Branch,
+      Chat,
+    ]),
   ],
   controllers: [SettingsController],
   providers: [

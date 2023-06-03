@@ -99,11 +99,17 @@ export class AuthService {
     await this.usersRepository.save(user).catch((err) => {
       throw new BadRequestException('Error updating user', err);
     });
-    //to send code to email
-    // return await sendWhatsappMessage(
-    //   user.phoneNumber.toString(),
-    //   'You verification code is: ' + verificationCode,
-    // );
+    
+    this.mailService.send({
+      from: process.env.MAIL_FROM_USER,
+      to: user.email,
+      subject: 'Clean Clinic Verification Code',
+      text: `Your email verification code is: ${verificationCode.toString()}`,
+      html: `<h3>Dear ${user.firstName},</h3>
+            <p>Your email verification code is: ${verificationCode.toString()}</p>
+            <p>Thank you for using Clean Clinic!</p>`,
+            
+    })
   }
 
   async verifyMobileNumber(id: string, code: string): Promise<boolean> {

@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppService } from 'src/app.service';
 import { BranchesService } from 'src/branches/branches.service';
 import { Branch } from 'src/branches/entities/branch.entity';
+import { Chat } from 'src/chats/entities/chat.entity';
 import { MailService } from 'src/common/mail/mail.service';
 import { DeviceTokensService } from 'src/device-tokens/device-tokens.service';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
@@ -16,7 +17,14 @@ import { AuthService } from './auth.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Employee, DeviceToken, Setting, Branch]),
+    TypeOrmModule.forFeature([
+      User,
+      Employee,
+      DeviceToken,
+      Setting,
+      Branch,
+      Chat,
+    ]),
   ],
   providers: [
     AuthService,

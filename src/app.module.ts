@@ -14,6 +14,8 @@ import { BranchesModule } from './branches/branches.module';
 import { BranchesService } from './branches/branches.service';
 import { Branch } from './branches/entities/branch.entity';
 import { CategoriesModule } from './categories/categories.module';
+import { ChatsModule } from './chats/chats.module';
+import { Chat } from './chats/entities/chat.entity';
 import { MailModule } from './common/mail/mail.module';
 import { ConsoleCommandsModule } from './console-commands/console-commands.module';
 import { CreditCardsModule } from './credit-cards/credit-cards.module';
@@ -55,7 +57,18 @@ import { ProductImage } from './products/entities/product-image.entity';
       useFactory: async (configService: ConfigService) =>
         configService.get('database'),
     }),
-    TypeOrmModule.forFeature([Branch, Employee, DeviceToken, User, Setting,Ad,Product,ProductImage]),
+    TypeOrmModule.forFeature([
+      Branch,
+      Employee,
+      DeviceToken,
+      User,
+      Setting,
+      Employee,
+      Ad,
+      Product,
+      ProductImage,
+      Chat,
+    ]),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '../public'), // added ../ to get one folder back
       serveRoot: '/public/', //last slash is important
@@ -109,6 +122,7 @@ import { ProductImage } from './products/entities/product-image.entity';
     CategoriesModule,
     OrdersModule,
     MailModule,
+    ChatsModule,
   ],
   controllers: [AppController],
   providers: [AppService, BranchesService, EmployeesService, UsersService,AdsService,ProductsService],

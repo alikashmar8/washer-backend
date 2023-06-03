@@ -3,36 +3,38 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppService } from 'src/app.service';
 import { BranchesService } from 'src/branches/branches.service';
 import { Branch } from 'src/branches/entities/branch.entity';
-import { Chat } from 'src/chats/entities/chat.entity';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
 import { EmployeesService } from 'src/employees/employees.service';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { Setting } from 'src/settings/entities/setting.entity';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
-import { AddressesController } from './addresses.controller';
-import { AddressesService } from './addresses.service';
-import { Address } from './entities/address.entity';
+import { ChatsController } from './chats.controller';
+import { ChatsGateway } from './chats.gateway';
+import { ChatsService } from './chats.service';
+import { Chat } from './entities/chat.entity';
+import { Message } from './entities/message.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      Address,
+      Chat,
+      Message,
       User,
       DeviceToken,
       Employee,
       Setting,
       Branch,
-      Chat,
     ]),
   ],
-  controllers: [AddressesController],
+  controllers: [ChatsController],
   providers: [
-    AddressesService,
+    ChatsService,
+    ChatsGateway,
     UsersService,
     EmployeesService,
     AppService,
     BranchesService,
   ],
 })
-export class AddressesModule {}
+export class ChatsModule {}

@@ -1,8 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as admin from 'firebase-admin';
-import 'firebase/database';
-import { Repository } from 'typeorm';
+import { DeviceTokenStatus } from 'src/common/enums/device-token-status.enum';
+import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
+import { IsNull, Not, Repository } from 'typeorm';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { Notification } from './entities/notification.entity';
 import { NotificationData } from './interfaces/notification.interface';
@@ -12,17 +13,32 @@ export class NotificationsService {
   constructor(
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
+    @InjectRepository(DeviceToken)
+    private readonly deviceTokensRepository: Repository<DeviceToken>,
   ) {}
 
   async create(data: CreateNotificationDto): Promise<void> {
     const notification = this.notificationRepository.create(data);
     await this.notificationRepository.save(notification);
 
+    const fcmTokens = (
+      await this.deviceTokensRepository.find({
+        where: {
+          userId: data.userId,
+          employeeId: data.employeeId,
+          status: DeviceTokenStatus.ACTIVE,
+          isMobile: true,
+          loggedOutAt: null,
+          fcmToken: Not(IsNull()), // Filter out null fcmTokens
+        },
+      })
+    ).map((deviceToken) => deviceToken.fcmToken);
+
     const notificationData: NotificationData = {
       title: notification.title,
       body: notification.body,
       type: data.type,
-      fcmTokens: data.fcmTokens,
+      fcmTokens: fcmTokens,
     };
 
     this.notify(notificationData);

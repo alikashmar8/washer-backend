@@ -1,13 +1,16 @@
 import * as argon from 'argon2';
 import { Exclude } from 'class-transformer';
 import { Address } from 'src/addresses/entities/address.entity';
+import { Chat } from 'src/chats/entities/chat.entity';
+import { Message } from 'src/chats/entities/message.entity';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
+import { Notification } from 'src/notifications/entities/notification.entity';
+import { Order } from 'src/orders/entities/order.entity';
 import { Promo } from 'src/promos/entities/promo.entity';
 import { ServiceRequest } from 'src/service-requests/entities/service-request.entity';
 import { Transaction } from 'src/transactions/entities/transaction.entity';
 import { Vehicle } from 'src/vehicles/entities/vehicle.entity';
 import { Wallet } from 'src/wallets/entities/wallet.entity';
-import { Notification } from 'src/notifications/entities/notification.entity';
 import {
   BeforeInsert,
   Column,
@@ -23,7 +26,6 @@ import {
   removeSpecialCharacters,
 } from '../../common/utils/functions';
 import { CreditCard } from './../../credit-cards/entities/credit-card.entity';
-import { Order } from 'src/orders/entities/order.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -140,7 +142,6 @@ export class User extends BaseEntity {
   @OneToMany((type) => Order, (order) => order.user, { cascade: true })
   orders: Order[];
 
-
   @Exclude()
   @OneToMany((type) => Transaction, (transaction) => transaction.user, {
     cascade: true,
@@ -152,6 +153,14 @@ export class User extends BaseEntity {
     cascade: true,
   })
   requests: ServiceRequest[];
+
+  @Exclude()
+  @OneToMany((type) => Message, (message) => message.user)
+  messages: Message[];
+
+  @Exclude()
+  @OneToMany((type) => Chat, (chat) => chat.user)
+  chats: Chat[];
 
   public get isSocialMediaLogin(): boolean {
     return (

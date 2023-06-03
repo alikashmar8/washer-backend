@@ -11,7 +11,7 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { AuthService } from './auth.service';
@@ -117,12 +117,14 @@ export class AuthController {
   }
 
   @UseGuards(IsUserGuard)
+  @ApiBearerAuth('access_token')
   @Get('sendMobileVerificationCode')
   async sendMobileVerificationCode(@CurrentUser() user: User) {
     return await this.authService.sendMobileVerificationCode(user.id);
   }
 
   @UseGuards(IsUserGuard)
+  @ApiBearerAuth('access_token')
   @Post('verifyMobileNumber')
   async checkValidWhatsAppCode(
     @CurrentUser() user: User,
@@ -130,6 +132,24 @@ export class AuthController {
   ) {
     return await this.authService.verifyMobileNumber(user.id, code);
   }
+
+  @UseGuards(IsUserGuard)
+  @ApiBearerAuth('access_token')
+  @Get('sendEmailVerificationCode')
+  async sendEmailVerificationCode(@CurrentUser() user: User) {
+    return await this.authService.sendEmailVerificationCode(user.id);
+  }
+
+  @UseGuards(IsUserGuard)
+  @ApiBearerAuth('access_token')
+  @Post('verifyEmailNumber')
+  async checkValidEmailCode(
+    @CurrentUser() user: User,
+    @Body('code') code: string,
+  ) {
+    return await this.authService.verifyEmail(user.id, code);
+  }
+  
 
   @Get('sendTestEmail')
   async sendTestEmail() {

@@ -1,5 +1,7 @@
 import * as argon from 'argon2';
 import { Exclude } from 'class-transformer';
+import { Chat } from 'src/chats/entities/chat.entity';
+import { Message } from 'src/chats/entities/message.entity';
 import { BaseEntity } from 'src/common/entities/base-entity.entity';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { removeSpecialCharacters } from 'src/common/utils/functions';
@@ -12,7 +14,7 @@ import {
   Entity,
   ManyToOne,
   OneToMany,
-  PrimaryGeneratedColumn
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Branch } from './../../branches/entities/branch.entity';
 
@@ -57,6 +59,12 @@ export class Employee extends BaseEntity {
   passwordResetExpiry?: Date;
 
   @Column({ nullable: true })
+  currentLongitude?: number;
+
+  @Column({ nullable: true })
+  currentLatitude?: number;
+
+  @Column({ nullable: true })
   branchId?: string;
 
   @ManyToOne((type) => Branch, (branch) => branch.employees, {
@@ -78,11 +86,13 @@ export class Employee extends BaseEntity {
   @OneToMany((type) => Notification, (notification) => notification.employee)
   notifications: Notification[];
 
-  @Column({ nullable: true })
-  currentLongitude?: number;
+  @Exclude()
+  @OneToMany((type) => Message, (message) => message.user)
+  messages: Message[];
 
-  @Column({ nullable: true })
-  currentLatitude?: number;
+  @Exclude()
+  @OneToMany((type) => Chat, (chat) => chat.employee)
+  chats: Chat[];
 
   @BeforeInsert()
   async hashPassword() {

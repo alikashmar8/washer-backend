@@ -130,10 +130,11 @@ export class ProductsService {
   }
 
   async remove(id: string) {
-    const product = await this.findOneByIdOrFail(id);
-    const images = product.images;
-  
     try {
+      const product = await this.findOneByIdOrFail(id, ['images']);
+      const images = product.images;
+  
+      
       await this.productRepository.delete(id);
   
       images.forEach(async (image) => {

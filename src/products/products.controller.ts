@@ -109,7 +109,7 @@ export class ProductsController {
     @Body() updateProductDto: UpdateProductDto,
     @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    if (files) await this.productsService.updateImage(id, files);
+    // if (files) await this.productsService.updateImage(id, files);
     return await this.productsService.update(id, updateProductDto);
   }
 
