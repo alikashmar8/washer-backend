@@ -9,8 +9,9 @@ import {
   Patch,
   Post,
   UnauthorizedException,
+  ValidationPipe,
 } from '@nestjs/common';
-import { Query, UseGuards } from '@nestjs/common/decorators';
+import { Query, UseGuards, UsePipes } from '@nestjs/common/decorators';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { IsEmployeeGuard } from 'src/auth/guards/is-employee.guard';
@@ -147,6 +148,7 @@ export class ServiceRequestsController {
   }
 
   @UseGuards(IsUserGuard)
+  @UsePipes(new ValidationPipe())
   @Post('calculate-total')
   async getTotal(
     @Body() body: CalculateRequestTotal,
