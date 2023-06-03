@@ -13,7 +13,8 @@ export default () => ({
     migrations: [path.join(__dirname, '../src/migrations/**/*{.ts,.js}')],
     // entities: ['dist/**/*.entity{.ts,.js}'],
     // migrations: ['src/migrations/**/*.ts'],
-    synchronize: process.env.TYPEORM_SYNCHRONIZE || 'false',
+    // synchronize: process.env.TYPEORM_SYNCHRONIZE || 'false',
+    synchronize: false,
   },
   firebase: {
     projectId: process.env.FIREBASE_PROJECT_ID,

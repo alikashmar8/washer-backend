@@ -15,7 +15,7 @@ export class ChatsService {
   async createMessage(data: CreateMessageDto) {
     this.chatsRepository
       .update(data.chatId, {
-        lastMessage: data.message,
+        lastMessage: data.text,
         lastMessageDate: new Date(),
       })
       .catch((err) => {

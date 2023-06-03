@@ -8,7 +8,7 @@ export class CreateMessageDto {
   
   @IsNotEmpty()
   @ApiProperty({ type: String })
-  message: string;
+  text: string;
 
   // Either userId or employeeId will be set in code
   userId: string;

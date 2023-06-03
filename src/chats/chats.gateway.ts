@@ -59,7 +59,7 @@ export class ChatsGateway
     @MessageBody() data: CreateMessageDto,
   ) {
     console.log(
-      `Processing: User ${client.id} sent message: ${data.message}`,
+      `Processing: User ${client.id} sent message: ${data.text}`,
     );
     // get access token from headers
     const token = client.handshake.headers.authorization.split(' ')[1];
@@ -85,7 +85,7 @@ export class ChatsGateway
     @MessageBody() data: CreateMessageDto,
   ) {
     console.log(
-      `Processing: Employee ${client.id} sent message: ${data.message}`,
+      `Processing: Employee ${client.id} sent message: ${data.text}`,
     );
     // get access token from headers
     const token = client.handshake.headers.authorization.split(' ')[1];
