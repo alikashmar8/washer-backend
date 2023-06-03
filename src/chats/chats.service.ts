@@ -46,7 +46,7 @@ export class ChatsService {
   ) {
     const take = filters.take || 15;
     const skip = filters.skip || 0;
-    return await this.messagesRepository.findAndCount({
+    const res =  await this.messagesRepository.findAndCount({
       where: {
         chatId,
         userId: filters.userId,
@@ -58,5 +58,10 @@ export class ChatsService {
       skip: skip,
       take: take,
     });
+
+    return {
+      data: res[0],
+      count: res[1],
+    }
   }
 }
