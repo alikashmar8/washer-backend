@@ -8,7 +8,7 @@ export class CalculateRequestTotal {
   serviceTypeId: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   promoCode: string;
 
   @ApiProperty({ required: false })

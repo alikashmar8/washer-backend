@@ -1,25 +1,20 @@
-import { AuthGuard } from './../auth/guards/auth.guard';
 import {
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
   Param,
-  Delete,
-  UseGuards,
   Query,
+  UseGuards
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { ChatsService } from './chats.service';
-import { CreateChatDto } from './dto/create-chat.dto';
-import { UpdateChatDto } from './dto/update-chat.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentEmployee } from 'src/common/decorators/current-employee.decorator';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
-import { User } from 'src/users/entities/user.entity';
 import { Employee } from 'src/employees/entities/employee.entity';
+import { User } from 'src/users/entities/user.entity';
+import { AuthGuard } from './../auth/guards/auth.guard';
+import { ChatsService } from './chats.service';
 
-// @ApiTags('Chats')
+@ApiBearerAuth('access_token')
+@ApiTags('Chats')
 @Controller('chats')
 export class ChatsController {
   constructor(private readonly chatsService: ChatsService) {}
@@ -40,10 +35,10 @@ export class ChatsController {
     @Param('id') id: string,
     @CurrentEmployee() employee: Employee,
     @CurrentUser() user: User,
-    @Query() query: any
+    @Query() query: any,
   ) {
-    query.userId = user.id;
-    query.employeeId = employee.id;
+    query.userId = user?.id;
+    query.employeeId = employee?.id;
     return await this.chatsService.findChatMessages(id, query);
   }
 
