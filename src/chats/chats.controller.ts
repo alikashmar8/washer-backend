@@ -37,8 +37,8 @@ export class ChatsController {
     @CurrentUser() user: User,
     @Query() query: any,
   ) {
-    query.userId = user.id;
-    query.employeeId = employee.id;
+    query.userId = user?.id;
+    query.employeeId = employee?.id;
     return await this.chatsService.findChatMessages(id, query);
   }
 
