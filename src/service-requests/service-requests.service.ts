@@ -8,6 +8,7 @@ import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { RequestStatus } from 'src/common/enums/request-status.enum';
 import { calculateDistance } from 'src/common/utils/functions';
 import { Employee } from 'src/employees/entities/employee.entity';
+import { NotificationsService } from 'src/notifications/notifications.service';
 import { PromosService } from 'src/promos/promos.service';
 import { ServiceTypesService } from 'src/service-types/service-types.service';
 import { Setting } from 'src/settings/entities/setting.entity';
@@ -36,6 +37,7 @@ export class ServiceRequestsService {
     private branchesRepository: Repository<Branch>,
     private promoService: PromosService,
     private dataSource: DataSource,
+    private notificationsService: NotificationsService,
   ) {}
 
   async create(data: CreateServiceRequestDto) {
@@ -148,6 +150,8 @@ export class ServiceRequestsService {
       .leftJoinAndSelect('req.user', 'user')
       .leftJoinAndSelect('req.type', 'type')
       .leftJoinAndSelect('req.employee', 'employee')
+      .leftJoinAndSelect('req.address', 'address')
+      .leftJoinAndSelect('req.vehicle', 'vehicle')
       .leftJoinAndSelect('type.category', 'category');
 
     if (filters.userId || currentUser) {
@@ -337,10 +341,40 @@ export class ServiceRequestsService {
   }
 
   async updateStatus(id: string, data: UpdateServiceRequestStatusDto) {
-    return await this.requestsRepository.update(id, data).catch((err) => {
-      console.log(err);
-      throw new BadRequestException('Error updating status');
-    });
+    const serviceRequest = await this.findOneByIdOrFail(id, ['user']);
+
+    try {
+      await this.requestsRepository.update(id, data);
+    } catch (err) {
+      console.error(err);
+      throw new BadRequestException('Error updating status', err);
+    }
+
+    switch (data.status) {
+      case RequestStatus.APPROVED:
+        this.notificationsService.createAndNotify({
+          title: 'Request update.',
+          body: 'Your Request have been accepted!',
+          userId: serviceRequest.userId,
+        });
+        break;
+      case RequestStatus.IN_PROGRESS:
+        this.notificationsService.createAndNotify({
+          title: 'Request update.',
+          body: 'Driver is on his way and will start soon!',
+          userId: serviceRequest.userId,
+        });
+        break;
+      case RequestStatus.DONE:
+        this.notificationsService.createAndNotify({
+          title: 'Request update.',
+          body: 'Your request is done! Thank you for your business.',
+          userId: serviceRequest.userId,
+        });
+        break;
+      default:
+        break;
+    }
   }
 
   async calculateRequestCost(data: {
