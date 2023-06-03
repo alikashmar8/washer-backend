@@ -17,7 +17,7 @@ export class NotificationsService {
     private readonly deviceTokensRepository: Repository<DeviceToken>,
   ) {}
 
-  async create(data: CreateNotificationDto): Promise<void> {
+  async createAndNotify(data: CreateNotificationDto): Promise<void> {
     const notification = this.notificationRepository.create(data);
     await this.notificationRepository.save(notification);
 
