@@ -46,11 +46,13 @@ export class AdsController {
     @Body() createAdDto: CreateAdDto,
     @UploadedFile() image: Express.Multer.File,
   ) {
+    console.log('entered ads');
     if (!image) {
       throw new BadRequestException('Ad image is required!');
     } else {
       createAdDto.image = image.path;
     }
+    console.log('adDto: ', createAdDto);
     return await this.adsService.create(createAdDto);
   }
 
@@ -83,7 +85,7 @@ export class AdsController {
     @UploadedFile() file?: Express.Multer.File,
   ) {
     console.log(updateAdDto);
-    if (file) await this.adsService.updateImage(id, file);
+    if (file) await this.adsService.updateImage(id, file.path);
     return await this.adsService.update(id, updateAdDto);
   }
 

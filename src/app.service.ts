@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { BranchesService } from './branches/branches.service';
 import { EmployeeRole } from './common/enums/employee-role.enum';
 import { EmployeesService } from './employees/employees.service';
@@ -17,8 +21,6 @@ import {
 } from './common/constants';
 import { Currency } from './common/enums/currency.enum';
 import * as path from 'path';
-
-
 import { Employee } from './employees/entities/employee.entity';
 import { UsersService } from './users/users.service';
 import { Chat } from './chats/entities/chat.entity';
@@ -83,7 +85,7 @@ export class AppService {
     await this.settingsRepository.save([
       {
         key: EXCHANGE_RATE,
-        value: '100000'
+        value: '100000',
       },
       {
         key: CAR_COST,
@@ -122,7 +124,7 @@ export class AppService {
     try {
       if (fs.existsSync(filePath)) {
         // file exists, delete it
-      
+
         fs.unlinkSync(filePath);
         console.log('Image File deleted');
       } else {
@@ -133,37 +135,35 @@ export class AppService {
     }
   }
 
-
-    async updateFile(
-      id: string,
-      filePropertyName: string,
-      newFile: Express.Multer.File,
-      repository: Repository<any>
-    ) {
-      
-      const entity = await repository.findOne({where:{id:id}});
-      console.log("entity: " , entity);
-      if (!entity) {
-        throw new NotFoundException(`Entity with ID ${id} not found`);
-      }
-      const oldFile = entity.filePropertyName;
-    console.log("oldFile ",oldFile);
-
-      await repository.update(id, { [filePropertyName]: newFile.path });
-      console.log("check_3");
-
-      
-      if (oldFile) {
-        console.log(oldFile);
-        const oldFilePath = path.join(process.cwd(), oldFile);
-        console.log(`Old ${filePropertyName} path:`, oldFilePath);
-        try {
-          await this.deleteFile(oldFilePath);
-        } catch (err) {
-          console.error(`Failed to delete old ${filePropertyName} file ${oldFile}: ${err}`);
-        }
+  async updateFile(
+    id: string,
+    filePropertyName: string,
+    newFilePath: string, 
+    repository: Repository<any>,
+  ) {
+    const entity = await repository.findOne({ where: { id } });
+  
+    if (!entity) {
+      throw new NotFoundException(`Entity with ID ${id} not found`);
+    }
+    const oldFile = entity[filePropertyName];
+  
+    await repository.update(id, { [filePropertyName]: newFilePath });
+    console.log('check_3');
+  
+    if (oldFile) {
+      console.log(oldFile);
+      const oldFilePath = path.join(process.cwd(), oldFile);
+      console.log(`Old ${filePropertyName} path:`, oldFilePath);
+      try {
+        await this.deleteFile(oldFilePath);
+        console.log('File replacement done successfully');
+      } catch (err) {
+        console.error(
+          `Failed to delete old ${filePropertyName} file ${oldFile}: ${err}`,
+        );
       }
     }
-    
   }
 
+}
