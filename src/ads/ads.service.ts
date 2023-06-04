@@ -89,7 +89,7 @@ export class AdsService {
       });
   }
 
-  async updateImage(id: string, newImage?: Express.Multer.File) {
+  async updateImage(id: string, newImage?: string) {
     //TODO to handle err in newImage
     return await this.appsService.updateFile(
       id,

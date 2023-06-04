@@ -16,10 +16,10 @@ export class CreateOrderDto {
     @ApiProperty({ nullable: true })
     promoCode: string;
 
-    // @ApiProperty({ enum: OrderStatus, default: OrderStatus.PENDING })
-    // @IsNotEmpty()
-    // @IsEnum(OrderStatus)
-    // status: OrderStatus;
+//     @ApiProperty({ enum: OrderStatus, default: OrderStatus.PENDING })
+//     @IsNotEmpty()
+//     @IsEnum(OrderStatus)
+//     status: OrderStatus;
 
     userId: string;
 

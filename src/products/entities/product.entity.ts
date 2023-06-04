@@ -39,10 +39,10 @@ export class Product {
   @Column({ nullable: false, default: 0 })
   views: number;
 
-  @Column({nullable:false,type:'boolean',default:true})
+  @Column({nullable:false,default:true})
   isActive:boolean;
   
-  @Column({ nullable: false ,default:1})
+  @Column({ nullable: false })
   categoryId: string;
 
   @OneToMany((type) => ProductImage, (image) => image.product)
