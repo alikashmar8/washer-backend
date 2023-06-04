@@ -33,12 +33,12 @@ export class ChatsController {
   @Get(':id/messages')
   async getChatMessages(
     @Param('id') id: string,
-    @CurrentEmployee() employee: Employee,
-    @CurrentUser() user: User,
+    // @CurrentEmployee() employee: Employee,
+    // @CurrentUser() user: User,
     @Query() query: any,
   ) {
-    query.userId = user?.id;
-    query.employeeId = employee?.id;
+    // query.userId = user?.id;
+    // query.employeeId = employee?.id;
     return await this.chatsService.findChatMessages(id, query);
   }
 

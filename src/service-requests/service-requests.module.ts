@@ -22,6 +22,8 @@ import { ServiceType } from './../service-types/entities/service-type.entity';
 import { ServiceRequest } from './entities/service-request.entity';
 import { ServiceRequestsController } from './service-requests.controller';
 import { ServiceRequestsService } from './service-requests.service';
+import { NotificationsService } from 'src/notifications/notifications.service';
+import { Notification } from '../notifications/entities/notification.entity';
 
 @Module({
   imports: [
@@ -37,6 +39,7 @@ import { ServiceRequestsService } from './service-requests.service';
       Setting,
       Promo,
       Chat,
+      Notification,
     ]),
   ],
   controllers: [ServiceRequestsController],
@@ -51,6 +54,7 @@ import { ServiceRequestsService } from './service-requests.service';
     SettingsService,
     PromosService,
     AppService,
+    NotificationsService,
   ],
 })
 export class ServiceRequestsModule {}

@@ -38,8 +38,8 @@ export class ChatsService {
   async findChatMessages(
     chatId: string,
     filters: {
-      userId?: string;
-      employeeId?: string;
+      // userId?: string;
+      // employeeId?: string;
       take?: number;
       skip?: number;
     },
@@ -49,8 +49,8 @@ export class ChatsService {
     const res =  await this.messagesRepository.findAndCount({
       where: {
         chatId,
-        userId: filters.userId,
-        employeeId: filters.employeeId,
+        // userId: filters.userId,
+        // employeeId: filters.employeeId,
       },
       order: {
         createdAt: 'DESC',
