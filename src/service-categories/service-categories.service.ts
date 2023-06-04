@@ -5,12 +5,14 @@ import { CreateServiceCategoryDto } from './dto/create-service-category.dto';
 import { UpdateServiceCategoryStatusDto } from './dto/update-service-category-status.dto';
 import { UpdateServiceCategoryDto } from './dto/update-service-category.dto';
 import { ServiceCategory } from './entities/service-category.entity';
-
+import { AppService } from 'src/app.service';
+import * as path from 'path';
 @Injectable()
 export class ServiceCategoriesService {
   constructor(
     @InjectRepository(ServiceCategory)
     private serviceCategoriesRepository: Repository<ServiceCategory>,
+    private appsService: AppService,
   ) {}
 
   async create(data: CreateServiceCategoryDto) {
@@ -46,7 +48,7 @@ export class ServiceCategoriesService {
       });
     }
     if (queryParams.search) {
-      let innerQuery = new Brackets((qb) => {
+      const innerQuery = new Brackets((qb) => {
         qb.where('category.name like :name', {
           name: `%${queryParams.search}%`,
         }).orWhere('category.icon like :name', {
@@ -72,6 +74,7 @@ export class ServiceCategoriesService {
   }
 
   async update(id: string, data: UpdateServiceCategoryDto) {
+    console.log("update in service file");
     return await this.serviceCategoriesRepository
       .update(id, data)
       .catch((err) => {
@@ -81,9 +84,27 @@ export class ServiceCategoriesService {
 
   async remove(id: string) {
     // TODO: remove icon
-    return await this.serviceCategoriesRepository.delete(id).catch((err) => {
+    const service_category = await this.findOneByIdOrFail(id);
+    const icon = service_category.icon;
+    console.log("-------------------");
+    console.log("-------------------");
+    console.log("Icon: "+icon);
+    return await this.serviceCategoriesRepository
+    .delete(id)
+    .catch((err) => {
       console.log(err);
       throw new BadRequestException('Error deleting category!', err);
+    })
+    .then(async () => {
+      if (icon) {
+        const imagePath = path.join(process.cwd(), icon);
+        console.log('Image path:', imagePath);
+        try {
+          await this.appsService.deleteFile(imagePath);
+        } catch (err) {
+          console.error(err);
+        }
+      }
     });
   }
 
@@ -104,5 +125,16 @@ export class ServiceCategoriesService {
       .catch((err) => {
         throw new BadRequestException('Category not found!', err);
       });
+  }
+
+  async updateImage(id: string, newImage?: Express.Multer.File) {
+    //TODO to handle err in newImage
+    return await this.appsService.updateFile(
+      id,
+      'icon',
+      newImage,
+      this.serviceCategoriesRepository
+    );
+   
   }
 }

@@ -88,4 +88,17 @@ export class AdsService {
         throw new BadRequestException('Ad not found!', err);
       });
   }
+
+  async updateImage(id: string, newImage?: Express.Multer.File) {
+    //TODO to handle err in newImage
+    return await this.appsService.updateFile(
+      id,
+      'image',
+      newImage,
+      this.adsRepository
+    );
+   
+  }
+  
+
 }

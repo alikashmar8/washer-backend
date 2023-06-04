@@ -15,6 +15,8 @@ import { CreateEmployeeChatDTO } from './../chats/dto/create-employee-chat.dto';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { Employee } from './entities/employee.entity';
+import * as path from 'path';
+import { log } from 'console';
 
 @Injectable()
 export class EmployeesService {
@@ -206,15 +208,34 @@ export class EmployeesService {
     return `This action returns a #${id} employee`;
   }
 
-  update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
-    return `This action updates a #${id} employee`;
+  async update(id: string, data: UpdateEmployeeDto) {
+    return await this.employeesRepository.update(id, data).catch((err) => {
+      console.log(err);
+      throw new BadRequestException('Error updating employee!', err);
+    });
   }
 
   async remove(id: string) {
-    return await this.employeesRepository.delete(id).catch((err) => {
-      throw new BadRequestException('Error unable to delete employee!');
-    });
+    const employee = await this.findOneByIdOrFail(id);
+    const photo = employee.photo;
+
+    return await this.employeesRepository
+      .delete(id)
+      .catch((err) => {
+        throw new BadRequestException('Error deleting employee!', err);
+      })
+      .then(async () => {
+        if (photo) {
+          const imagePath = path.join(process.cwd(), photo);
+          try {
+            await this.appService.deleteFile(imagePath);
+          } catch (err) {
+            console.error(err);
+          }
+        }
+      });
   }
+
 
   async findOneByToken(token: any) {
     const deviceToken = await this.deviceTokensRepository.findOne({
@@ -252,24 +273,15 @@ export class EmployeesService {
       });
   }
 
-  async deleteImage(id: string, imagePath: string) {
-    const employee = await this.findOneByIdOrFail(id);
-    if (!employee) {
-      throw new NotFoundException('Employee not found');
-    }
-    if (employee.photo) {
-      try {
-        if (fs.existsSync(imagePath)) {
-          // file exists, delete it
-          console.log('Checked imagePath');
-          fs.unlinkSync(imagePath);
-        } else {
-          console.log(`File does not exist: ${imagePath}`);
-        }
-      } catch (err) {
-        console.error(`Error deleting image file: ${err.message}`);
-      }
-    }
+  async updateImage(id: string, newImage?: Express.Multer.File) {
+    console.log("updating image");
+    //TODO to handle err in newImage
+    return await this.appService.updateFile(
+      id,
+      'photo',
+      newImage,
+      this.employeesRepository
+    );
   }
 
   async createChat(body: CreateEmployeeChatDTO) {

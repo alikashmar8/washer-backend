@@ -11,6 +11,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import {
+  Patch,
   Query,
   UploadedFile,
   UseGuards,
@@ -27,6 +28,7 @@ import { Employee } from 'src/employees/entities/employee.entity';
 import { User } from 'src/users/entities/user.entity';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { VehiclesService } from './vehicles.service';
+import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 
 @ApiTags('Vehicles')
 @ApiBearerAuth('access_token')
@@ -35,22 +37,13 @@ import { VehiclesService } from './vehicles.service';
 export class VehiclesController {
   constructor(private readonly vehiclesService: VehiclesService) {}
 
-  @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor(
       'photo',
       getMulterSettings({ destination: './public/uploads/vehicles' }),
     ),
   )
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        createVehicleDto: { type: 'string' },
-        photo: { type: 'string', format: 'binary' },
-      },
-    },
-  })
+  @ApiConsumes('multipart/form-data')
   @UseGuards(IsUserGuard)
   @Post()
   async create(
@@ -89,10 +82,26 @@ export class VehiclesController {
   //   return this.vehiclesService.findOne(+id);
   // }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateVehicleDto: UpdateVehicleDto) {
-  //   return this.vehiclesService.update(+id, updateVehicleDto);
-  // }
+  @UseInterceptors(
+    FileInterceptor(
+      'photo',
+      getMulterSettings({ destination: './public/uploads/vehicles' }),
+    ),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBearerAuth('access_token')
+  @UseGuards(IsUserGuard)
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() updateVehicleDto?: UpdateVehicleDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    console.log("********************");
+    console.log("vehicleDTO:"+updateVehicleDto);
+    if (file) await this.vehiclesService.updateImage(id, file);
+    return this.vehiclesService.update(+id, updateVehicleDto);
+  }
 
   @UseGuards(IsUserGuard)
   @Delete(':id')
@@ -105,4 +114,6 @@ export class VehiclesController {
 
     return await this.vehiclesService.remove(id);
   }
+
+
 }

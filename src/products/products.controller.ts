@@ -52,9 +52,11 @@ export class ProductsController {
     @Body() createProductDto: CreateProductDto,
     @UploadedFiles() images: Express.Multer.File[],
   ) {
+    console.log("createDTO",createProductDto);
     if (!images || !images.length) {
       throw new BadRequestException('product images are required!');
     } else {
+      console.log("product 1");
       const imageList = images.map((image) => image.path);
       createProductDto.images = imageList;
     }
@@ -90,7 +92,7 @@ export class ProductsController {
   //   return this.productsService.update(+id, updateProductDto);
   // }
 
-  // review updateDto ma
+
   @UseInterceptors(
     FilesInterceptor(
       'images[]',
@@ -105,8 +107,9 @@ export class ProductsController {
   async update(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
-    @CurrentEmployee() employee: Employee,
+    @UploadedFiles() files?: Express.Multer.File[],
   ) {
+    // if (files) await this.productsService.updateImage(id, files);
     return await this.productsService.update(id, updateProductDto);
   }
 

@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsOptional,Max } from 'class-validator';
 export class CreatePromoDto {
 
     @ApiProperty()
@@ -20,6 +20,7 @@ export class CreatePromoDto {
 
     @ApiProperty()
     @IsOptional()
+    @Max(100)
     discountPercentage: number;
 
     @ApiProperty()

@@ -8,6 +8,7 @@ import { CreateOrderItemDto } from './dto/create-orderItem.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/orderItem.entity';
+import { OrderStatus } from './enums/order-status.enum';
 
 @Injectable()
 export class OrdersService {
@@ -164,9 +165,29 @@ export class OrdersService {
       });
   }
 
-  update(id: number, updateOrderDto: UpdateOrderDto) {
-    return `This action updates a #${id} order`;
+  async update(id: string, updateOrderDto: UpdateOrderDto) {    
+    return await this.ordersRepository
+      .update(id, updateOrderDto)
+      .catch((err) => {
+        console.log(err);
+        throw new BadRequestException('Error updating order!');
+      });
   }
+
+  async updateStatus(id: string, status: OrderStatus) {    
+    return await this.ordersRepository
+      .createQueryBuilder()
+      .update()
+      .set({ status: status })
+      .where("id = :id", { id: id })
+      .execute()
+      .catch((err) => {
+        console.log(err);
+        throw new BadRequestException('Error updating order status!');
+      });
+  }
+  
+
 
   async remove(id: number) {
     return await this.ordersRepository.delete(id).catch(() => {

@@ -7,16 +7,20 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import * as fs from 'fs';
 import { Currency } from 'src/common/enums/currency.enum';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Not, Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductImage } from './entities/product-image.entity';
 import { Product } from './entities/product.entity';
+import * as path from 'path';
+import { AppService } from 'src/app.service';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(Product) private productRepository: Repository<Product>,
+    @InjectRepository(ProductImage) private productImageRepository: Repository<ProductImage>,
+    private appsService:AppService,
     private dataSource: DataSource,
   ) {}
 
@@ -25,12 +29,13 @@ export class ProductsService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
+
     try {
       const product = await queryRunner.manager
         .getRepository(Product)
         .save(createProductDto);
 
-      let savedImages = [];
+      const savedImages = [];
       createProductDto.images.forEach(async (image) => {
         const productImage = await queryRunner.manager
           .getRepository(ProductImage)
@@ -58,35 +63,7 @@ export class ProductsService {
     }
   }
 
-  /*
-    async create(createProductDto: CreateProductDto) {
-        const queryRunner = this.dataSource.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
-        try {
-            const createdProduct = await queryRunner.manager
-                .getRepository(Product)
-                .save(createProductDto);
-
-
-            createProductDto.images.forEach(image => {
-                queryRunner.manager
-                    .getRepository(ProductImage)
-                    .save({ productId: createdProduct.id, image });
-            })
-
-            await queryRunner.commitTransaction();
-            await queryRunner.release();
-            return createdProduct;
-        } catch (error) {
-            console.log(error);
-            await queryRunner.rollbackTransaction();
-            await queryRunner.release();
-            throw new BadRequestException('Error creating product');
-        }
-    }
-*/
-
+  
   async findAll(queryParams: {
     search?: string;
     isActive?: boolean;
@@ -153,29 +130,61 @@ export class ProductsService {
   }
 
   async remove(id: string) {
-    return await this.productRepository.delete(id).catch((err) => {
-      console.log(err);
+    try {
+      const product = await this.findOneByIdOrFail(id, ['images']);
+      const images = product.images;
+  
+      
+      await this.productRepository.delete(id);
+  
+      images.forEach(async (image) => {
+        const imagePath = path.join(process.cwd(), image.image);
+        if (imagePath) {
+          try {
+            await this.appsService.deleteFile(imagePath);
+          } catch (err) {
+            console.error(err);
+          }
+        } else {
+          console.log(`Image ${imagePath} not found`);
+        }
+      });
+  
+      return { message: 'Product deleted successfully' };
+    } catch (error) {
+      console.log(error);
       throw new BadRequestException('Error deleting product');
+    }
+  }
+  
+  async updateImage(id: string, newImages?: Express.Multer.File[]) {
+    const product = await this.productRepository.findOne({where:{id},  relations: ['images'] });
+  
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+  
+    if (newImages && newImages.length > 0) {
+      // Update the product's images
+      const newProductImages = newImages.map((image) => {
+        const productImage = new ProductImage();
+        productImage.image = image.path;
+        productImage.product = product;
+        return productImage;
+      });
+      const savedImages = await this.productImageRepository.save(newProductImages);
+      product.images = [...product.images, ...savedImages];
+    }
+  
+    await this.productRepository.save(product);
+  
+    // Delete any images that were removed
+    await this.productImageRepository.delete({
+      id: Not(In(product.images.map((image) => image.id))),
+      productId: id,
     });
   }
+  
 
-  async deleteImage(id: string, imagePath: string) {
-    const product = await this.findOneByIdOrFail(id);
-    if (!product) {
-      throw new NotFoundException('Employee not found');
-    }
-    if (product.images) {
-      try {
-        if (fs.existsSync(imagePath)) {
-          // file exists, delete it
-          console.log('Checked imagePath');
-          fs.unlinkSync(imagePath);
-        } else {
-          console.log(`File does not exist: ${imagePath}`);
-        }
-      } catch (err) {
-        console.error(`Error deleting image file: ${err.message}`);
-      }
-    }
-  }
+  
 }

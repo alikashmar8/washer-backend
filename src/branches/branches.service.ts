@@ -34,8 +34,19 @@ export class BranchesService {
       });
   }
 
-  update(id: number, updateBranchDto: UpdateBranchDto) {
-    return `This action updates a #${id} branch`;
+  async update(id: string, updateBranchDto: UpdateBranchDto) {
+    const branch = await this.branchesRepository
+      .findOneByOrFail({ id })
+      .catch(() => {
+        throw new BadRequestException(`Branch with id: ${id} was not found`);
+      });
+      branch.description = updateBranchDto.description;
+      branch.isActive = updateBranchDto.isActive;
+      branch.employees = updateBranchDto.employees;
+      branch.requests = updateBranchDto.requests;
+      
+    
+    await this.branchesRepository.save(branch);
   }
 
   async remove(id: string) {

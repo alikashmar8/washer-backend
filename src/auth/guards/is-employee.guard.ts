@@ -16,16 +16,19 @@ export class IsEmployeeGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const authorization = request.headers.authorization;
+    console.log("0");
     if (!authorization) return false;
     const token = authorization.split(' ')[1];
-
+console.log("1");
     if (!token) {
+      console.log("2");
       return false;
     }
     try {
+      console.log("3");
       const employee = await this.employeesService.findOneByToken(token);
       if (!employee) return false;
-
+      console.log("4");
       request.employee = employee;
       return true;
     } catch (err) {

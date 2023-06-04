@@ -66,10 +66,24 @@ export class AdsController {
     return await this.adsService.findOneByIdOrFail(id);
   }
 
+  @UseInterceptors(
+    FileInterceptor(
+      'image',
+      getMulterSettings({ destination: './public/uploads/ads' }),
+    ),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBearerAuth('access_token')
   @Roles(EmployeeRole.ADMIN)
   @UseGuards(RolesGuard)
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateAdDto: UpdateAdDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateAdDto?: UpdateAdDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    console.log(updateAdDto);
+    if (file) await this.adsService.updateImage(id, file);
     return await this.adsService.update(id, updateAdDto);
   }
 

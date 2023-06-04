@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -36,6 +37,7 @@ import { Employee } from './entities/employee.entity';
 
 @ApiTags('Employees')
 @UsePipes(new ValidationPipe())
+@ApiBearerAuth('access_token')
 @Controller('employees')
 export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}
@@ -49,7 +51,6 @@ export class EmployeesController {
     ),
   )
   @ApiConsumes('multipart/form-data')
-  @ApiBearerAuth('access_token')
   @Post()
   async create(
     @Body() createEmployeeDto: CreateEmployeeDto,
@@ -68,6 +69,11 @@ export class EmployeesController {
       throw new UnauthorizedException(
         'You are not allowed to create admin users',
       );
+      if (!photo) {
+        throw new BadRequestException('Employee photo is required!');
+      } else {
+        createEmployeeDto.photo = photo.path;
+      }
     return await this.employeesService.create(createEmployeeDto);
   }
 
@@ -106,11 +112,22 @@ export class EmployeesController {
   }
 
   @Patch(':id')
-  update(
+  @UseInterceptors(
+    FileInterceptor(
+      'photo',
+      getMulterSettings({ destination: './public/uploads/employees' }),
+    ),
+  )
+  @ApiConsumes('multipart/form-data')
+  async update(
     @Param('id') id: string,
-    @Body() updateEmployeeDto: UpdateEmployeeDto,
+    @Body() updateEmployeeDto?: UpdateEmployeeDto,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
-    return this.employeesService.update(+id, updateEmployeeDto);
+    console.log("data ",updateEmployeeDto );
+    if (file) await this.employeesService.updateImage(id, file);
+    else delete updateEmployeeDto.photo;
+    return this.employeesService.update(id, updateEmployeeDto);
   }
 
   @UseGuards(IsEmployeeGuard)
@@ -128,15 +145,6 @@ export class EmployeesController {
         return new UnauthorizedException(
           'You are not allowed to perform this action!',
         );
-      }
-    }
-    if (employeeToDelete.photo) {
-      const imagePath = path.join(process.cwd(), employeeToDelete.photo);
-
-      try {
-        await this.employeesService.deleteImage(id, imagePath);
-      } catch (err) {
-        console.error(`Error deleting image file: ${err.message}`);
       }
     }
     return await this.employeesService.remove(id);

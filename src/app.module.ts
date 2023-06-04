@@ -39,6 +39,12 @@ import { UsersModule } from './users/users.module';
 import { UsersService } from './users/users.service';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { WalletsModule } from './wallets/wallets.module';
+import { AdsService } from './ads/ads.service';
+import { ProductsService } from './products/products.service';
+import { Ad } from './ads/entities/ad.entity';
+import { Product } from './products/entities/product.entity';
+import { ProductImage } from './products/entities/product-image.entity';
+
 
 @Module({
   imports: [
@@ -58,6 +64,9 @@ import { WalletsModule } from './wallets/wallets.module';
       User,
       Setting,
       Employee,
+      Ad,
+      Product,
+      ProductImage,
       Chat,
     ]),
     ServeStaticModule.forRoot({
@@ -116,7 +125,7 @@ import { WalletsModule } from './wallets/wallets.module';
     ChatsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, BranchesService, EmployeesService, UsersService],
+  providers: [AppService, BranchesService, EmployeesService, UsersService,AdsService,ProductsService],
 })
 export class AppModule {
   constructor(configService: ConfigService) {

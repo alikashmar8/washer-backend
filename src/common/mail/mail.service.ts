@@ -9,7 +9,10 @@ export class MailService {
   send(data: MailData): void {
     this.mailerService
       .sendMail(data)
-      .then(() => {})
+      .then((r) => {
+        console.log("Email sending response:");
+        console.log(r);
+      })
       .catch((err) => {
         console.error(`sendMail - To: ${data.to}`, err.message, 'MailService');
       });

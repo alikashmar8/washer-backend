@@ -65,7 +65,7 @@ export class OrdersController {
     @Param('id') id: string,
     @Body() updateOrderDto: UpdateOrderDto,
   ) {
-    return await this.ordersService.update(+id, updateOrderDto);
+    return await this.ordersService.update(id, updateOrderDto);
   }
 
   @Delete(':id')
