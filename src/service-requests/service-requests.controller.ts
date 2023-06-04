@@ -36,6 +36,7 @@ export class ServiceRequestsController {
     private readonly serviceRequestsService: ServiceRequestsService,
   ) {}
 
+  @UsePipes(new ValidationPipe())
   @UseGuards(IsUserGuard)
   @Post()
   async create(
@@ -92,6 +93,7 @@ export class ServiceRequestsController {
       'employee',
       'type',
       'address',
+      'vehicle'
     ]);
     if (user && user.id != serviceReq.userId)
       throw new UnauthorizedException(
