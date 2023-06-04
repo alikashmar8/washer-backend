@@ -23,7 +23,7 @@ export class ChatsService {
       });
     return await this.messagesRepository.save(data);
   }
-  
+
   async findChatByIdOrFail(chatId: string, relations?: string[]) {
     return await this.chatsRepository
       .findOneOrFail({
@@ -38,19 +38,15 @@ export class ChatsService {
   async findChatMessages(
     chatId: string,
     filters: {
-      // userId?: string;
-      // employeeId?: string;
       take?: number;
       skip?: number;
     },
   ) {
     const take = filters.take || 15;
     const skip = filters.skip || 0;
-    const res =  await this.messagesRepository.findAndCount({
+    const res = await this.messagesRepository.findAndCount({
       where: {
         chatId,
-        // userId: filters.userId,
-        // employeeId: filters.employeeId,
       },
       order: {
         createdAt: 'DESC',
@@ -62,6 +58,6 @@ export class ChatsService {
     return {
       data: res[0],
       count: res[1],
-    }
+    };
   }
 }

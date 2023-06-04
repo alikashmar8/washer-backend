@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Query,
-  UseGuards
-} from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentEmployee } from 'src/common/decorators/current-employee.decorator';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
@@ -31,14 +25,7 @@ export class ChatsController {
 
   @UseGuards(AuthGuard)
   @Get(':id/messages')
-  async getChatMessages(
-    @Param('id') id: string,
-    // @CurrentEmployee() employee: Employee,
-    // @CurrentUser() user: User,
-    @Query() query: any,
-  ) {
-    // query.userId = user?.id;
-    // query.employeeId = employee?.id;
+  async getChatMessages(@Param('id') id: string, @Query() query: any) {
     return await this.chatsService.findChatMessages(id, query);
   }
 
