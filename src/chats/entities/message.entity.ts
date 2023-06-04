@@ -33,6 +33,9 @@ export class Message {
   @Column({ nullable: false })
   chatId: string;
 
+  @Column({ nullable: false, type: 'integer' })
+  sentTimestamp: number;
+
   @Column({ nullable: true })
   userId?: string;
 

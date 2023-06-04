@@ -49,7 +49,7 @@ export class ChatsService {
         chatId,
       },
       order: {
-        createdAt: 'DESC',
+        sentTimestamp: 'DESC',
       },
       skip: skip,
       take: take,
