@@ -279,7 +279,7 @@ export class EmployeesService {
     return await this.appService.updateFile(
       id,
       'photo',
-      newImage,
+      "newImage",
       this.employeesRepository
     );
   }

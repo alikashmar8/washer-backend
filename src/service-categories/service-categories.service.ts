@@ -1,12 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as path from 'path';
+import { AppService } from 'src/app.service';
 import { Brackets, Repository } from 'typeorm';
 import { CreateServiceCategoryDto } from './dto/create-service-category.dto';
 import { UpdateServiceCategoryStatusDto } from './dto/update-service-category-status.dto';
 import { UpdateServiceCategoryDto } from './dto/update-service-category.dto';
 import { ServiceCategory } from './entities/service-category.entity';
-import { AppService } from 'src/app.service';
-import * as path from 'path';
 @Injectable()
 export class ServiceCategoriesService {
   constructor(
@@ -74,38 +74,45 @@ export class ServiceCategoriesService {
   }
 
   async update(id: string, data: UpdateServiceCategoryDto) {
-    console.log("update in service file");
+    const newImagePath = data.icon;
+    delete data.icon;
     return await this.serviceCategoriesRepository
       .update(id, data)
       .catch((err) => {
         throw new BadRequestException('Error updating category!', err);
+      })
+      .then(() => {
+        if (newImagePath) {
+          this.appsService.updateFile(
+            id,
+            'icon',
+            newImagePath,
+            this.serviceCategoriesRepository,
+          );
+        }
       });
   }
 
   async remove(id: string) {
-    // TODO: remove icon
     const service_category = await this.findOneByIdOrFail(id);
     const icon = service_category.icon;
-    console.log("-------------------");
-    console.log("-------------------");
-    console.log("Icon: "+icon);
     return await this.serviceCategoriesRepository
-    .delete(id)
-    .catch((err) => {
-      console.log(err);
-      throw new BadRequestException('Error deleting category!', err);
-    })
-    .then(async () => {
-      if (icon) {
-        const imagePath = path.join(process.cwd(), icon);
-        console.log('Image path:', imagePath);
-        try {
-          await this.appsService.deleteFile(imagePath);
-        } catch (err) {
-          console.error(err);
+      .delete(id)
+      .catch((err) => {
+        console.log(err);
+        throw new BadRequestException('Error deleting category!', err);
+      })
+      .then(async () => {
+        if (icon) {
+          const imagePath = path.join(process.cwd(), icon);
+          console.log('Image path:', imagePath);
+          try {
+            await this.appsService.deleteFile(imagePath);
+          } catch (err) {
+            console.error(err);
+          }
         }
-      }
-    });
+      });
   }
 
   async updateStatus(id: string, data: UpdateServiceCategoryStatusDto) {
@@ -125,16 +132,5 @@ export class ServiceCategoriesService {
       .catch((err) => {
         throw new BadRequestException('Category not found!', err);
       });
-  }
-
-  async updateImage(id: string, newImage?: Express.Multer.File) {
-    //TODO to handle err in newImage
-    return await this.appsService.updateFile(
-      id,
-      'icon',
-      newImage,
-      this.serviceCategoriesRepository
-    );
-   
   }
 }
