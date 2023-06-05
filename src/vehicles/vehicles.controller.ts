@@ -18,7 +18,7 @@ import {
   UsePipes,
 } from '@nestjs/common/decorators';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { IsUserGuard } from 'src/auth/guards/is-user.guard';
 import { CurrentEmployee } from 'src/common/decorators/current-employee.decorator';
@@ -27,8 +27,8 @@ import { getMulterSettings } from 'src/common/utils/functions';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { User } from 'src/users/entities/user.entity';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
-import { VehiclesService } from './vehicles.service';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
+import { VehiclesService } from './vehicles.service';
 
 @ApiTags('Vehicles')
 @ApiBearerAuth('access_token')
@@ -97,10 +97,10 @@ export class VehiclesController {
     @Body() updateVehicleDto?: UpdateVehicleDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    console.log("********************");
-    console.log("vehicleDTO:"+updateVehicleDto);
-    if (file) await this.vehiclesService.updateImage(id, file);
-    return this.vehiclesService.update(+id, updateVehicleDto);
+    if (file) {
+      updateVehicleDto.photo = file.path;
+    }
+    return await this.vehiclesService.update(id, updateVehicleDto);
   }
 
   @UseGuards(IsUserGuard)
@@ -114,6 +114,4 @@ export class VehiclesController {
 
     return await this.vehiclesService.remove(id);
   }
-
-
 }

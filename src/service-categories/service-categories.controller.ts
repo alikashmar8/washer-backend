@@ -87,14 +87,7 @@ export class ServiceCategoriesController {
     @Body() updateServiceCategoryDto?: UpdateServiceCategoryDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    // todo: handle image update
-    if (file) {
-      console.log("Image to update exits")
-      await this.serviceCategoriesService.updateImage(id, file);
-    }else{
-      console.log("Image to update doesn't exits")
-      console.log("update dto:"+updateServiceCategoryDto);
-    }
+    if (file) updateServiceCategoryDto.icon = file.path;
     return await this.serviceCategoriesService.update(
       id,
       updateServiceCategoryDto,
