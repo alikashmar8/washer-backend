@@ -279,7 +279,11 @@ export class EmployeesService {
     return await this.appService.updateFile(
       id,
       'photo',
+<<<<<<< HEAD
+      newImage.path,
+=======
       "newImage",
+>>>>>>> ace36a761f988b9d4687219f884fdbe877e583f3
       this.employeesRepository
     );
   }

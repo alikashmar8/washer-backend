@@ -88,4 +88,18 @@ export class VehiclesService {
         throw new BadRequestException('Vehicle not found!', err);
       });
   }
+<<<<<<< HEAD
+
+  async updateImage(id: string, newImage?: Express.Multer.File) {
+    //TODO to handle err in newImage
+    return await this.appsService.updateFile(
+      id,
+      'photo',
+      newImage.path,
+      this.vehiclesRepository
+    );
+  }
+
+=======
+>>>>>>> ace36a761f988b9d4687219f884fdbe877e583f3
 }

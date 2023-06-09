@@ -155,4 +155,17 @@ export class ServiceTypesService {
         }
       });
   }
+<<<<<<< HEAD
+
+  async updateImage(id: string, newImage?: Express.Multer.File) {
+    //TODO to handle err in newImage
+    return await this.appsService.updateFile(
+      id,
+      'icon',
+      newImage.path,
+      this.serviceTypesRepository
+    );
+  }
+=======
+>>>>>>> ace36a761f988b9d4687219f884fdbe877e583f3
 }

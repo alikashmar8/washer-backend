@@ -15,6 +15,7 @@ export default () => ({
     // migrations: ['src/migrations/**/*.ts'],
     // synchronize: process.env.TYPEORM_SYNCHRONIZE || 'false',
     synchronize: false,
+    timezone: 'Z',
   },
   firebase: {
     projectId: process.env.FIREBASE_PROJECT_ID,

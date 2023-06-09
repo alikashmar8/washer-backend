@@ -75,7 +75,7 @@ export class ChatsGateway
       'employee',
     ]);
     // emit message to related employee only
-    this.server.emit('messages-' + chat.employeeId, { messageObj });
+    this.server.emit('messages-e' + chat.employeeId, { messageObj });
   }
 
   @UseGuards(WsGuard)
@@ -101,7 +101,7 @@ export class ChatsGateway
       'employee',
     ]);
     // emit message to related user only
-    this.server.emit('messages-' + chat.userId, { messageObj });
+    this.server.emit('messages-u' + chat.userId, { messageObj });
   }
 
   // todo: 1- check if notify on chat creation is needed
