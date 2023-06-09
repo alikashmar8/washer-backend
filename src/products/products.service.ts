@@ -5,30 +5,29 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import * as fs from 'fs';
-import { Currency } from 'src/common/enums/currency.enum';
+import * as path from 'path';
+import { AppService } from 'src/app.service';
 import { DataSource, In, Not, Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductImage } from './entities/product-image.entity';
 import { Product } from './entities/product.entity';
-import * as path from 'path';
-import { AppService } from 'src/app.service';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(Product) private productRepository: Repository<Product>,
-    @InjectRepository(ProductImage) private productImageRepository: Repository<ProductImage>,
-    private appsService:AppService,
+    @InjectRepository(ProductImage)
+    private productImageRepository: Repository<ProductImage>,
+    private appsService: AppService,
     private dataSource: DataSource,
+    private appService: AppService,
   ) {}
 
   async create(createProductDto: CreateProductDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-
 
     try {
       const product = await queryRunner.manager
@@ -63,7 +62,6 @@ export class ProductsService {
     }
   }
 
-  
   async findAll(queryParams: {
     search?: string;
     isActive?: boolean;
@@ -106,13 +104,58 @@ export class ProductsService {
     };
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto) {    
-    return await this.productRepository
-      .update(id, updateProductDto)
-      .catch((err) => {
-        console.log(err);
-        throw new BadRequestException('Error updating address!');
-      });
+  async update(id: string, data: UpdateProductDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const images = data.images;
+      delete data.images;
+      const productRepository = queryRunner.manager.getRepository(Product);
+      const res = await productRepository.update(id, data);
+
+      if (images) {
+        const productImageRepository =
+          queryRunner.manager.getRepository(ProductImage);
+        const oldImages = await productImageRepository.find({
+          where: {
+            productId: id,
+          },
+        });
+        oldImages.forEach(async (image) => {
+          const imagePath = path.join(process.cwd(), image.image);
+          if (imagePath) {
+            try {
+              await this.appService.deleteFile(imagePath);
+            } catch (err) {
+              console.log(err);
+            }
+          }
+        });
+
+        await productImageRepository.delete({
+          productId: id,
+        });
+
+        const productImages = images.map((image) => ({
+          image,
+          productId: id,
+        }));
+        productImageRepository.create(productImages);
+        await productImageRepository.save(productImages);
+      }
+
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
+
+      return res;
+    } catch (error) {
+      console.log(error);
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+      throw new BadRequestException('Error updating product');
+    }
   }
 
   async updateProductView(id: string) {
@@ -133,10 +176,9 @@ export class ProductsService {
     try {
       const product = await this.findOneByIdOrFail(id, ['images']);
       const images = product.images;
-  
-      
+
       await this.productRepository.delete(id);
-  
+
       images.forEach(async (image) => {
         const imagePath = path.join(process.cwd(), image.image);
         if (imagePath) {
@@ -149,21 +191,24 @@ export class ProductsService {
           console.log(`Image ${imagePath} not found`);
         }
       });
-  
+
       return { message: 'Product deleted successfully' };
     } catch (error) {
       console.log(error);
       throw new BadRequestException('Error deleting product');
     }
   }
-  
+
   async updateImage(id: string, newImages?: Express.Multer.File[]) {
-    const product = await this.productRepository.findOne({where:{id},  relations: ['images'] });
-  
+    const product = await this.productRepository.findOne({
+      where: { id },
+      relations: ['images'],
+    });
+
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
-  
+
     if (newImages && newImages.length > 0) {
       // Update the product's images
       const newProductImages = newImages.map((image) => {
@@ -172,19 +217,18 @@ export class ProductsService {
         productImage.product = product;
         return productImage;
       });
-      const savedImages = await this.productImageRepository.save(newProductImages);
+      const savedImages = await this.productImageRepository.save(
+        newProductImages,
+      );
       product.images = [...product.images, ...savedImages];
     }
-  
+
     await this.productRepository.save(product);
-  
+
     // Delete any images that were removed
     await this.productImageRepository.delete({
       id: Not(In(product.images.map((image) => image.id))),
       productId: id,
     });
   }
-  
-
-  
 }

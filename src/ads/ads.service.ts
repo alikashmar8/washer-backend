@@ -1,16 +1,14 @@
 import {
   BadRequestException,
-  Injectable,
-  NotFoundException,
+  Injectable
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import * as fs from 'fs';
+import * as path from 'path';
+import { AppService } from 'src/app.service';
 import { Repository } from 'typeorm';
 import { CreateAdDto } from './dto/create-ad.dto';
 import { UpdateAdDto } from './dto/update-ad.dto';
 import { Ad } from './entities/ad.entity';
-import * as path from 'path';
-import { AppService } from 'src/app.service';
 
 @Injectable()
 export class AdsService {
@@ -94,11 +92,8 @@ export class AdsService {
     return await this.appsService.updateFile(
       id,
       'image',
-      newImage,
-      this.adsRepository
+      'newImage',
+      this.adsRepository,
     );
-   
   }
-  
-
 }

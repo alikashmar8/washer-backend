@@ -1,13 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as path from 'path';
+import { AppService } from 'src/app.service';
+import { EXCHANGE_RATE } from 'src/common/constants';
+import { Setting } from 'src/settings/entities/setting.entity';
 import { Brackets, Repository } from 'typeorm';
 import { CreateServiceTypeDto } from './dto/create-service-type.dto';
 import { UpdateServiceTypeDto } from './dto/update-service-type.dto';
 import { ServiceType } from './entities/service-type.entity';
-import { Setting } from 'src/settings/entities/setting.entity';
-import { EXCHANGE_RATE } from 'src/common/constants';
-import * as path from 'path';
-import { AppService } from 'src/app.service';
 
 @Injectable()
 export class ServiceTypesService {
@@ -34,10 +34,11 @@ export class ServiceTypesService {
   }) {
     const take = queryParams.take || 10;
     const skip = queryParams.skip || 0;
-    let isFirstWhere = true;
+
     let query: any = this.serviceTypesRepository
       .createQueryBuilder('type')
-      .leftJoinAndSelect('type.category', 'category');
+      .leftJoinAndSelect('type.category', 'category')
+      .where('type.id IS NOT NULL');
 
     if (queryParams.isActive != null) {
       if (typeof queryParams.isActive == 'string') {
@@ -47,8 +48,7 @@ export class ServiceTypesService {
           queryParams.isActive = false;
         }
       }
-      isFirstWhere = false;
-      query = query.where('type.isActive = :isActive', {
+      query = query.andWhere('type.isActive = :isActive', {
         isActive: queryParams.isActive,
       });
     }
@@ -65,35 +65,30 @@ export class ServiceTypesService {
             name: `%${queryParams.search}%`,
           });
       });
-      if (isFirstWhere) {
-        isFirstWhere = false;
-        query = query.where(innerQuery);
-      } else {
-        query = query.andWhere(innerQuery);
-      }
+      query = query.andWhere(innerQuery);
     }
 
     if (queryParams.serviceCategoryId) {
-      const queryString = 'type.serviceCategoryId = ' + queryParams.serviceCategoryId;
-      if (isFirstWhere) {
-        isFirstWhere = false;
-        query = query.where(queryString);
-      } else {
-        query = query.andWhere(queryString);
-      }
+      const queryString = 'type.serviceCategoryId = :categoryId';
+
+      query = query.andWhere(queryString, {
+        categoryId: queryParams.serviceCategoryId,
+      });
     }
 
     query = await query.skip(skip).take(take).getManyAndCount();
 
-    const exchangeRateSetting: Setting = await this.settingsRepository.findOneOrFail({
-      where: {
-        key: EXCHANGE_RATE
-      }
-    }).catch( err => {
-      throw new BadRequestException('Error calculating prices', err);
-    })
+    const exchangeRateSetting: Setting = await this.settingsRepository
+      .findOneOrFail({
+        where: {
+          key: EXCHANGE_RATE,
+        },
+      })
+      .catch((err) => {
+        throw new BadRequestException('Error calculating prices', err);
+      });
     const exchangeRate = Number(exchangeRateSetting.value);
-    
+
     query[0].forEach((element) => {
       element.priceLBP = element.price * exchangeRate;
     });
@@ -120,9 +115,23 @@ export class ServiceTypesService {
   }
 
   async update(id: string, data: UpdateServiceTypeDto) {
-    return await this.serviceTypesRepository.update(id, data).catch((err) => {
-      throw new BadRequestException('Error updating service type', err);
-    });
+    const newImagePath = data.icon;
+    delete data.icon;
+    return await this.serviceTypesRepository
+      .update(id, data)
+      .catch((err) => {
+        throw new BadRequestException('Error updating service type', err);
+      })
+      .then(() => {
+        if (newImagePath) {
+          this.appsService.updateFile(
+            id,
+            'icon',
+            newImagePath,
+            this.serviceTypesRepository,
+          );
+        }
+      });
   }
 
   async remove(id: string) {
@@ -146,6 +155,7 @@ export class ServiceTypesService {
         }
       });
   }
+<<<<<<< HEAD
 
   async updateImage(id: string, newImage?: Express.Multer.File) {
     //TODO to handle err in newImage
@@ -156,4 +166,6 @@ export class ServiceTypesService {
       this.serviceTypesRepository
     );
   }
+=======
+>>>>>>> ace36a761f988b9d4687219f884fdbe877e583f3
 }

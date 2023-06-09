@@ -84,8 +84,8 @@ export class ServiceTypesController {
     @Body() updateServiceTypeDto: UpdateServiceTypeDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    if (file) await this.serviceTypesService.updateImage(id, file);
-    return this.serviceTypesService.update(id, updateServiceTypeDto);
+    if (file) updateServiceTypeDto.icon = file.path;
+    return await this.serviceTypesService.update(id, updateServiceTypeDto);
   }
 
   @Delete(':id')

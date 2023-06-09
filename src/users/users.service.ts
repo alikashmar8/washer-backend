@@ -117,8 +117,11 @@ export class UsersService {
     };
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: string, data: UpdateUserDto) {
+    return await this.usersRepository.update(id, data).catch((err) => {
+      console.log(err);
+      throw new BadRequestException('Error updating user', err);
+    });
   }
 
   remove(id: number) {

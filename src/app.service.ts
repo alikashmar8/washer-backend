@@ -3,14 +3,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { BranchesService } from './branches/branches.service';
-import { EmployeeRole } from './common/enums/employee-role.enum';
-import { EmployeesService } from './employees/employees.service';
-import { PaymentType } from './common/enums/payment-type.enum';
-import { Setting } from './settings/entities/setting.entity';
-import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as fs from 'fs';
+import * as path from 'path';
+import { Repository } from 'typeorm';
+import { BranchesService } from './branches/branches.service';
 import {
   CAR_COST,
   EXCHANGE_RATE,
@@ -20,10 +17,13 @@ import {
   VAN_COST,
 } from './common/constants';
 import { Currency } from './common/enums/currency.enum';
-import * as path from 'path';
+import { EmployeeRole } from './common/enums/employee-role.enum';
+import { PaymentType } from './common/enums/payment-type.enum';
+import { Setting } from './settings/entities/setting.entity';
+
+import { Chat } from './chats/entities/chat.entity';
 import { Employee } from './employees/entities/employee.entity';
 import { UsersService } from './users/users.service';
-import { Chat } from './chats/entities/chat.entity';
 
 @Injectable()
 export class AppService {
@@ -138,26 +138,25 @@ export class AppService {
   async updateFile(
     id: string,
     filePropertyName: string,
-    newFilePath: string, 
+    newFilePath: string,
     repository: Repository<any>,
   ) {
     const entity = await repository.findOne({ where: { id } });
-  
+
     if (!entity) {
       throw new NotFoundException(`Entity with ID ${id} not found`);
     }
     const oldFile = entity[filePropertyName];
-  
+
     await repository.update(id, { [filePropertyName]: newFilePath });
     console.log('check_3');
-  
+
     if (oldFile) {
       console.log(oldFile);
       const oldFilePath = path.join(process.cwd(), oldFile);
       console.log(`Old ${filePropertyName} path:`, oldFilePath);
       try {
         await this.deleteFile(oldFilePath);
-        console.log('File replacement done successfully');
       } catch (err) {
         console.error(
           `Failed to delete old ${filePropertyName} file ${oldFile}: ${err}`,
@@ -165,5 +164,4 @@ export class AppService {
       }
     }
   }
-
 }

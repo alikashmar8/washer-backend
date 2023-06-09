@@ -1,11 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as path from 'path';
+import { AppService } from 'src/app.service';
 import { Repository } from 'typeorm';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { Vehicle } from './entities/vehicle.entity';
-import * as path from 'path';
-import { AppService } from 'src/app.service';
 
 @Injectable()
 export class VehiclesService {
@@ -36,12 +36,23 @@ export class VehiclesService {
     return `This action returns a #${id} vehicle`;
   }
 
-  async update(id: number, updateVehicleDto: UpdateVehicleDto) {
+  async update(id: string, updateVehicleDto: UpdateVehicleDto) {
+    const newImage = updateVehicleDto.photo;
+    delete updateVehicleDto.photo;
     return await this.vehiclesRepository
       .update(id, updateVehicleDto)
       .catch((err) => {
         console.log(err);
         throw new BadRequestException('Error updating vehicle!');
+      })
+      .then(async () => {
+        if (newImage)
+          await this.appsService.updateFile(
+            id,
+            'photo',
+            newImage,
+            this.vehiclesRepository,
+          );
       });
   }
 
@@ -67,7 +78,6 @@ export class VehiclesService {
       });
   }
 
-
   async findOneByIdOrFail(id: string, relations?: string[]) {
     return await this.vehiclesRepository
       .findOneOrFail({
@@ -78,6 +88,7 @@ export class VehiclesService {
         throw new BadRequestException('Vehicle not found!', err);
       });
   }
+<<<<<<< HEAD
 
   async updateImage(id: string, newImage?: Express.Multer.File) {
     //TODO to handle err in newImage
@@ -89,4 +100,6 @@ export class VehiclesService {
     );
   }
 
+=======
+>>>>>>> ace36a761f988b9d4687219f884fdbe877e583f3
 }
