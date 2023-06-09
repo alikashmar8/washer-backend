@@ -133,7 +133,6 @@ export class ServiceCategoriesService {
         throw new BadRequestException('Category not found!', err);
       });
   }
-<<<<<<< HEAD
 
   async updateImage(id: string, newImage?: Express.Multer.File) {
     //TODO to handle err in newImage
@@ -141,10 +140,7 @@ export class ServiceCategoriesService {
       id,
       'icon',
       newImage.path,
-      this.serviceCategoriesRepository
+      this.serviceCategoriesRepository,
     );
-   
   }
-=======
->>>>>>> ace36a761f988b9d4687219f884fdbe877e583f3
 }
