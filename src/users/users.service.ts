@@ -118,10 +118,11 @@ export class UsersService {
   }
 
   async update(id: string, data: UpdateUserDto) {
-    return await this.usersRepository.update(id, data).catch((err) => {
+    await this.usersRepository.update(id, data).catch((err) => {
       console.log(err);
       throw new BadRequestException('Error updating user', err);
     });
+    return await this.findById(id);
   }
 
   remove(id: number) {
