@@ -132,7 +132,7 @@ export class ServiceCategoriesService {
     return await this.appsService.updateFile(
       id,
       'icon',
-      newImage,
+      newImage.path,
       this.serviceCategoriesRepository
     );
    

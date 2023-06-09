@@ -84,7 +84,7 @@ export class VehiclesService {
     return await this.appsService.updateFile(
       id,
       'photo',
-      newImage,
+      newImage.path,
       this.vehiclesRepository
     );
   }
