@@ -236,7 +236,6 @@ export class EmployeesService {
       });
   }
 
-
   async findOneByToken(token: any) {
     const deviceToken = await this.deviceTokensRepository.findOne({
       where: {
@@ -274,17 +273,13 @@ export class EmployeesService {
   }
 
   async updateImage(id: string, newImage?: Express.Multer.File) {
-    console.log("updating image");
+    console.log('updating image');
     //TODO to handle err in newImage
     return await this.appService.updateFile(
       id,
       'photo',
-<<<<<<< HEAD
       newImage.path,
-=======
-      "newImage",
->>>>>>> ace36a761f988b9d4687219f884fdbe877e583f3
-      this.employeesRepository
+      this.employeesRepository,
     );
   }
 
