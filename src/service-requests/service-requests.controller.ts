@@ -54,9 +54,14 @@ export class ServiceRequestsController {
   async findAll(
     @Query()
     query: {
+      search?: string;
       userId?: string;
       employeeId?: string;
       branchId?: string;
+      fromDate?: string;
+      toDate?: string;
+      status?: RequestStatus;
+      isPaid?: boolean;
       take?: number;
       skip?: number;
       lat?: number;
@@ -93,7 +98,7 @@ export class ServiceRequestsController {
       'employee',
       'type',
       'address',
-      'vehicle'
+      'vehicle',
     ]);
     if (user && user.id != serviceReq.userId)
       throw new UnauthorizedException(
@@ -158,6 +163,18 @@ export class ServiceRequestsController {
   ) {
     body.userId = user.id;
     return await this.serviceRequestsService.calculateRequestCost(body);
+  }
+
+  @UseGuards(IsEmployeeGuard)
+  @Patch(':id/assignEmployee')
+  async assignEmployee(
+    @Param('id') id: string,
+    @Body('employeeId') employeeId: string,
+    @CurrentEmployee() employee: Employee,
+  ) {
+    if (!employeeId)
+      throw new BadRequestException('employeeId should not be empty!');
+    return await this.serviceRequestsService.assignEmployee(id, employeeId);
   }
 
   // @Delete(':id')

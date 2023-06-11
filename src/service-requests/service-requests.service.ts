@@ -5,6 +5,7 @@ import { Address } from 'src/addresses/entities/address.entity';
 import { Branch } from 'src/branches/entities/branch.entity';
 import { EXCHANGE_RATE } from 'src/common/constants';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
+import { NotificationType } from 'src/common/enums/notification-type.enum';
 import { RequestStatus } from 'src/common/enums/request-status.enum';
 import { calculateDistance } from 'src/common/utils/functions';
 import { Employee } from 'src/employees/entities/employee.entity';
@@ -437,14 +438,13 @@ export class ServiceRequestsService {
         discountAmount = promo.discountAmount;
     }
 
-    
-    if(total < discountAmount ){
-      total =0;
+    if (total < discountAmount) {
+      total = 0;
       discountAmount = total;
-    }else{
+    } else {
       total -= discountAmount;
     }
-    
+
     total += data.tips;
 
     // todo: check for fees or other costs in case of payment by credit cards
@@ -461,5 +461,22 @@ export class ServiceRequestsService {
       console.log(err);
       throw new BadRequestException('Error updating payment status');
     });
+  }
+
+  async assignEmployee(id: string, employeeId: string) {
+    const res = await this.requestsRepository
+      .update(id, { employeeId })
+      .catch(() => {
+        throw new BadRequestException('Error assigning employee!');
+      });
+
+    this.notificationsService.createAndNotify({
+      title: 'New Request Assignment',
+      body: `You have been assigned a new request id: ${id}`,
+      type: NotificationType.REQUEST_ASSIGNED,
+      employeeId: employeeId,
+    });
+
+    return res;
   }
 }
