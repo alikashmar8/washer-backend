@@ -23,9 +23,9 @@ export class CreateNotificationDto {
     @IsOptional()
     type?: NotificationType;
 
-    @ApiProperty()
-    @IsOptional()
-    fcmTokens?: string[];
+    // @ApiProperty()
+    // @IsOptional()
+    // fcmTokens?: string[];
 }
 
 
