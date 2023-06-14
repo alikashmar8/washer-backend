@@ -1,13 +1,13 @@
 import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import {
-  WebSocketGateway,
-  WebSocketServer,
-  SubscribeMessage,
-  OnGatewayInit,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
   ConnectedSocket,
   MessageBody,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  OnGatewayInit,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { WsGuard } from 'src/auth/guards/ws.guard';
@@ -15,13 +15,13 @@ import { ChatsService } from 'src/chats/chats.service';
 import { CreateMessageDto } from 'src/chats/dto/chat.dto';
 import { EmployeesService } from 'src/employees/employees.service';
 import { UsersService } from 'src/users/users.service';
-
+import { ChatSenderType } from './dto/chat-sender-type.dto';
 
 @WebSocketGateway({
   cors: {
     origin: '*',
   },
-  namespace: "chatGateway"
+  namespace: 'chatGateway',
 })
 @UsePipes(new ValidationPipe())
 export class ChatsGateway
@@ -58,9 +58,7 @@ export class ChatsGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() data: CreateMessageDto,
   ) {
-    console.log(
-      `Processing: User ${client.id} sent message: ${data.text}`,
-    );
+    console.log(`Processing: User ${client.id} sent message: ${data.text}`);
     // get access token from headers
     const token = client.handshake.headers.authorization.split(' ')[1];
     // get user that have this token
@@ -68,6 +66,7 @@ export class ChatsGateway
     if (!user) return;
     // assign user id in data to submit
     data.userId = user.id;
+    data.lastSenderType = ChatSenderType.USER;
     // create message in database
     const messageObj = await this.chatsService.createMessage(data);
     const chat = await this.chatsService.findChatByIdOrFail(messageObj.chatId, [
@@ -84,9 +83,7 @@ export class ChatsGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() data: CreateMessageDto,
   ) {
-    console.log(
-      `Processing: Employee ${client.id} sent message: ${data.text}`,
-    );
+    console.log(`Processing: Employee ${client.id} sent message: ${data.text}`);
     // get access token from headers
     const token = client.handshake.headers.authorization.split(' ')[1];
     // get employee that have this token
@@ -94,6 +91,7 @@ export class ChatsGateway
     if (!employee) return;
     // assign employee id in data to submit
     data.employeeId = employee.id;
+    data.lastSenderType = ChatSenderType.EMPLOYEE;
     // create message in database
     const messageObj = await this.chatsService.createMessage(data);
     const chat = await this.chatsService.findChatByIdOrFail(messageObj.chatId, [

@@ -1,3 +1,4 @@
+import { ChatSenderType } from './chat-sender-type.dto';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber } from 'class-validator';
 
@@ -15,6 +16,8 @@ export class CreateMessageDto {
   @ApiProperty()
   sentTimestamp: number;
 
+  // set in code based on who is the sender 
+  lastSenderType: ChatSenderType;
   // Either userId or employeeId will be set in code
   userId: string;
   employeeId: string;

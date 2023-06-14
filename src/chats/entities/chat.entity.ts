@@ -8,6 +8,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { ChatSenderType } from '../dto/chat-sender-type.dto';
 import { Message } from './message.entity';
 
 @Entity('chats')
@@ -26,6 +27,9 @@ export class Chat {
 
   @Column({ nullable: true })
   lastMessageDate?: Date;
+
+  @Column({ nullable: true, type: 'enum', enum: ChatSenderType })
+  lastSenderType?: ChatSenderType;
 
   @ManyToOne((type) => User, (user) => user.chats, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
