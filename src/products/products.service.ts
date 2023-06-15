@@ -65,6 +65,8 @@ export class ProductsService {
   async findAll(queryParams: {
     search?: string;
     isActive?: boolean;
+    orderBy?: string;
+    orderByDirection?: string;
     take?: number;
     skip?: number;
   }) {
@@ -94,6 +96,15 @@ export class ProductsService {
       query = query.andWhere('product.name LIKE :search', {
         search: '%' + queryParams.search + '%',
       });
+    }
+
+    if (queryParams.orderBy) {
+      const { orderBy, orderByDirection } = queryParams;
+      const direction =
+        orderByDirection && orderByDirection.toLowerCase() == 'asc'
+          ? 'ASC'
+          : 'DESC';
+      query = query.orderBy(orderBy, direction);
     }
 
     query = await query.skip(skip).take(take).getManyAndCount();

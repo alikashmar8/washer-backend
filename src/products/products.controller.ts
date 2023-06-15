@@ -52,16 +52,13 @@ export class ProductsController {
     @Body() createProductDto: CreateProductDto,
     @UploadedFiles() images: Express.Multer.File[],
   ) {
-    console.log("createDTO",createProductDto);
     if (!images || !images.length) {
       throw new BadRequestException('product images are required!');
     } else {
-      console.log("product 1");
       const imageList = images.map((image) => image.path);
       createProductDto.images = imageList;
     }
 
-    // todo: check files type & test api
     return await this.productsService.create(createProductDto);
   }
 
@@ -72,6 +69,8 @@ export class ProductsController {
     query: {
       search?: string;
       isActive?: boolean;
+      orderBy?: string;
+      orderByDirection?: string;
       take?: number;
       skip?: number;
     },
@@ -87,12 +86,6 @@ export class ProductsController {
     ]);
   }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-  //   return this.productsService.update(+id, updateProductDto);
-  // }
-
-
   @UseInterceptors(
     FilesInterceptor(
       'images[]',
@@ -107,9 +100,11 @@ export class ProductsController {
   async update(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
-    @UploadedFiles() files?: Express.Multer.File[],
+    @CurrentEmployee() employee: Employee,
+    @UploadedFiles() images?: Express.Multer.File[],
   ) {
-    // if (files) await this.productsService.updateImage(id, files);
+    const imageList = images ? images.map((image) => image.path) : [];
+    updateProductDto.images = imageList;
     return await this.productsService.update(id, updateProductDto);
   }
 

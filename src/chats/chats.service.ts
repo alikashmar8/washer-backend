@@ -17,6 +17,7 @@ export class ChatsService {
       .update(data.chatId, {
         lastMessage: data.text,
         lastMessageDate: new Date(),
+        lastSenderType: data.lastSenderType
       })
       .catch((err) => {
         console.log('error updating Chat after message sent!', err);
