@@ -174,6 +174,11 @@ export class ServiceRequestsController {
   ) {
     if (!employeeId)
       throw new BadRequestException('employeeId should not be empty!');
+
+    if (employee.role == EmployeeRole.DRIVER && employee.id != employeeId)
+      throw new UnauthorizedException(
+        'You are not allowed to perform this action!',
+      );
     return await this.serviceRequestsService.assignEmployee(id, employeeId);
   }
 

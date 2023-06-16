@@ -464,12 +464,13 @@ export class ServiceRequestsService {
   }
 
   async assignEmployee(id: string, employeeId: string) {
+    const serviceRequest = await this.findOneByIdOrFail(id);
+    serviceRequest.employeeId = employeeId;
     const res = await this.requestsRepository
-      .update(id, { employeeId })
-      .catch(() => {
-        throw new BadRequestException('Error assigning employee!');
+      .save(serviceRequest)
+      .catch((err) => {
+        throw new BadRequestException('Error assigning employee');
       });
-
     this.notificationsService.createAndNotify({
       title: 'New Request Assignment',
       body: `You have been assigned a new request id: ${id}`,
