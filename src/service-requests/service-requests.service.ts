@@ -333,8 +333,15 @@ export class ServiceRequestsService {
       });
   }
 
-  update(id: number, updateServiceRequestDto: UpdateServiceRequestDto) {
-    return `This action updates a #${id} serviceRequest`;
+  async update(id: string, updateServiceRequestDto: UpdateServiceRequestDto) {
+    return await this.requestsRepository
+      .update(id, {
+        confirmedDate: updateServiceRequestDto.confirmedDate,
+      })
+      .catch((err) => {
+        console.log(err);
+        throw new BadRequestException('Error updating request!');
+      });
   }
 
   remove(id: number) {

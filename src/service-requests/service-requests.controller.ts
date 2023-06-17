@@ -27,6 +27,7 @@ import { CreateServiceRequestDto } from './dto/create-service-request.dto';
 import { UpdateServiceRequestPaymentStatusDto } from './dto/update-service-request-payment-status.dto';
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
 import { ServiceRequestsService } from './service-requests.service';
+import { UpdateServiceRequestDto } from './dto/update-service-request.dto';
 
 @ApiBearerAuth('access_token')
 @ApiTags('Service Requests')
@@ -180,6 +181,17 @@ export class ServiceRequestsController {
         'You are not allowed to perform this action!',
       );
     return await this.serviceRequestsService.assignEmployee(id, employeeId);
+  }
+
+  @UseGuards(IsEmployeeGuard)
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() body: UpdateServiceRequestDto,
+    @CurrentUser() user: User,
+    @CurrentEmployee() employee: Employee,
+  ) {
+    return await this.serviceRequestsService.update(id, body);
   }
 
   // @Delete(':id')
