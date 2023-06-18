@@ -1,4 +1,9 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateServiceRequestDto } from './create-service-request.dto';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsDateString, IsNotEmpty } from 'class-validator';
 
-export class UpdateServiceRequestDto extends PartialType(CreateServiceRequestDto) {}
+export class UpdateServiceRequestDto {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsDateString()
+  confirmedDate: Date;
+}
