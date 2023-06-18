@@ -153,14 +153,13 @@ export class ServiceRequestsService {
       .leftJoinAndSelect('req.employee', 'employee')
       .leftJoinAndSelect('req.address', 'address')
       .leftJoinAndSelect('req.vehicle', 'vehicle')
-      .leftJoinAndSelect('type.category', 'category');
-
+      .leftJoinAndSelect('type.category', 'category')
+      .where('req.id IS NOT NULL');
+    isFirstWhere = false;
     if (filters.userId || currentUser) {
       let uid = filters.userId;
       if (currentUser) uid = currentUser.id;
-      if (isFirstWhere) query = query.where('req.userId = :uId', { uId: uid });
       else query = query.andWhere('req.userId = :uId', { uId: uid });
-      isFirstWhere = false;
     }
 
     if (filters.branchId) {
@@ -242,37 +241,32 @@ export class ServiceRequestsService {
       isFirstWhere = false;
     }
 
-    if (currentEmployee && currentEmployee.role == EmployeeRole.DRIVER) {
-      // if employee is driver => he will be able to see his requests or non assigned ones
-      // TODO: query to be tested
-      const innerQuery = new Brackets((qb) => {
-        qb.where('req.employeeId = :eid', {
-          eid: currentEmployee.id,
-        }).orWhere('req.employeeId is null');
-        // .orWhere('req.employeeId = :eid', {
-        //   eid: null,
-        // });
+    // TODO: check if this logic is needed
+    // if (currentEmployee && currentEmployee.role == EmployeeRole.DRIVER) {
+    //   // if employee is driver => he will be able to see his requests or non assigned ones
+    //   // TODO: query to be tested
+    //   const innerQuery = new Brackets((qb) => {
+    //     qb.where('req.employeeId = :eid', {
+    //       eid: currentEmployee.id,
+    //     }).orWhere('req.employeeId is null');
+    //     // .orWhere('req.employeeId = :eid', {
+    //     //   eid: null,
+    //     // });
+    //   });
+    //   if (isFirstWhere) {
+    //     isFirstWhere = false;
+    //     query = query.where(innerQuery);
+    //   } else {
+    //     query = query.andWhere(innerQuery);
+    //   }
+    // } else {
+    // filter by employee normally
+    if (filters.employeeId != undefined) {
+      query = query.andWhere('req.employeeId = :eId', {
+        eId: filters.employeeId,
       });
-      if (isFirstWhere) {
-        isFirstWhere = false;
-        query = query.where(innerQuery);
-      } else {
-        query = query.andWhere(innerQuery);
-      }
-    } else {
-      // filter by employee normally
-      if (filters.employeeId) {
-        if (isFirstWhere)
-          query = query.where('req.employeeId = :eId', {
-            eId: filters.employeeId,
-          });
-        else
-          query = query.andWhere('req.employeeId = :eId', {
-            eId: filters.employeeId,
-          });
-        isFirstWhere = false;
-      }
     }
+    // }
 
     if (filters.search) {
       query = query.andWhere(
