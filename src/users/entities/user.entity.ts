@@ -173,9 +173,6 @@ export class User extends BaseEntity {
     this.username = this.username
       ? this.username
       : removeSpecialCharacters(this.firstName + this.lastName) + Date.now();
-    this.password = this.password
-      ? removeSpecialCharacters(this.phoneNumber)
-      : null;
     const password = this.password ? this.password : this.username;
     const hash = await argon.hash(password);
     this.password = hash;

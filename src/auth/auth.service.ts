@@ -24,6 +24,7 @@ import {
   terminateWhatsappConfiguration,
 } from './whatsapp';
 import { MailService } from 'src/common/mail/mail.service';
+import { PasswordResetDTO } from './dtos/forget-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -230,8 +231,8 @@ export class AuthService {
 
     if (!user) throw new BadRequestException('Error user not found!');
 
-    // const match = await argon.verify(user.password, data.password);
-    // if (!match) throw new BadRequestException('Password incorrect!');
+    const match = await argon.verify(user.password, data.password);
+    if (!match) throw new BadRequestException('Password incorrect!');
 
     // const access_token = jwt.sign(
     //   { user, type: JWTDataTypeEnum.USER },
@@ -273,8 +274,8 @@ export class AuthService {
 
     if (!employee) throw new BadRequestException('Error employee not found!');
 
-    // const match = await argon.verify(employee.password, data.password);
-    // if (!match) throw new BadRequestException('Password incorrect!');
+    const match = await argon.verify(employee.password, data.password);
+    if (!match) throw new BadRequestException('Password incorrect!');
 
     // const access_token = jwt.sign(
     //   { employee, type: JWTDataTypeEnum.EMPLOYEE },
@@ -367,5 +368,61 @@ export class AuthService {
       console.log(err);
       throw new BadRequestException('Error sending test email');
     }
+  }
+
+  async forgetPasswordByEmail(email: string): Promise<void> {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) throw new BadRequestException('Error user not found!');
+    if (user.isSocialMediaLogin)
+      throw new BadRequestException('Invalid action for social media account');
+
+    const passwordResetCode: number = Math.floor(
+      100000 + Math.random() * 900000,
+    );
+    const passwordResetExpires: Date = new Date();
+    const codeExpireIn = 120; //minutes
+    passwordResetExpires.setTime(
+      passwordResetExpires.getTime() + codeExpireIn * 60 * 1000, //120 minutes
+    );
+
+    user.passwordResetCode = passwordResetCode + '';
+    user.passwordResetExpiry = passwordResetExpires;
+
+    await this.usersRepository.save(user).catch((err) => {
+      console.log("Error saving user's password reset code");
+      throw new BadRequestException('Error generating code', err);
+    });
+
+    const mailData = {
+      from: process.env.MAIL_FROM_USER,
+      to: user.email,
+      subject: 'Reset Password Code',
+      text: `Please use this code ${passwordResetCode} to reset your password. Code will expire in ${codeExpireIn} minutes.`,
+      html: `
+          <h3>Hello ${user.firstName}!</h3>
+          <p>Please use this code ${passwordResetCode} to reset your password. Code will expire in ${codeExpireIn} minutes.</p>
+      `,
+    };
+
+    this.mailService.send(mailData);
+  }
+
+  async passwordReset(data: PasswordResetDTO) {
+    const user = await this.usersService.findByEmail(data.email);
+    if (!user) throw new BadRequestException('Error user not found!');
+    if (user.passwordResetCode != data.passwordResetCode)
+      throw new BadRequestException('Invalid code');
+
+    const todayDate = new Date();
+    if (todayDate > user.passwordResetExpiry)
+      throw new BadRequestException('Reset code expired');
+
+    const hash = await argon.hash(data.newPassword);
+    user.password = hash;
+
+    return await this.usersRepository.save(user).catch((err) => {
+      console.log(err);
+      throw new BadRequestException('Error updating password!', err);
+    });
   }
 }
