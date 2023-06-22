@@ -15,6 +15,10 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { AuthService } from './auth.service';
+import {
+  ForgetPasswordDTO,
+  PasswordResetDTO,
+} from './dtos/forget-password.dto';
 import { LoginDTO } from './dtos/login.dto';
 import { LogoutDTO } from './dtos/logout.dto';
 import { RegisterUserDTO } from './dtos/register.dto';
@@ -149,8 +153,18 @@ export class AuthController {
   ) {
     return await this.authService.verifyEmail(user.id, code);
   }
-  
 
+  @Post('forgetPassword')
+  async forgotPassword(@Body() data: ForgetPasswordDTO): Promise<void> {
+    return await this.authService.forgetPasswordByEmail(data.email);
+  }
+
+  @Post('passwordReset')
+  async validatePasswordResetCode(@Body() data: PasswordResetDTO) {
+    return await this.authService.passwordReset(data);
+  }
+
+  //TODO remove
   @Get('sendTestEmail')
   async sendTestEmail() {
     return await this.authService.sendTestEmail();
