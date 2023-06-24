@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -8,7 +7,7 @@ import {
   Post,
   UnauthorizedException,
   UseInterceptors,
-  ValidationPipe,
+  ValidationPipe
 } from '@nestjs/common';
 import {
   Patch,
@@ -51,9 +50,7 @@ export class VehiclesController {
     @UploadedFile() photo: Express.Multer.File,
     @CurrentUser() user: User,
   ) {
-    if (!photo) {
-      throw new BadRequestException('Vehicle icon is required!');
-    } else {
+    if (photo) {
       createVehicleDto.photo = photo.path;
     }
 
