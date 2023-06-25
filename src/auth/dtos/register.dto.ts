@@ -32,7 +32,7 @@ export class RegisterUserDTO {
     type: String,
     description: `${passwordRegex}`,
   })
-  @Matches(passwordRegex, { message: 'Weak password' })
+  // @Matches(passwordRegex, { message: 'Weak password' })
   @IsNotEmpty()
   @Length(6, 32)
   password: string;
