@@ -84,8 +84,7 @@ export class AdsController {
     @Body() updateAdDto?: UpdateAdDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    console.log(updateAdDto);
-    if (file) await this.adsService.updateImage(id, file.path);
+    if (file) updateAdDto.image = file.path;
     return await this.adsService.update(id, updateAdDto);
   }
 
