@@ -41,16 +41,16 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   // // Set firebase config options
-  // const firebaseConfig: firebaseAdmin.ServiceAccount = {
-  //   projectId: configService.get<string>('firebase.projectId'),
-  //   privateKey: configService.get<string>('firebase.privateKey'),
-  //   clientEmail: configService.get<string>('firebase.clientEmail'),
-  // };
+  const firebaseConfig: firebaseAdmin.ServiceAccount = {
+    projectId: configService.get<string>('firebase.projectId'),
+    privateKey: configService.get<string>('firebase.privateKey'),
+    clientEmail: configService.get<string>('firebase.clientEmail'),
+  };
 
   // // Initialize the firebase admin app
-  // firebaseAdmin.initializeApp({
-  //   credential: firebaseAdmin.credential.cert(firebaseConfig),
-  // });
+  firebaseAdmin.initializeApp({
+    credential: firebaseAdmin.credential.cert(firebaseConfig),
+  });
 
   await app.listen(3001, '0.0.0.0');
 }
