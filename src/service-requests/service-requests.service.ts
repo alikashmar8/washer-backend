@@ -400,6 +400,7 @@ export class ServiceRequestsService {
     discountAmountLBP: number;
   }> {
     let total = 0;
+    if (!data.tips) data.tips = 0;
 
     const exchangeRateSetting: Setting = await this.settingsRepository
       .findOneOrFail({
@@ -447,13 +448,14 @@ export class ServiceRequestsService {
     }
 
     if (total < discountAmount) {
-      total = 0;
       discountAmount = total;
+      total = 0;
     } else {
       total -= discountAmount;
     }
 
-    total += data.tips;
+    const tipsUSD = data.tips / exchangeRate;
+    total += tipsUSD;
 
     // todo: check for fees or other costs in case of payment by credit cards
     const totalLBP = total * exchangeRate;
