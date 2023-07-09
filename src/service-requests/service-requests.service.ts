@@ -285,7 +285,11 @@ export class ServiceRequestsService {
       );
     }
 
-    query = await query.skip(skip).take(take).getManyAndCount();
+    query = await query
+      .orderBy('req.requestedDate', 'desc')
+      .skip(skip)
+      .take(take)
+      .getManyAndCount();
 
     // TODO: to be uncommented later on
     // if (currentEmployee && currentEmployee.role == EmployeeRole.DRIVER) {
