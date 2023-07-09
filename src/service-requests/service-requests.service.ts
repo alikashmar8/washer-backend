@@ -4,7 +4,6 @@ import { AddressesService } from 'src/addresses/addresses.service';
 import { Address } from 'src/addresses/entities/address.entity';
 import { Branch } from 'src/branches/entities/branch.entity';
 import { EXCHANGE_RATE } from 'src/common/constants';
-import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { NotificationType } from 'src/common/enums/notification-type.enum';
 import { RequestStatus } from 'src/common/enums/request-status.enum';
 import { calculateDistance } from 'src/common/utils/functions';
@@ -344,9 +343,9 @@ export class ServiceRequestsService {
 
   async updateStatus(id: string, data: UpdateServiceRequestStatusDto) {
     const serviceRequest = await this.findOneByIdOrFail(id, ['user']);
-
+    let res;
     try {
-      await this.requestsRepository.update(id, data);
+      res = await this.requestsRepository.update(id, data);
     } catch (err) {
       console.error(err);
       throw new BadRequestException('Error updating status', err);
@@ -358,6 +357,7 @@ export class ServiceRequestsService {
           title: 'Request update.',
           body: 'Your Request have been accepted!',
           userId: serviceRequest.userId,
+          type: NotificationType.REQUEST_ACCEPTED,
         });
         break;
       case RequestStatus.IN_PROGRESS:
@@ -365,6 +365,7 @@ export class ServiceRequestsService {
           title: 'Request update.',
           body: 'Driver is on his way and will start soon!',
           userId: serviceRequest.userId,
+          type: NotificationType.REQUEST_DRIVER_IN_ROUTE,
         });
         break;
       case RequestStatus.DONE:
@@ -372,11 +373,13 @@ export class ServiceRequestsService {
           title: 'Request update.',
           body: 'Your request is done! Thank you for your business.',
           userId: serviceRequest.userId,
+          type: NotificationType.REQUEST_DONE,
         });
         break;
       default:
         break;
     }
+    return res;
   }
 
   async calculateRequestCost(data: {
