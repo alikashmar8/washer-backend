@@ -16,12 +16,11 @@ import {
   UseGuards,
   UseInterceptors,
   UsePipes,
-  ValidationPipe
+  ValidationPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import geoip from 'geoip-lite';
-import * as path from 'path';
 import { IsEmployeeGuard } from 'src/auth/guards/is-employee.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { CreateEmployeeChatDTO } from 'src/chats/dto/create-employee-chat.dto';
@@ -69,11 +68,11 @@ export class EmployeesController {
       throw new UnauthorizedException(
         'You are not allowed to create admin users',
       );
-      if (!photo) {
-        throw new BadRequestException('Employee photo is required!');
-      } else {
-        createEmployeeDto.photo = photo.path;
-      }
+    if (!photo) {
+      throw new BadRequestException('Employee photo is required!');
+    } else {
+      createEmployeeDto.photo = photo.path;
+    }
     return await this.employeesService.create(createEmployeeDto);
   }
 
@@ -124,10 +123,8 @@ export class EmployeesController {
     @Body() updateEmployeeDto?: UpdateEmployeeDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    console.log("data ",updateEmployeeDto );
-    if (file) await this.employeesService.updateImage(id, file);
-    else delete updateEmployeeDto.photo;
-    return this.employeesService.update(id, updateEmployeeDto);
+    if (file) updateEmployeeDto.photo = file.path;
+    return await this.employeesService.update(id, updateEmployeeDto);
   }
 
   @UseGuards(IsEmployeeGuard)
