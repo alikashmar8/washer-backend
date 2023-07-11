@@ -1,10 +1,6 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import * as fs from 'fs';
+import * as path from 'path';
 import { AppService } from 'src/app.service';
 import { Chat } from 'src/chats/entities/chat.entity';
 import { DeviceTokenStatus } from 'src/common/enums/device-token-status.enum';
@@ -15,8 +11,6 @@ import { CreateEmployeeChatDTO } from './../chats/dto/create-employee-chat.dto';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { Employee } from './entities/employee.entity';
-import * as path from 'path';
-import { log } from 'console';
 
 @Injectable()
 export class EmployeesService {
@@ -209,10 +203,24 @@ export class EmployeesService {
   }
 
   async update(id: string, data: UpdateEmployeeDto) {
-    return await this.employeesRepository.update(id, data).catch((err) => {
-      console.log(err);
-      throw new BadRequestException('Error updating employee!', err);
-    });
+    const imagePath = data.photo;
+    delete data.photo;
+    return await this.employeesRepository
+      .update(id, data)
+      .catch((err) => {
+        console.log(err);
+        throw new BadRequestException('Error updating employee!', err);
+      })
+      .then((data) => {
+        if (imagePath) {
+          this.appService.updateFile(
+            id,
+            'photo',
+            imagePath,
+            this.employeesRepository,
+          );
+        }
+      });
   }
 
   async remove(id: string) {
@@ -270,17 +278,6 @@ export class EmployeesService {
       .catch((err) => {
         throw new BadRequestException('Employee not found!', err);
       });
-  }
-
-  async updateImage(id: string, newImage?: Express.Multer.File) {
-    console.log('updating image');
-    //TODO to handle err in newImage
-    return await this.appService.updateFile(
-      id,
-      'photo',
-      newImage.path,
-      this.employeesRepository,
-    );
   }
 
   async createChat(body: CreateEmployeeChatDTO) {
