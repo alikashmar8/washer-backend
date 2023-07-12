@@ -34,19 +34,16 @@ export class BranchesService {
       });
   }
 
-  async update(id: string, updateBranchDto: UpdateBranchDto) {
-    const branch = await this.branchesRepository
-      .findOneByOrFail({ id })
-      .catch(() => {
-        throw new BadRequestException(`Branch with id: ${id} was not found`);
+  async update(id: string, data: UpdateBranchDto) {
+    return await this.branchesRepository
+      .update(id, {
+        description: data.description,
+        isActive: data.isActive,
+      })
+      .catch((err) => {
+        console.log(err);
+        throw new BadRequestException('Error Updating Branch', err);
       });
-      branch.description = updateBranchDto.description;
-      branch.isActive = updateBranchDto.isActive;
-      branch.employees = updateBranchDto.employees;
-      branch.requests = updateBranchDto.requests;
-      
-    
-    await this.branchesRepository.save(branch);
   }
 
   async remove(id: string) {
