@@ -326,7 +326,7 @@ export class ServiceRequestsService {
     const exchangeRate = Number(exchangeRateSetting.value);
 
     query[0].forEach((req) => {
-      req.totalLBP = Number(req.cost) * exchangeRate + req.tips;
+      req.totalLBP = Number(req.cost) * exchangeRate
     });
     return {
       data: query[0],
