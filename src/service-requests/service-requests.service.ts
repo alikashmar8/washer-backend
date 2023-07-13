@@ -313,6 +313,21 @@ export class ServiceRequestsService {
     //     }
     //   });
     // }
+
+    const exchangeRateSetting: Setting = await this.settingsRepository
+      .findOneOrFail({
+        where: {
+          key: EXCHANGE_RATE,
+        },
+      })
+      .catch((err) => {
+        throw new BadRequestException('Error calculating prices', err);
+      });
+    const exchangeRate = Number(exchangeRateSetting.value);
+
+    query[0].forEach((req) => {
+      req.totalLBP = Number(req.total) * exchangeRate;
+    });
     return {
       data: query[0],
       count: query[1],
