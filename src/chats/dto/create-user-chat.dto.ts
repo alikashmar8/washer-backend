@@ -4,7 +4,7 @@ import { IsNotEmpty } from 'class-validator';
 export class CreateUserChatDto {
   @ApiProperty()
   @IsNotEmpty()
-  employeeId: string;
-
   userId: string;
+
+  employeeId: string;
 }

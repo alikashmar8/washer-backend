@@ -1,4 +1,11 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentEmployee } from 'src/common/decorators/current-employee.decorator';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
@@ -27,6 +34,16 @@ export class ChatsController {
   @Get(':id/messages')
   async getChatMessages(@Param('id') id: string, @Query() query: any) {
     return await this.chatsService.findChatMessages(id, query);
+  }
+
+  @UseGuards(AuthGuard)
+  @Patch(':id/messages')
+  async markChatMessagesRead(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+    @CurrentEmployee() employee: Employee,
+  ) {
+    return await this.chatsService.markChatMessagesRead(id, user, employee);
   }
 
   // @Patch(':id')

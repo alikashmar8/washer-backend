@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Query,
+  Res,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -22,6 +23,10 @@ import { CreateUserChatDto } from './../chats/dto/create-user-chat.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
+import { IsEmployeeGuard } from 'src/auth/guards/is-employee.guard';
+import { CurrentEmployee } from 'src/common/decorators/current-employee.decorator';
+import { Employee } from 'src/employees/entities/employee.entity';
+import { Response } from 'express';
 
 @UsePipes(new ValidationPipe())
 @ApiTags('Users')
@@ -67,23 +72,20 @@ export class UsersController {
     return this.usersService.remove(+id);
   }
 
-  @UseGuards(IsUserGuard)
+  @UseGuards(IsEmployeeGuard)
   @Post(':id/chats')
   async addNewChat(
     @Param('id') id: string,
     @Body() body: CreateUserChatDto,
-    @CurrentUser() user: User,
+    @CurrentEmployee() employee: Employee,
   ) {
-    body.userId = user.id;
+    body.employeeId = employee.id;
     return await this.usersService.createChat(body);
   }
 
   @UseGuards(IsUserGuard)
   @Get(':id/chats')
-  async getAllChats(
-    @Param('id') id: string,
-    @CurrentUser() user: User,
-  ) {
+  async getAllChats(@Param('id') id: string, @CurrentUser() user: User) {
     return await this.usersService.getUserChats(user.id);
   }
 }

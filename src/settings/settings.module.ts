@@ -12,6 +12,8 @@ import { DeviceToken } from './../device-tokens/entities/device-token.entity';
 import { Setting } from './entities/setting.entity';
 import { SettingsController } from './settings.controller';
 import { SettingsService } from './settings.service';
+import { ChatsService } from 'src/chats/chats.service';
+import { Message } from 'src/chats/entities/message.entity';
 
 @Module({
   imports: [
@@ -22,6 +24,7 @@ import { SettingsService } from './settings.service';
       Employee,
       Branch,
       Chat,
+      Message,
     ]),
   ],
   controllers: [SettingsController],
@@ -31,6 +34,7 @@ import { SettingsService } from './settings.service';
     EmployeesService,
     AppService,
     BranchesService,
+    ChatsService,
   ],
 })
 export class SettingsModule {}

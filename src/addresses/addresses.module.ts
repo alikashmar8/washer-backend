@@ -13,6 +13,8 @@ import { UsersService } from 'src/users/users.service';
 import { AddressesController } from './addresses.controller';
 import { AddressesService } from './addresses.service';
 import { Address } from './entities/address.entity';
+import { ChatsService } from 'src/chats/chats.service';
+import { Message } from 'src/chats/entities/message.entity';
 
 @Module({
   imports: [
@@ -24,12 +26,14 @@ import { Address } from './entities/address.entity';
       Setting,
       Branch,
       Chat,
+      Message,
     ]),
   ],
   controllers: [AddressesController],
   providers: [
     AddressesService,
     UsersService,
+    ChatsService,
     EmployeesService,
     AppService,
     BranchesService,

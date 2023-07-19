@@ -11,10 +11,12 @@ import { CreateEmployeeChatDTO } from './../chats/dto/create-employee-chat.dto';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { Employee } from './entities/employee.entity';
+import { Message } from 'src/chats/entities/message.entity';
 
 @Injectable()
 export class EmployeesService {
   constructor(
+    @InjectRepository(Message) private messagesRepository: Repository<Message>,
     @InjectRepository(Employee)
     private employeesRepository: Repository<Employee>,
     @InjectRepository(DeviceToken)
@@ -297,11 +299,32 @@ export class EmployeesService {
   }
 
   async getEmployeeChats(id: string) {
-    return await this.chatsRepository.find({
+    let chats = await this.chatsRepository.find({
       where: {
         employeeId: id,
       },
       relations: ['user', 'employee'],
     });
+
+    chats = await Promise.all(
+      chats.map(async (chat) => {
+        chat.unReadCount = await this.countChatUnreadMessages(chat.id, id);
+        return chat;
+      }),
+    );
+
+    return chats;
+  }
+
+  async countChatUnreadMessages(chatId: string, employeeId: string) {
+    const res = await this.messagesRepository.count({
+      where: {
+        chatId,
+        employeeId,
+        isRead: false,
+      },
+    });
+
+    return res;
   }
 }

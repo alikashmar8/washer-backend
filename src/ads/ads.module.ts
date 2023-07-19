@@ -13,6 +13,8 @@ import { AppService } from './../app.service';
 import { AdsController } from './ads.controller';
 import { AdsService } from './ads.service';
 import { Ad } from './entities/ad.entity';
+import { ChatsService } from 'src/chats/chats.service';
+import { Message } from 'src/chats/entities/message.entity';
 
 @Module({
   imports: [
@@ -24,6 +26,7 @@ import { Ad } from './entities/ad.entity';
       Setting,
       Branch,
       Chat,
+      Message,
     ]),
   ],
   controllers: [AdsController],
@@ -33,6 +36,7 @@ import { Ad } from './entities/ad.entity';
     EmployeesService,
     AppService,
     BranchesService,
+    ChatsService,
   ],
 })
 export class AdsModule {}

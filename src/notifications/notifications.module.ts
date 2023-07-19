@@ -14,6 +14,8 @@ import { UsersService } from 'src/users/users.service';
 import { Notification } from './entities/notification.entity';
 import { NotificationsController } from './notifications.controller';
 import { NotificationsService } from './notifications.service';
+import { ChatsService } from 'src/chats/chats.service';
+import { Message } from 'src/chats/entities/message.entity';
 
 @Module({
   imports: [
@@ -25,6 +27,7 @@ import { NotificationsService } from './notifications.service';
       Setting,
       Branch,
       Chat,
+      Message,
     ]),
   ],
   controllers: [NotificationsController],
@@ -35,6 +38,7 @@ import { NotificationsService } from './notifications.service';
     DeviceTokensService,
     AppService,
     BranchesService,
+    ChatsService,
   ],
 })
 export class NotificationsModule {}

@@ -13,6 +13,8 @@ import { UsersService } from 'src/users/users.service';
 import { Vehicle } from './entities/vehicle.entity';
 import { VehiclesController } from './vehicles.controller';
 import { VehiclesService } from './vehicles.service';
+import { Message } from 'src/chats/entities/message.entity';
+import { ChatsService } from 'src/chats/chats.service';
 
 @Module({
   imports: [
@@ -24,6 +26,7 @@ import { VehiclesService } from './vehicles.service';
       Setting,
       Branch,
       Chat,
+      Message,
     ]),
   ],
   controllers: [VehiclesController],
@@ -33,6 +36,7 @@ import { VehiclesService } from './vehicles.service';
     EmployeesService,
     AppService,
     BranchesService,
+    ChatsService,
   ],
 })
 export class VehiclesModule {}

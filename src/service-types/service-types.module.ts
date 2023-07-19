@@ -13,6 +13,8 @@ import { UsersService } from 'src/users/users.service';
 import { ServiceType } from './entities/service-type.entity';
 import { ServiceTypesController } from './service-types.controller';
 import { ServiceTypesService } from './service-types.service';
+import { Message } from 'src/chats/entities/message.entity';
+import { ChatsService } from 'src/chats/chats.service';
 
 @Module({
   imports: [
@@ -24,6 +26,7 @@ import { ServiceTypesService } from './service-types.service';
       Setting,
       Branch,
       Chat,
+      Message,
     ]),
   ],
   controllers: [ServiceTypesController],
@@ -33,6 +36,7 @@ import { ServiceTypesService } from './service-types.service';
     EmployeesService,
     AppService,
     BranchesService,
+    ChatsService,
   ],
 })
 export class ServiceTypesModule {}

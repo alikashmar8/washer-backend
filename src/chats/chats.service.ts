@@ -4,6 +4,8 @@ import { Repository } from 'typeorm/repository/Repository';
 import { CreateMessageDto } from './dto/chat.dto';
 import { Chat } from './entities/chat.entity';
 import { Message } from './entities/message.entity';
+import { Employee } from 'src/employees/entities/employee.entity';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class ChatsService {
@@ -17,7 +19,7 @@ export class ChatsService {
       .update(data.chatId, {
         lastMessage: data.text,
         lastMessageDate: new Date(),
-        lastSenderType: data.lastSenderType
+        lastSenderType: data.lastSenderType,
       })
       .catch((err) => {
         console.log('error updating Chat after message sent!', err);
@@ -60,5 +62,21 @@ export class ChatsService {
       data: res[0],
       count: res[1],
     };
+  }
+
+  async markChatMessagesRead(chatId: string, user: User, employee: Employee) {
+    const key = user ? 'userId' : 'employeeId';
+    const value = user ? user.id : employee.id;
+
+    const res = await this.messagesRepository.update(
+      {
+        chatId,
+        [key]: value,
+        isRead: false,
+      },
+      { isRead: true },
+    );
+
+    return res;
   }
 }
