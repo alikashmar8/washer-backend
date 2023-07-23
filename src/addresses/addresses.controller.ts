@@ -85,9 +85,6 @@ export class AddressesController {
         HttpStatus.UNAUTHORIZED,
       );
     }
-    console.log("updateAddressDto");
-    console.log(updateAddressDto);
-    
     return await this.addressesService.update(id, updateAddressDto);
   }
 

@@ -10,7 +10,7 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
-  UpdateDateColumn
+  UpdateDateColumn,
 } from 'typeorm';
 import { ProductImage } from './product-image.entity';
 
@@ -35,13 +35,13 @@ export class Product {
     default: Currency.LBP,
   })
   currency: Currency;
-  
+
   @Column({ nullable: false, default: 0 })
   views: number;
 
-  @Column({nullable:false,default:true})
-  isActive:boolean;
-  
+  @Column({ nullable: false, default: true })
+  isActive: boolean;
+
   @Column({ nullable: false })
   categoryId: string;
 
@@ -60,5 +60,4 @@ export class Product {
 
   @UpdateDateColumn()
   updatedAt: Date;
-
 }

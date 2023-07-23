@@ -45,9 +45,14 @@ export class BranchesController {
     return await this.branchesService.findByIdOrFail(id, relations);
   }
 
+  @Roles(EmployeeRole.ADMIN)
+  @UseGuards(RolesGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBranchDto: UpdateBranchDto) {
-    return this.branchesService.update(id, updateBranchDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateBranchDto: UpdateBranchDto,
+  ) {
+    return await this.branchesService.update(id, updateBranchDto);
   }
 
   @Roles(EmployeeRole.ADMIN)

@@ -16,21 +16,21 @@ export class PromosController {
   @UseGuards(RolesGuard)
   @Roles(EmployeeRole.ADMIN)
   @Post()
-  create(@Body() createPromoDto: CreatePromoDto) {
-    return this.promosService.create(createPromoDto);
+  async create(@Body() createPromoDto: CreatePromoDto) {
+    return await this.promosService.create(createPromoDto);
   }
 
   @Roles(EmployeeRole.ADMIN)
   @UseGuards(RolesGuard)
   @Get()
-  findAll(@Query() query) {
-    return this.promosService.findAll(query);
+  async findAll(@Query() query) {
+    return await this.promosService.findAll(query);
   }
   @Roles(EmployeeRole.ADMIN)
   @UseGuards(RolesGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.promosService.findOneByIdOrFail(id);
+  async findOne(@Param('id') id: string) {
+    return await this.promosService.findOneByIdOrFail(id);
   }
 
   @Roles(EmployeeRole.ADMIN)

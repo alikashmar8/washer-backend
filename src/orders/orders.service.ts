@@ -37,6 +37,7 @@ export class OrdersService {
           throw new BadRequestException('Error saving Order  !');
         });
 
+        //TODO: update product quantity--;
       items = await Promise.all(
         items.map(async (item) => {
           item.orderId = order.id;

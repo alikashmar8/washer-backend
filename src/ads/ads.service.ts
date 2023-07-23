@@ -1,7 +1,4 @@
-import {
-  BadRequestException,
-  Injectable
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as path from 'path';
 import { AppService } from 'src/app.service';
@@ -51,10 +48,23 @@ export class AdsService {
   }
 
   async update(id: string, data: UpdateAdDto) {
-    return await this.adsRepository.update(id, data).catch((err) => {
-      console.log(err);
-      throw new BadRequestException('Error updating ad!', err);
-    });
+    const imagePath = data.image;
+    delete data.image;
+    return await this.adsRepository
+      .update(id, data)
+      .catch((err) => {
+        console.log(err);
+        throw new BadRequestException('Error updating ad!', err);
+      })
+      .then((data) => {
+        if (imagePath)
+          this.appsService.updateFile(
+            id,
+            'image',
+            imagePath,
+            this.adsRepository,
+          );
+      });
   }
 
   async remove(id: string) {
@@ -85,15 +95,5 @@ export class AdsService {
       .catch((err) => {
         throw new BadRequestException('Ad not found!', err);
       });
-  }
-
-  async updateImage(id: string, newImage?: string) {
-    //TODO to handle err in newImage
-    return await this.appsService.updateFile(
-      id,
-      'image',
-      'newImage',
-      this.adsRepository,
-    );
   }
 }
