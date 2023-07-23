@@ -11,7 +11,7 @@ import { Employee } from 'src/employees/entities/employee.entity';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 import { DataSource, Repository } from 'typeorm';
-import { uuid } from 'uuidv4';
+import { v4 as uuid } from 'uuid';
 import { LoginDTO } from './dtos/login.dto';
 import { LogoutDTO } from './dtos/logout.dto';
 import { RegisterUserDTO } from './dtos/register.dto';
