@@ -17,6 +17,8 @@ import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/orderItem.entity';
 import { OrdersController } from './orders.controller';
 import { OrdersService } from './orders.service';
+import { ChatsService } from 'src/chats/chats.service';
+import { Message } from 'src/chats/entities/message.entity';
 
 @Module({
   imports: [
@@ -31,6 +33,7 @@ import { OrdersService } from './orders.service';
       Setting,
       Branch,
       Chat,
+      Message,
     ]),
   ],
   controllers: [OrdersController],
@@ -41,6 +44,7 @@ import { OrdersService } from './orders.service';
     PromosService,
     AppService,
     BranchesService,
+    ChatsService,
   ],
 })
 export class OrdersModule {}

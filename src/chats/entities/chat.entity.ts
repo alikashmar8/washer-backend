@@ -43,4 +43,6 @@ export class Chat {
 
   @OneToMany((type) => Message, (message) => message.chat)
   messages: Message[];
+
+  unReadCount: number;
 }

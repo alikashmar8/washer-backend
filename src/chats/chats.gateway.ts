@@ -16,6 +16,8 @@ import { CreateMessageDto } from 'src/chats/dto/chat.dto';
 import { EmployeesService } from 'src/employees/employees.service';
 import { UsersService } from 'src/users/users.service';
 import { ChatSenderType } from './dto/chat-sender-type.dto';
+import { NotificationType } from 'src/common/enums/notification-type.enum';
+import { NotificationsService } from 'src/notifications/notifications.service';
 
 @WebSocketGateway({
   cors: {
@@ -31,6 +33,7 @@ export class ChatsGateway
     private chatsService: ChatsService,
     private usersService: UsersService,
     private employeesService: EmployeesService,
+    private notificationsService: NotificationsService,
   ) {}
 
   @WebSocketServer() server: Server;
@@ -75,6 +78,13 @@ export class ChatsGateway
     ]);
     // emit message to related employee only
     this.server.emit('messages-e' + chat.employeeId, { messageObj });
+
+    await this.notificationsService.createAndNotify({
+      title: user.firstName + ' ' + user.lastName,
+      body: messageObj.text,
+      employeeId: chat.employeeId,
+      type: NotificationType.CHAT_MESSAGE,
+    });
   }
 
   @UseGuards(WsGuard)
@@ -100,6 +110,13 @@ export class ChatsGateway
     ]);
     // emit message to related user only
     this.server.emit('messages-u' + chat.userId, { messageObj });
+
+    await this.notificationsService.createAndNotify({
+      title: employee.firstName + ' ' + employee.lastName,
+      body: messageObj.text,
+      userId: chat.userId,
+      type: NotificationType.CHAT_MESSAGE,
+    });
   }
 
   // todo: 1- check if notify on chat creation is needed

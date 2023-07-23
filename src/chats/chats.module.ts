@@ -14,6 +14,8 @@ import { ChatsGateway } from './chats.gateway';
 import { ChatsService } from './chats.service';
 import { Chat } from './entities/chat.entity';
 import { Message } from './entities/message.entity';
+import { NotificationsService } from 'src/notifications/notifications.service';
+import { Notification } from 'src/notifications/entities/notification.entity';
 
 @Module({
   imports: [
@@ -25,6 +27,7 @@ import { Message } from './entities/message.entity';
       Employee,
       Setting,
       Branch,
+      Notification,
     ]),
   ],
   controllers: [ChatsController],
@@ -35,6 +38,7 @@ import { Message } from './entities/message.entity';
     EmployeesService,
     AppService,
     BranchesService,
+    NotificationsService,
   ],
 })
 export class ChatsModule {}

@@ -44,7 +44,8 @@ import { ProductsService } from './products/products.service';
 import { Ad } from './ads/entities/ad.entity';
 import { Product } from './products/entities/product.entity';
 import { ProductImage } from './products/entities/product-image.entity';
-
+import { Message } from './chats/entities/message.entity';
+import { ChatsService } from './chats/chats.service';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { ProductImage } from './products/entities/product-image.entity';
       Product,
       ProductImage,
       Chat,
+      Message,
     ]),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '../public'), // added ../ to get one folder back
@@ -125,7 +127,15 @@ import { ProductImage } from './products/entities/product-image.entity';
     ChatsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, BranchesService, EmployeesService, UsersService,AdsService,ProductsService],
+  providers: [
+    AppService,
+    BranchesService,
+    EmployeesService,
+    UsersService,
+    AdsService,
+    ProductsService,
+    ChatsService,
+  ],
 })
 export class AppModule {
   constructor(configService: ConfigService) {

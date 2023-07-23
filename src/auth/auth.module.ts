@@ -14,6 +14,8 @@ import { UsersService } from 'src/users/users.service';
 import { Employee } from './../employees/entities/employee.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { ChatsService } from 'src/chats/chats.service';
+import { Message } from 'src/chats/entities/message.entity';
 
 @Module({
   imports: [
@@ -24,11 +26,13 @@ import { AuthService } from './auth.service';
       Setting,
       Branch,
       Chat,
+      Message,
     ]),
   ],
   providers: [
     AuthService,
     UsersService,
+    ChatsService,
     EmployeesService,
     DeviceTokensService,
     MailService,

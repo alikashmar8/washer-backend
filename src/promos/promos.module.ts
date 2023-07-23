@@ -13,6 +13,8 @@ import { UsersService } from 'src/users/users.service';
 import { Promo } from './entities/promo.entity';
 import { PromosController } from './promos.controller';
 import { PromosService } from './promos.service';
+import { ChatsService } from 'src/chats/chats.service';
+import { Message } from 'src/chats/entities/message.entity';
 
 @Module({
   imports: [
@@ -24,6 +26,7 @@ import { PromosService } from './promos.service';
       Branch,
       User,
       Chat,
+      Message,
     ]),
   ],
   controllers: [PromosController],
@@ -33,6 +36,7 @@ import { PromosService } from './promos.service';
     AppService,
     BranchesService,
     UsersService,
+    ChatsService,
   ],
 })
 export class PromosModule {}

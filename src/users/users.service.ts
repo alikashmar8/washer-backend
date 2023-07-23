@@ -8,10 +8,12 @@ import { Brackets, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { Message } from 'src/chats/entities/message.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
+    @InjectRepository(Message) private messagesRepository: Repository<Message>,
     @InjectRepository(User) private usersRepository: Repository<User>,
     @InjectRepository(Chat) private chatsRepository: Repository<Chat>,
     @InjectRepository(DeviceToken)
@@ -158,22 +160,49 @@ export class UsersService {
         employeeId: body.employeeId,
         userId: body.userId,
       },
+      relations: ['user', 'employee'],
     });
 
-    if (exists) throw new BadRequestException('Chat already exists');
+    if (exists) return exists;
 
-    return await this.chatsRepository.save({
+    const newChat = await this.chatsRepository.save({
       employeeId: body.employeeId,
       userId: body.userId,
+    });
+
+    return await this.chatsRepository.findOne({
+      where: { id: newChat.id },
+      relations: ['user', 'employee'],
     });
   }
 
   async getUserChats(id: string) {
-    return await this.chatsRepository.find({
+    let chats = await this.chatsRepository.find({
       where: {
         userId: id,
       },
       relations: ['user', 'employee'],
     });
+
+    chats = await Promise.all(
+      chats.map(async (chat) => {
+        chat.unReadCount = await this.countChatUnreadMessages(chat.id, id);
+        return chat;
+      }),
+    );
+
+    return chats;
+  }
+
+  async countChatUnreadMessages(chatId: string, userId: string) {
+    const res = await this.messagesRepository.count({
+      where: {
+        chatId,
+        userId,
+        isRead: false,
+      },
+    });
+
+    return res;
   }
 }

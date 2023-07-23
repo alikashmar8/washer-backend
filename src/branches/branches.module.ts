@@ -11,6 +11,8 @@ import { UsersService } from './../users/users.service';
 import { BranchesController } from './branches.controller';
 import { BranchesService } from './branches.service';
 import { Branch } from './entities/branch.entity';
+import { Message } from 'src/chats/entities/message.entity';
+import { ChatsService } from 'src/chats/chats.service';
 
 @Module({
   imports: [
@@ -21,9 +23,16 @@ import { Branch } from './entities/branch.entity';
       Setting,
       User,
       Chat,
+      Message,
     ]),
   ],
   controllers: [BranchesController],
-  providers: [BranchesService, EmployeesService, AppService, UsersService],
+  providers: [
+    BranchesService,
+    EmployeesService,
+    AppService,
+    UsersService,
+    ChatsService,
+  ],
 })
 export class BranchesModule {}

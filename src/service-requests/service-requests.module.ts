@@ -24,6 +24,8 @@ import { ServiceRequestsController } from './service-requests.controller';
 import { ServiceRequestsService } from './service-requests.service';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { Notification } from '../notifications/entities/notification.entity';
+import { Message } from 'src/chats/entities/message.entity';
+import { ChatsService } from 'src/chats/chats.service';
 
 @Module({
   imports: [
@@ -40,6 +42,7 @@ import { Notification } from '../notifications/entities/notification.entity';
       Promo,
       Chat,
       Notification,
+      Message,
     ]),
   ],
   controllers: [ServiceRequestsController],
@@ -55,6 +58,7 @@ import { Notification } from '../notifications/entities/notification.entity';
     PromosService,
     AppService,
     NotificationsService,
+    ChatsService,
   ],
 })
 export class ServiceRequestsModule {}

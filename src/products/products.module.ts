@@ -15,6 +15,8 @@ import { Product } from './entities/product.entity';
 import { ProductsController } from './products.controller';
 import { ProductsService } from './products.service';
 import { ProductImage } from './entities/product-image.entity';
+import { ChatsService } from 'src/chats/chats.service';
+import { Message } from 'src/chats/entities/message.entity';
 
 @Module({
   imports: [
@@ -27,6 +29,7 @@ import { ProductImage } from './entities/product-image.entity';
       Branch,
       ProductImage,
       Chat,
+      Message,
     ]),
   ],
   controllers: [ProductsController],
@@ -37,6 +40,7 @@ import { ProductImage } from './entities/product-image.entity';
     EmployeesService,
     AppService,
     BranchesService,
+    ChatsService,
   ],
 })
 export class ProductsModule {}

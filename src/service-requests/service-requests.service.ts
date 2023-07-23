@@ -286,7 +286,7 @@ export class ServiceRequestsService {
     }
 
     query = await query
-      .orderBy('req.requestedDate', 'desc')
+      .orderBy('req.requestedDate', 'ASC')
       .skip(skip)
       .take(take)
       .getManyAndCount();
@@ -326,7 +326,7 @@ export class ServiceRequestsService {
     const exchangeRate = Number(exchangeRateSetting.value);
 
     query[0].forEach((req) => {
-      req.totalLBP = Number(req.total) * exchangeRate;
+      req.totalLBP = Number(req.cost) * exchangeRate
     });
     return {
       data: query[0],

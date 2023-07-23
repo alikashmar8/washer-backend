@@ -34,6 +34,8 @@ export class NotificationsService {
       })
     ).map((deviceToken) => deviceToken.fcmToken);
 
+    console.log('fcmTokens', fcmTokens);
+
     const notificationData: NotificationData = {
       title: notification.title,
       body: notification.body,

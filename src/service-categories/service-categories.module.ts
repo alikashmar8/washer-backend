@@ -13,6 +13,8 @@ import { UsersService } from 'src/users/users.service';
 import { ServiceCategory } from './entities/service-category.entity';
 import { ServiceCategoriesController } from './service-categories.controller';
 import { ServiceCategoriesService } from './service-categories.service';
+import { ChatsService } from 'src/chats/chats.service';
+import { Message } from 'src/chats/entities/message.entity';
 
 @Module({
   imports: [
@@ -23,7 +25,8 @@ import { ServiceCategoriesService } from './service-categories.service';
       Employee,
       Setting,
       Branch,
-      Chat, 
+      Chat,
+      Message,
     ]),
   ],
   controllers: [ServiceCategoriesController],
@@ -33,6 +36,7 @@ import { ServiceCategoriesService } from './service-categories.service';
     EmployeesService,
     AppService,
     BranchesService,
+    ChatsService,
   ],
 })
 export class ServiceCategoriesModule {}
