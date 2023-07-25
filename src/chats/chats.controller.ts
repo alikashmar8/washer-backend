@@ -7,6 +7,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { CurrentEmployee } from 'src/common/decorators/current-employee.decorator';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { Employee } from 'src/employees/entities/employee.entity';
+import { User } from 'src/users/entities/user.entity';
 import { AuthGuard } from './../auth/guards/auth.guard';
 import { ChatsService } from './chats.service';
 
