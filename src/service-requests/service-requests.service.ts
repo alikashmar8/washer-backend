@@ -261,18 +261,13 @@ export class ServiceRequestsService {
     //   }
     // } else {
     // filter by employee normally
-    console.log('filters.employeeId: ');
-    console.log(filters.employeeId);
-
-    if (filters.employeeId || filters.employeeId == null) {
+    if (filters.employeeId) {
       query = query.andWhere('req.employeeId = :eId', {
         eId: filters.employeeId,
       });
     } else if (currentEmployee && currentEmployee.role == EmployeeRole.DRIVER) {
       // if employee is driver, get unassigned requests by default
-      query = query.andWhere('req.employeeId = :eId', {
-        eId: null,
-      });
+      query = query.andWhere('req.employeeId is null');
     }
     // }
 
