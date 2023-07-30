@@ -12,7 +12,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { Query, UseGuards, UsePipes } from '@nestjs/common/decorators';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { IsEmployeeGuard } from 'src/auth/guards/is-employee.guard';
 import { IsUserGuard } from 'src/auth/guards/is-user.guard';
@@ -51,6 +51,11 @@ export class ServiceRequestsController {
   }
 
   @UseGuards(AuthGuard)
+  @ApiQuery({ name: 'take', example: 10, required: false })
+  @ApiQuery({ name: 'skip', example: 0, required: false })
+  @ApiQuery({ name: 'employeeId', example: 1, required: false })
+  @ApiQuery({ name: 'search', example: '', required: false })
+  @ApiQuery({ name: 'userId', example: 1, required: false })
   @Get()
   async findAll(
     @Query()
@@ -71,12 +76,12 @@ export class ServiceRequestsController {
     @CurrentUser() user: User,
     @CurrentEmployee() employee: Employee,
   ) {
-    if (
-      employee &&
-      employee.role == EmployeeRole.DRIVER &&
-      (!query.lat || !query.lon)
-    )
-      throw new BadRequestException('Error retrieving your location!');
+    // if (
+    //   employee &&
+    //   employee.role == EmployeeRole.DRIVER &&
+    //   (!query.lat || !query.lon)
+    // )
+    //   throw new BadRequestException('Error retrieving your location!');
     if (user) {
       query.userId = user.id;
     } else if (
