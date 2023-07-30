@@ -4,6 +4,7 @@ import { AddressesService } from 'src/addresses/addresses.service';
 import { Address } from 'src/addresses/entities/address.entity';
 import { Branch } from 'src/branches/entities/branch.entity';
 import { EXCHANGE_RATE } from 'src/common/constants';
+import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { NotificationType } from 'src/common/enums/notification-type.enum';
 import { RequestStatus } from 'src/common/enums/request-status.enum';
 import { calculateDistance } from 'src/common/utils/functions';
@@ -260,9 +261,17 @@ export class ServiceRequestsService {
     //   }
     // } else {
     // filter by employee normally
-    if (filters.employeeId != undefined) {
+    console.log('filters.employeeId: ');
+    console.log(filters.employeeId);
+
+    if (filters.employeeId || filters.employeeId == null) {
       query = query.andWhere('req.employeeId = :eId', {
         eId: filters.employeeId,
+      });
+    } else if (currentEmployee && currentEmployee.role == EmployeeRole.DRIVER) {
+      // if employee is driver, get unassigned requests by default
+      query = query.andWhere('req.employeeId = :eId', {
+        eId: null,
       });
     }
     // }
@@ -326,7 +335,7 @@ export class ServiceRequestsService {
     const exchangeRate = Number(exchangeRateSetting.value);
 
     query[0].forEach((req) => {
-      req.totalLBP = Number(req.cost) * exchangeRate
+      req.totalLBP = Number(req.cost) * exchangeRate;
     });
     return {
       data: query[0],
