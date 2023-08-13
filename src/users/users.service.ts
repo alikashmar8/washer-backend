@@ -44,6 +44,7 @@ export class UsersService {
         throw new BadRequestException(`User not found!`);
       });
   }
+
   async findByUsernameOrFail(username: string, relations?: string[]) {
     return await this.usersRepository
       .findOneOrFail({
@@ -53,6 +54,13 @@ export class UsersService {
       .catch((err) => {
         throw new BadRequestException(`User ${username} not found!`);
       });
+  }
+
+  async findByUsername(username: string, relations?: string[]) {
+    return await this.usersRepository.findOne({
+      where: { username: username },
+      relations: relations,
+    });
   }
 
   async create(data: CreateUserDto) {
