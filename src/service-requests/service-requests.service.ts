@@ -159,7 +159,7 @@ export class ServiceRequestsService {
     if (filters.userId || currentUser) {
       let uid = filters.userId;
       if (currentUser) uid = currentUser.id;
-      else query = query.andWhere('req.userId = :uId', { uId: uid });
+      query = query.andWhere('req.userId = :uId', { uId: uid });
     }
 
     if (filters.branchId) {
