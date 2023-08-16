@@ -15,7 +15,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { CurrentEmployee } from 'src/common/decorators/current-employee.decorator';
@@ -63,6 +63,12 @@ export class ProductsController {
   }
 
   @UseGuards(AuthGuard)
+  @ApiQuery({ name: 'take', example: 10, required: false })
+  @ApiQuery({ name: 'skip', example: 0, required: false })
+  @ApiQuery({ name: 'search', example: 'Product1', required: false })
+  @ApiQuery({ name: 'orderBy', example: '1', required: false })
+  @ApiQuery({ name: 'orderByDirection', example: '1', required: false })
+  @ApiQuery({ name: 'isActive', example: true, required: false, type: Boolean })
   @Get()
   async findAll(
     @Query()
