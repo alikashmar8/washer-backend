@@ -1,15 +1,16 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
 import { CreateUserChatDto } from 'src/chats/dto/create-user-chat.dto';
 import { Chat } from 'src/chats/entities/chat.entity';
+import { Message } from 'src/chats/entities/message.entity';
 import { DeviceTokenStatus } from 'src/common/enums/device-token-status.enum';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
 import { Brackets, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { Message } from 'src/chats/entities/message.entity';
-
 @Injectable()
 export class UsersService {
   constructor(
@@ -128,10 +129,41 @@ export class UsersService {
   }
 
   async update(id: string, data: UpdateUserDto) {
-    await this.usersRepository.update(id, data).catch((err) => {
-      console.log(err);
-      throw new BadRequestException('Error updating user', err);
-    });
+    const newImage = data.photo;
+    delete data.photo;
+
+    await this.usersRepository
+      .update(id, data)
+      .catch((err) => {
+        console.error(err);
+        throw new BadRequestException('Error updating user', err);
+      })
+      .then(async () => {
+        if (newImage) {
+          const user = await this.usersRepository.findOne({ where: { id } });
+
+          const oldFile = user.photo;
+
+          await this.usersRepository.update(id, { photo: newImage });
+
+          if (oldFile) {
+            const oldFilePath = path.join(process.cwd(), oldFile);
+            try {
+              if (fs.existsSync(oldFilePath)) {
+                // file exists, delete it
+                fs.unlinkSync(oldFilePath);
+                console.log('Image File deleted');
+              } else {
+                console.log(`File does not exist: ${oldFilePath}`);
+              }
+            } catch (err) {
+              console.error(
+                `Failed to delete old photo file ${oldFile}: ${err}`,
+              );
+            }
+          }
+        }
+      });
     return await this.findById(id);
   }
 
