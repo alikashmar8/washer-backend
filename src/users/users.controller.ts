@@ -8,11 +8,13 @@ import {
   Post,
   Query,
   Res,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { IsUserGuard } from 'src/auth/guards/is-user.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
@@ -27,6 +29,8 @@ import { IsEmployeeGuard } from 'src/auth/guards/is-employee.guard';
 import { CurrentEmployee } from 'src/common/decorators/current-employee.decorator';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { Response } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { getMulterSettings } from 'src/common/utils/functions';
 
 @UsePipes(new ValidationPipe())
 @ApiTags('Users')
@@ -60,9 +64,23 @@ export class UsersController {
     ]);
   }
 
+  @UseInterceptors(
+    FileInterceptor(
+      'photo',
+      getMulterSettings({ destination: './public/uploads/users' }),
+    ),
+  )
+  @ApiConsumes('multipart/form-data')
   @UseGuards(AuthGuard)
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @UploadedFile() photo?: Express.Multer.File,
+  ) {
+    if (photo) {
+      updateUserDto.photo = photo.path;
+    }
     return await this.usersService.update(id, updateUserDto);
   }
 

@@ -29,4 +29,13 @@ export class UpdateUserDto {
   @IsOptional()
   @Length(6, 32)
   phoneNumber: string;
+
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    required: true,
+    description: 'User image',
+    example: 'image.png',
+  })
+  photo?: string;
 }
