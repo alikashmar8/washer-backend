@@ -37,7 +37,7 @@ export class Vehicle extends BaseEntity {
   @Column({ type: 'varchar', length: 50, nullable: false })
   color: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   photo: string;
 
   @Column({ type: 'enum', enum: VehicleType, default: VehicleType.CAR })
