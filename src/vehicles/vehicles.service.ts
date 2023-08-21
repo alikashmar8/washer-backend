@@ -39,7 +39,7 @@ export class VehiclesService {
   async update(id: string, updateVehicleDto: UpdateVehicleDto) {
     const newImage = updateVehicleDto.photo;
     delete updateVehicleDto.photo;
-    return await this.vehiclesRepository
+    await this.vehiclesRepository
       .update(id, updateVehicleDto)
       .catch((err) => {
         console.log(err);
@@ -54,6 +54,8 @@ export class VehiclesService {
             this.vehiclesRepository,
           );
       });
+    
+      return { success: true }
   }
 
   async remove(id: string) {
