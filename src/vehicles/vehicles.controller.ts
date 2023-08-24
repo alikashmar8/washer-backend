@@ -86,7 +86,6 @@ export class VehiclesController {
     ),
   )
   @ApiConsumes('multipart/form-data')
-  @ApiBearerAuth('access_token')
   @UseGuards(IsUserGuard)
   @Patch(':id')
   async update(
