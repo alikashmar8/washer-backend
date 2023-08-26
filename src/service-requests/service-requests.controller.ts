@@ -53,9 +53,15 @@ export class ServiceRequestsController {
   @UseGuards(AuthGuard)
   @ApiQuery({ name: 'take', example: 10, required: false })
   @ApiQuery({ name: 'skip', example: 0, required: false })
-  @ApiQuery({ name: 'employeeId', example: 1, required: false })
-  @ApiQuery({ name: 'search', example: '', required: false })
-  @ApiQuery({ name: 'userId', example: 1, required: false })
+  @ApiQuery({ name: 'employeeId', required: false })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'userId', required: false })
+  @ApiQuery({ name: 'branchId', required: false })
+  @ApiQuery({ name: 'confirmedDate', required: false })
+  @ApiQuery({ name: 'fromDate', required: false })
+  @ApiQuery({ name: 'toDate', required: false })
+  @ApiQuery({ name: 'status', required: false })
+  @ApiQuery({ name: 'isPaid', required: false })
   @Get()
   async findAll(
     @Query()
@@ -66,6 +72,7 @@ export class ServiceRequestsController {
       branchId?: string;
       fromDate?: string;
       toDate?: string;
+      confirmedDate?: string;
       status?: RequestStatus;
       isPaid?: boolean;
       take?: number;

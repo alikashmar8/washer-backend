@@ -6,6 +6,7 @@ import { Branch } from 'src/branches/entities/branch.entity';
 import { EXCHANGE_RATE } from 'src/common/constants';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { NotificationType } from 'src/common/enums/notification-type.enum';
+import { PaymentType } from 'src/common/enums/payment-type.enum';
 import { RequestStatus } from 'src/common/enums/request-status.enum';
 import { calculateDistance } from 'src/common/utils/functions';
 import { Employee } from 'src/employees/entities/employee.entity';
@@ -17,6 +18,7 @@ import { SettingsService } from 'src/settings/settings.service';
 import { User } from 'src/users/entities/user.entity';
 import { VehiclesService } from 'src/vehicles/vehicles.service';
 import { Brackets, DataSource, Repository } from 'typeorm';
+import { Wallet } from './../wallets/entities/wallet.entity';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
 import { UpdateServiceRequestPaymentStatusDto } from './dto/update-service-request-payment-status.dto';
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
@@ -80,6 +82,17 @@ export class ServiceRequestsService {
       if (branch.distance == initialDistance)
         throw new BadRequestException('No branch was found close to you!');
 
+      const user = await queryRunner.manager
+        .findOneOrFail(User, {
+          where: {
+            id: data.userId,
+          },
+          relations: ['wallet'],
+        })
+        .catch((err) => {
+          console.error(err);
+          throw new BadRequestException('User not found!', err);
+        });
       data.branchId = branch.id;
 
       const costObj = await this.calculateRequestCost({
@@ -92,10 +105,38 @@ export class ServiceRequestsService {
       });
 
       data.cost = costObj.total;
+      let request = queryRunner.manager.create(ServiceRequest, data);
+      request = await queryRunner.manager.save(request);
 
-      const request = queryRunner.manager.create(ServiceRequest, data);
+      if (data.paymentType == PaymentType.WALLET) {
+        const walletBalance = user.wallet.balance;
+        if (walletBalance < costObj.totalLBP)
+          throw new BadRequestException(
+            "You don't have enough balance to perform this reservation",
+          );
 
-      const savedRequest = await queryRunner.manager.save(request);
+        const newBalance = walletBalance - costObj.totalLBP;
+
+        // deduct amount from wallet balance
+        await queryRunner.manager
+          .update(Wallet, user.wallet.id, {
+            balance: newBalance,
+          })
+          .catch((err) => {
+            console.error(err);
+            throw new BadRequestException(
+              'Error deducting amount from your wallet!',
+              err,
+            );
+          });
+
+        //make request as paid
+        request.isPaid = true;
+        queryRunner.manager.save(ServiceRequest, request).catch((err) => {
+          console.error(err);
+          throw new BadRequestException('Error saving your request!', err);
+        });
+      }
 
       let promoIsValid = false;
 
@@ -113,7 +154,7 @@ export class ServiceRequestsService {
 
       await queryRunner.commitTransaction();
 
-      return savedRequest;
+      return request;
     } catch (err) {
       await queryRunner.rollbackTransaction();
 
@@ -132,6 +173,7 @@ export class ServiceRequestsService {
       employeeId?: string;
       branchId?: string;
       fromDate?: string;
+      confirmedDate?: string;
       toDate?: string;
       status?: RequestStatus;
       isPaid?: boolean;
@@ -200,6 +242,21 @@ export class ServiceRequestsService {
           isPaid: filters.isPaid,
         });
       isFirstWhere = false;
+    }
+
+    if (filters.confirmedDate) {
+      const startDate = new Date(filters.confirmedDate);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(filters.confirmedDate);
+      endDate.setHours(23, 59, 59, 999);
+
+      query = query
+        .andWhere('req.confirmedDate >= :startDate', {
+          startDate: startDate,
+        })
+        .andWhere('req.confirmedDate <= :endDate', {
+          endDate: endDate,
+        });
     }
 
     if (filters.fromDate) {
