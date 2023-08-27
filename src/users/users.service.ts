@@ -5,6 +5,7 @@ import * as path from 'path';
 import { CreateUserChatDto } from 'src/chats/dto/create-user-chat.dto';
 import { Chat } from 'src/chats/entities/chat.entity';
 import { Message } from 'src/chats/entities/message.entity';
+import { Currency } from 'src/common/enums/currency.enum';
 import { DeviceTokenStatus } from 'src/common/enums/device-token-status.enum';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
 import { Brackets, Repository } from 'typeorm';
@@ -26,6 +27,17 @@ export class UsersService {
       relations: relations,
     });
   }
+
+  async findByGoogleId(
+    googleId: string,
+    relations?: string[],
+  ): Promise<User | PromiseLike<User>> {
+    return await this.usersRepository.findOne({
+      where: { googleId },
+      relations,
+    });
+  }
+
   async findByPhoneNumber(
     phoneNumber: string,
     relations?: string[],
@@ -244,5 +256,31 @@ export class UsersService {
     });
 
     return res;
+  }
+
+  async createBySocialMediaAccount(
+    id: string,
+    email: string,
+    firstName: string,
+    lastName: string,
+    token: string,
+  ): Promise<any> {
+    let google_user_id: string;
+
+    google_user_id = id;
+
+    let user = await this.usersRepository.create({
+      firstName,
+      lastName,
+      email,
+      phoneNumber: '',
+      googleId: id,
+      wallet: {
+        balance: 0,
+        currency: Currency.LBP,
+      },
+    });
+
+    return await this.usersRepository.save(user);
   }
 }
