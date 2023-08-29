@@ -13,7 +13,10 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { DeviceTokenStatus } from 'src/common/enums/device-token-status.enum';
+import { DeviceTokensService } from 'src/device-tokens/device-tokens.service';
 import { User } from 'src/users/entities/user.entity';
+import { v4 as uuid } from 'uuid';
 import { AuthService } from './auth.service';
 import {
   ForgetPasswordDTO,
@@ -22,14 +25,20 @@ import {
 import { LoginDTO } from './dtos/login.dto';
 import { LogoutDTO } from './dtos/logout.dto';
 import { RegisterUserDTO } from './dtos/register.dto';
+import { SocialMediaLoginDTO } from './dtos/social-media-login.dto';
 import { UpdatePasswordDTO } from './dtos/update-password-dto';
+import { GoogleAuthGuard } from './guards/google.guard';
 import { IsEmployeeGuard } from './guards/is-employee.guard';
 import { IsUserGuard } from './guards/is-user.guard';
+
 @ApiTags('Auth')
 @Controller('auth')
 @UsePipes(new ValidationPipe())
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private deviceTokensService: DeviceTokensService,
+  ) {}
 
   @Post('register/users')
   async registerUser(@Body() body: RegisterUserDTO) {
@@ -168,5 +177,45 @@ export class AuthController {
   @Get('sendTestEmail')
   async sendTestEmail() {
     return await this.authService.sendTestEmail();
+  }
+
+  @ApiBearerAuth('access_token')
+  @UseGuards(new GoogleAuthGuard('google-token'))
+  @Post('login/google')
+  async googleAuth(
+    @Request() request,
+    @CurrentUser() user: User,
+    @Body() data: SocialMediaLoginDTO,
+  ): Promise<any> {
+    // let user = req.user;
+    if (!user.isMobileVerified)
+      return {
+        email: user.email,
+        registration_completed: user.phoneNumber ? true : false,
+        is_mobile_verified: false,
+      };
+
+    const deviceInfo = {
+      isMobile: request.useragent.isMobile,
+      browser: request.useragent.browser,
+      os: request.useragent.os,
+      platform: request.useragent.platform,
+      source: request.useragent.source,
+      version: request.useragent.version,
+    };
+    const token = uuid();
+
+    return await this.deviceTokensService.createUserDeviceToken({
+      isMobile: deviceInfo.isMobile,
+      os: deviceInfo.os,
+      platform: deviceInfo.platform,
+      token: data.fcmToken,
+      userId: user.id,
+      browser: deviceInfo.browser,
+      fcmToken: data.fcmToken,
+      source: deviceInfo.source,
+      version: deviceInfo.version,
+      status: DeviceTokenStatus.ACTIVE,
+    });
   }
 }

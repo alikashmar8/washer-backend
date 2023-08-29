@@ -1,9 +1,16 @@
+import { Wallet } from 'src/wallets/entities/wallet.entity';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as argon from 'argon2';
+import { Address } from 'src/addresses/entities/address.entity';
+import { Branch } from 'src/branches/entities/branch.entity';
 import { Currency } from 'src/common/enums/currency.enum';
 import { DeviceTokenStatus } from 'src/common/enums/device-token-status.enum';
-import { removeSpecialCharacters } from 'src/common/utils/functions';
+import { MailService } from 'src/common/mail/mail.service';
+import {
+  calculateDistance,
+  removeSpecialCharacters,
+} from 'src/common/utils/functions';
 import { DeviceTokensService } from 'src/device-tokens/device-tokens.service';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
 import { EmployeesService } from 'src/employees/employees.service';
@@ -12,6 +19,7 @@ import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 import { DataSource, Repository } from 'typeorm';
 import { v4 as uuid } from 'uuid';
+import { PasswordResetDTO } from './dtos/forget-password.dto';
 import { LoginDTO } from './dtos/login.dto';
 import { LogoutDTO } from './dtos/logout.dto';
 import { RegisterUserDTO } from './dtos/register.dto';
@@ -23,8 +31,6 @@ import {
   sendWhatsappTestMessage,
   terminateWhatsappConfiguration,
 } from './whatsapp';
-import { MailService } from 'src/common/mail/mail.service';
-import { PasswordResetDTO } from './dtos/forget-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -100,7 +106,7 @@ export class AuthService {
     await this.usersRepository.save(user).catch((err) => {
       throw new BadRequestException('Error updating user', err);
     });
-    
+
     this.mailService.send({
       from: process.env.MAIL_FROM_USER,
       to: user.email,
@@ -109,8 +115,7 @@ export class AuthService {
       html: `<h3>Dear ${user.firstName},</h3>
             <p>Your email verification code is: ${verificationCode.toString()}</p>
             <p>Thank you for using Clean Clinic!</p>`,
-            
-    })
+    });
   }
 
   async verifyMobileNumber(id: string, code: string): Promise<boolean> {
@@ -168,11 +173,11 @@ export class AuthService {
   async registerUser(data: RegisterUserDTO) {
     const exists =
       (await this.usersService.findByEmail(data.email)) ||
+      (await this.usersService.findByUsername(data.username)) ||
       (await this.usersService.findByPhoneNumber(
         removeSpecialCharacters(data.phoneNumber),
       ));
-    if (exists)
-      throw new BadRequestException('Email or Phone Number is already in use!');
+    if (exists) throw new BadRequestException('User already exists!');
 
     if (data.addresses && data.addresses.length < 1)
       throw new BadRequestException('At least 1 address should be provided!');
@@ -181,6 +186,29 @@ export class AuthService {
 
     await queryRunner.startTransaction();
     try {
+      const referralCode = data.referralCode;
+      delete data.referralCode;
+
+      // in case a referral code was provided, find the referral code owner then add 10 000 points to his balance & 10 000 to his wallet
+      if (referralCode) {
+        const referralUser = await this.findUserByReferralCode(referralCode, [
+          'wallet',
+        ]);
+        if (!referralUser)
+          throw new BadRequestException('Referral Code is not valid!');
+        const newUserPoints = referralUser.points + 10000;
+        await queryRunner.manager.update(User, referralUser.id, {
+          points: newUserPoints,
+        });
+
+        const newWalletBalance = referralUser.wallet.balance + 10000;
+        await queryRunner.manager.update(Wallet, referralUser.wallet.id, {
+          balance: newWalletBalance,
+        });
+      }
+
+      let addresses: any[] = data.addresses;
+      delete data.addresses;
       let user = this.usersRepository.create({
         // email: data.email,
         // firstName: data.firstName,
@@ -198,6 +226,48 @@ export class AuthService {
 
       user = await queryRunner.manager.save(user);
 
+      // validate addresses:
+      const branches = await queryRunner.manager.find(Branch, {
+        relations: ['address'],
+      });
+
+      for (let address of addresses) {
+        const userLat = address.lat;
+        const userLon = address.lon;
+
+        let nearestBranch: Branch;
+        let nearestDistance: number = Number.MAX_VALUE;
+        for (const branch of branches) {
+          const branchLat = branch.address.lat;
+          const branchLon = branch.address.lon;
+
+          const distance = calculateDistance(
+            { lat: userLat, lon: userLon },
+            { lat: branchLat, lon: branchLon },
+          );
+
+          if (distance < nearestDistance) {
+            nearestBranch = branch;
+            nearestDistance = distance;
+          }
+        }
+
+        if (
+          nearestDistance == Number.MAX_VALUE ||
+          !nearestBranch ||
+          nearestBranch.coverageArea < nearestDistance
+        ) {
+          queryRunner.rollbackTransaction();
+          throw new BadRequestException(
+            'No close branch was found near your address!',
+          );
+        }
+
+        address.userId = user.id;
+      }
+
+      await queryRunner.manager.save(Address, addresses);
+
       // data.addresses.forEach(async address => {
       //   address.userId = user.id;
       //   address.branchId = null;
@@ -207,12 +277,19 @@ export class AuthService {
       await queryRunner.commitTransaction();
       return user;
     } catch (err) {
-      console.log(err);
+      console.error(err);
       await queryRunner.rollbackTransaction();
-      throw new BadRequestException('Error registering user!');
+      throw new BadRequestException(err);
+      // throw new BadRequestException('Error registering user!');
     } finally {
       await queryRunner.release();
     }
+  }
+  async findUserByReferralCode(referralCode: string, relations?: string[]) {
+    return await this.usersRepository.findOne({
+      where: { referralCode },
+      relations,
+    });
   }
 
   async loginUsers(
@@ -223,11 +300,15 @@ export class AuthService {
 
     let user: User = null;
 
-    user = data.email
-      ? await this.usersService.findByEmail(data.email)
-      : data.username
-      ? await this.usersService.findByUsernameOrFail(data.username)
-      : await this.usersService.findByPhoneNumber(data.phoneNumber);
+    if (data.email) {
+      user = await this.usersService.findByEmail(data.email);
+    }
+    if (!user && data.username) {
+      user = await this.usersService.findByUsername(data.username);
+    }
+    if (!user && data.phoneNumber) {
+      user = await this.usersService.findByPhoneNumber(data.phoneNumber);
+    }
 
     if (!user) throw new BadRequestException('Error user not found!');
 
@@ -424,5 +505,28 @@ export class AuthService {
       console.log(err);
       throw new BadRequestException('Error updating password!', err);
     });
+  }
+
+  async loginOrRegisterByGoogleAccount(
+    id: string,
+    email: string,
+    firstName: string,
+    lastName: string,
+    token: string,
+  ): Promise<any> {
+    let user: User;
+
+    if (email) user = await this.usersService.findByEmail(email);
+    else user = await this.usersService.findByGoogleId(id);
+
+    if (user) return user;
+
+    return await this.usersService.createBySocialMediaAccount(
+      id,
+      email,
+      firstName,
+      lastName,
+      token,
+    );
   }
 }
