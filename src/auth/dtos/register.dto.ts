@@ -47,6 +47,11 @@ export class RegisterUserDTO {
   @Length(6, 32)
   phoneNumber: string;
 
+  @ApiProperty()
+  @IsOptional()
+  @Length(4, 32)
+  referralCode: string;
+
   @ApiProperty({
     required: false
   })
