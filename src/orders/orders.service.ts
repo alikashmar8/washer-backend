@@ -2,7 +2,11 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from 'src/products/entities/product.entity';
 import { PromosService } from 'src/promos/promos.service';
+import { Setting } from 'src/settings/entities/setting.entity';
+import { User } from 'src/users/entities/user.entity';
+import { Wallet } from 'src/wallets/entities/wallet.entity';
 import { Brackets, DataSource, Repository } from 'typeorm';
+import { POINTS_PER_ORDER_PERCENTAGE } from './../common/constants';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { CreateOrderItemDto } from './dto/create-orderItem.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -37,7 +41,7 @@ export class OrdersService {
           throw new BadRequestException('Error saving Order  !');
         });
 
-        //TODO: update product quantity--;
+      //TODO: update product quantity--;
       items = await Promise.all(
         items.map(async (item) => {
           item.orderId = order.id;
@@ -73,6 +77,41 @@ export class OrdersService {
       if (discountAmount != null) order.discountAmount = discountAmount;
 
       if (createOrderDto.promoCode) order.promoCode = createOrderDto.promoCode;
+
+      // add points and money to user
+      const pointsPerOrderPercentageSetting: Setting = await queryRunner.manager
+        .findOneOrFail(Setting, {
+          where: {
+            key: POINTS_PER_ORDER_PERCENTAGE,
+          },
+        })
+        .catch((err) => {
+          throw new BadRequestException(
+            'Error while crediting your points! Order is not completed.',
+            err,
+          );
+        });
+      const pointsPerOrderPercentage = Number(
+        pointsPerOrderPercentageSetting.value,
+      );
+      if (pointsPerOrderPercentage > 0) {
+        const customer = await queryRunner.manager.findOne(User, {
+          where: { id: order.userId },
+          relations: ['wallet'],
+        });
+        const pointsGained = Math.floor(
+          total * (pointsPerOrderPercentage / 100),
+        );
+        const newTotalPoints = customer.points + pointsGained;
+        await queryRunner.manager.update(User, customer.id, {
+          points: newTotalPoints,
+        });
+
+        const newWalletBalance = customer.wallet.balance + pointsGained;
+        await queryRunner.manager.update(Wallet, customer.wallet.id, {
+          balance: newWalletBalance,
+        });
+      }
 
       await queryRunner.manager.save(OrderItem, items).catch((err) => {
         console.log(err);
@@ -166,7 +205,7 @@ export class OrdersService {
       });
   }
 
-  async update(id: string, updateOrderDto: UpdateOrderDto) {    
+  async update(id: string, updateOrderDto: UpdateOrderDto) {
     return await this.ordersRepository
       .update(id, updateOrderDto)
       .catch((err) => {
@@ -175,20 +214,18 @@ export class OrdersService {
       });
   }
 
-  async updateStatus(id: string, status: OrderStatus) {    
+  async updateStatus(id: string, status: OrderStatus) {
     return await this.ordersRepository
       .createQueryBuilder()
       .update()
       .set({ status: status })
-      .where("id = :id", { id: id })
+      .where('id = :id', { id: id })
       .execute()
       .catch((err) => {
         console.log(err);
         throw new BadRequestException('Error updating order status!');
       });
   }
-  
-
 
   async remove(id: number) {
     return await this.ordersRepository.delete(id).catch(() => {
