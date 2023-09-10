@@ -151,6 +151,9 @@ export class OrdersService {
     let query: any = this.ordersRepository
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.user', 'user')
+      .leftJoinAndSelect('order.orderItems', 'item')
+      .leftJoinAndSelect('item.product', 'product')
+      .leftJoinAndSelect('product.images', 'image')
       .where('order.id IS NOT NULL');
 
     if (queryParams.userId) {
