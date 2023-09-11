@@ -2,9 +2,11 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as admin from 'firebase-admin';
 import { DeviceTokenStatus } from 'src/common/enums/device-token-status.enum';
+import { NotificationType } from 'src/common/enums/notification-type.enum';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
 import { IsNull, Not, Repository } from 'typeorm';
 import { CreateNotificationDto } from './dto/create-notification.dto';
+import { SendGlobalNotificationDTO } from './dto/send-global-notification.dto';
 import { Notification } from './entities/notification.entity';
 import { NotificationData } from './interfaces/notification.interface';
 
@@ -81,6 +83,34 @@ export class NotificationsService {
   async remove(id: string): Promise<void> {
     const notification = await this.findOneOrFail(id);
     await this.notificationRepository.remove(notification);
+  }
+
+  async sendGlobalNotification(data: SendGlobalNotificationDTO) {
+    const fcmTokens = (
+      await this.deviceTokensRepository.find({
+        where: {
+          userId: data.forEmployees ? null : Not(IsNull()),
+          employeeId: data.forEmployees ? Not(IsNull()) : null,
+          status: DeviceTokenStatus.ACTIVE,
+          isMobile: true,
+          loggedOutAt: null,
+          fcmToken: Not(IsNull()), // Filter out null fcmTokens
+        },
+      })
+    ).map((deviceToken) => deviceToken.fcmToken);
+
+    console.log('fcmTokens', fcmTokens);
+
+    const notificationData: NotificationData = {
+      title: data.title,
+      body: data.body,
+      type: NotificationType.GLOBAL_NOTIFICATION,
+      fcmTokens: fcmTokens,
+    };
+
+    this.notify(notificationData);
+
+    return;
   }
 
   async notify(notificationData: NotificationData): Promise<void> {
