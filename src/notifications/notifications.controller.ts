@@ -1,8 +1,10 @@
 import {
+  Body,
   Controller,
   Get,
   Param,
   Patch,
+  Post,
   Query,
   UnauthorizedException,
   UseGuards
@@ -14,6 +16,10 @@ import { Employee } from 'src/employees/entities/employee.entity';
 import { User } from 'src/users/entities/user.entity';
 import { AuthGuard } from './../auth/guards/auth.guard';
 import { NotificationsService } from './notifications.service';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { EmployeeRole } from 'src/common/enums/employee-role.enum';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { SendGlobalNotificationDTO } from './dto/send-global-notification.dto';
 @ApiTags('Notifications')
 @Controller('notifications')
 export class NotificationsController {
@@ -70,4 +76,15 @@ export class NotificationsController {
   // remove(@Param('id') id: string) {
   //   return this.notificationsService.remove(id);
   // }
+
+  @Roles(EmployeeRole.ADMIN)
+  @UseGuards(RolesGuard)
+  @Post('sendGlobalNotification')
+  async sendGlobalNotification(
+    @CurrentEmployee() currentEmployee: Employee,
+    @Body() data: SendGlobalNotificationDTO
+  ) {
+    return await this.notificationsService.sendGlobalNotification(data);
+  }
+
 }
