@@ -283,4 +283,9 @@ export class UsersService {
 
     return await this.usersRepository.save(user);
   }
+
+  async getUserWallet(userId: string) {
+    const user = await this.findById(userId, ['wallet']);
+    return user.wallet;
+  }
 }
