@@ -8,6 +8,7 @@ import {
   Post,
   Query,
   Res,
+  UnauthorizedException,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -105,5 +106,15 @@ export class UsersController {
   @Get(':id/chats')
   async getAllChats(@Param('id') id: string, @CurrentUser() user: User) {
     return await this.usersService.getUserChats(user.id);
+  }
+
+  @UseGuards(IsUserGuard)
+  @Get(':id/wallet')
+  async getUserWallet(@Param('id') id: string, @CurrentUser() user: User) {
+    if (id != user?.id)
+      throw new UnauthorizedException(
+        'You are not allowed to perform this operation!',
+      );
+    return await this.usersService.getUserWallet(user.id);
   }
 }
