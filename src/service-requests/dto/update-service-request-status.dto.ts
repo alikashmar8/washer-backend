@@ -18,4 +18,9 @@ export class UpdateServiceRequestStatusDto {
   @IsNotEmpty()
   @Length(10, 250)
   cancelReason?: string;
+  
+  @ApiProperty({ required: false, nullable: true})
+  @ValidateIf(o => o.status === RequestStatus.APPROVED)
+  @IsNotEmpty()
+  confirmedDate?: Date;
 }
