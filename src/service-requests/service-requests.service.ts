@@ -347,7 +347,7 @@ export class ServiceRequestsService {
     }
 
     query = await query
-      .orderBy('req.requestedDate', 'ASC')
+      .orderBy('req.requestedDate', 'DESC')
       .skip(skip)
       .take(take)
       .getManyAndCount();
@@ -424,8 +424,22 @@ export class ServiceRequestsService {
   async updateStatus(id: string, data: UpdateServiceRequestStatusDto) {
     const serviceRequest = await this.findOneByIdOrFail(id, ['user']);
     let res;
+    if (data.status == RequestStatus.APPROVED && !data.confirmedDate)
+      throw new BadRequestException('Please specify the confirmed date!');
+
     try {
-      res = await this.requestsRepository.update(id, data);
+      res = await this.requestsRepository.update(id, {
+        status: data.status,
+        cancelReason:
+          data.status == RequestStatus.CANCELLED
+            ? data.cancelReason
+            : serviceRequest.cancelReason,
+
+        confirmedDate:
+          data.status == RequestStatus.APPROVED
+            ? data.confirmedDate
+            : serviceRequest.confirmedDate,
+      });
     } catch (err) {
       console.error(err);
       throw new BadRequestException('Error updating status', err);
