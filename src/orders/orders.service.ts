@@ -192,7 +192,11 @@ export class OrdersService {
       query = query.andWhere(innerQuery);
     }
 
-    query = await query.skip(skip).take(take).getManyAndCount();
+    query = await query
+      .orderBy('order.createdAt', 'DESC')
+      .skip(skip)
+      .take(take)
+      .getManyAndCount();
 
     return {
       data: query[0],
