@@ -147,10 +147,10 @@ export class EmployeesController {
     return await this.employeesService.remove(id);
   }
 
-  @Patch('/:id/location')
   // @Roles(EmployeeRole.ADMIN, EmployeeRole.BRANCH_EMPLOYEE)
   // @UseGuards(RolesGuard)
-  // @UseGuards(IsEmployeeGuard)
+  @UseGuards(IsEmployeeGuard)
+  @Patch('/:id/location')
   async updateLocation(
     @Req() req,
     @Param('id') id: string,
