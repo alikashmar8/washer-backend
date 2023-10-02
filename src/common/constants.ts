@@ -15,3 +15,4 @@ export const RANGE_COST =  VehicleType.RANGE+'_COST';
 export const TRUCK_COST =  VehicleType.TRUCK+'_COST';
 export const VAN_COST =  VehicleType.VAN+'_COST';
 export const MOTORCYCLE_COST =  VehicleType.MOTORCYCLE+'_COST';
+export const POINTS_PER_ORDER_PERCENTAGE =  'POINTS_PER_ORDER_PERCENTAGE';
