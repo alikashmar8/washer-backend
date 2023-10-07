@@ -22,6 +22,9 @@ export class Branch extends BaseEntity {
   @Column({ default: false })
   isActive: boolean;
   
+  @Column({ nullable: false, default: 1000 })
+  coverageArea: number; // field value in meters
+  
   @Column({ nullable: false })
   addressId: string;
 
