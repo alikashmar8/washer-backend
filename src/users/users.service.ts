@@ -234,6 +234,9 @@ export class UsersService {
         userId: id,
       },
       relations: ['user', 'employee'],
+      order: {
+        lastMessageDate: 'DESC',
+      },
     });
 
     chats = await Promise.all(
