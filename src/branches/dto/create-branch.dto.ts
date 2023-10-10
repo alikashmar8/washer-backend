@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
   IsBoolean,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   ValidateNested,
 } from 'class-validator';
@@ -12,6 +13,11 @@ export class CreateBranchDto {
   @ApiProperty()
   @IsNotEmpty()
   description: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  coverageArea: number;
 
   @ApiProperty()
   @IsOptional()
