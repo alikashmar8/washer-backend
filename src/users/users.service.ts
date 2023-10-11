@@ -144,8 +144,14 @@ export class UsersService {
     const newImage = data.photo;
     delete data.photo;
 
+    const user = await this.findById(id);
+    const isMobileVerified =
+      data.phoneNumber && user.phoneNumber != data.phoneNumber
+        ? false
+        : user.isMobileVerified;
+
     await this.usersRepository
-      .update(id, data)
+      .update(id, { ...data, isMobileVerified })
       .catch((err) => {
         console.error(err);
         throw new BadRequestException('Error updating user', err);
