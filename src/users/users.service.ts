@@ -8,7 +8,7 @@ import { Message } from 'src/chats/entities/message.entity';
 import { Currency } from 'src/common/enums/currency.enum';
 import { DeviceTokenStatus } from 'src/common/enums/device-token-status.enum';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, IsNull, Not, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -247,7 +247,7 @@ export class UsersService {
 
     chats = await Promise.all(
       chats.map(async (chat) => {
-        chat.unReadCount = await this.countChatUnreadMessages(chat.id, id);
+        chat.unReadCount = await this.countChatUserUnreadMessages(chat.id, id);
         return chat;
       }),
     );
@@ -255,11 +255,11 @@ export class UsersService {
     return chats;
   }
 
-  async countChatUnreadMessages(chatId: string, userId: string) {
+  async countChatUserUnreadMessages(chatId: string, userId: string) {
     const res = await this.messagesRepository.count({
       where: {
         chatId,
-        userId,
+        employeeId: Not(IsNull()),
         isRead: false,
       },
     });
