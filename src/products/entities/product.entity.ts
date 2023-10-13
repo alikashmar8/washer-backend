@@ -39,6 +39,9 @@ export class Product {
   @Column({ nullable: false, default: 0 })
   views: number;
 
+  @Column({ name: 'quantity', nullable: true, default: 0 })
+  quantity?: number;
+
   @Column({ nullable: false, default: true })
   isActive: boolean;
 
