@@ -48,7 +48,15 @@ export class OrdersService {
           const product = await queryRunner.manager.findOneOrFail(Product, {
             where: { id: item.productId },
           });
+          if (product.quantity < item.quantity)
+            throw new BadRequestException(
+              `Insufficient quantity for: ${product.title}`,
+            );
+
           item.price = product.price;
+          await queryRunner.manager.update(Product, product.id, {
+            quantity: product.quantity - item.quantity,
+          });
           return item;
         }),
       );
