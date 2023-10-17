@@ -3,15 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as path from 'path';
 import { AppService } from 'src/app.service';
 import { Chat } from 'src/chats/entities/chat.entity';
+import { Message } from 'src/chats/entities/message.entity';
 import { DeviceTokenStatus } from 'src/common/enums/device-token-status.enum';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, IsNull, Not, Repository } from 'typeorm';
 import { CreateEmployeeChatDTO } from './../chats/dto/create-employee-chat.dto';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { Employee } from './entities/employee.entity';
-import { Message } from 'src/chats/entities/message.entity';
 
 @Injectable()
 export class EmployeesService {
@@ -308,7 +308,7 @@ export class EmployeesService {
 
     chats = await Promise.all(
       chats.map(async (chat) => {
-        chat.unReadCount = await this.countChatUnreadMessages(chat.id, id);
+        chat.unReadCount = await this.countChatEmployeeUnreadMessages(chat.id);
         return chat;
       }),
     );
@@ -316,11 +316,11 @@ export class EmployeesService {
     return chats;
   }
 
-  async countChatUnreadMessages(chatId: string, employeeId: string) {
+  async countChatEmployeeUnreadMessages(chatId: string) {
     const res = await this.messagesRepository.count({
       where: {
         chatId,
-        employeeId,
+        userId: Not(IsNull()),
         isRead: false,
       },
     });
