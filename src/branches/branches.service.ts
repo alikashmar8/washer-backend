@@ -39,6 +39,7 @@ export class BranchesService {
       .update(id, {
         description: data.description,
         isActive: data.isActive,
+        coverageArea: data.coverageArea,
       })
       .catch((err) => {
         console.log(err);
