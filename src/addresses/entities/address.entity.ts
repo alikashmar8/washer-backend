@@ -20,8 +20,8 @@ export class Address extends BaseEntity {
   @Column({ type: 'text', nullable: false })
   city: string;
   
-  @Column({ type: 'text', nullable: false })
-  region: string;
+  @Column({ type: 'text', nullable: true })
+  region?: string;
   
   @Column({ type: 'text', nullable: false })
   street: string;
