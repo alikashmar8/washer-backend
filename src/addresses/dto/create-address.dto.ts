@@ -12,8 +12,8 @@ export class CreateAddressDto {
   city: string;
   
   @ApiProperty()
-  @IsNotEmpty()
-  region: string;
+  @IsOptional()
+  region?: string;
   
   @ApiProperty()
   @IsNotEmpty()
@@ -23,14 +23,14 @@ export class CreateAddressDto {
   @IsNotEmpty()
   building: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsNumber()
-  @ApiProperty({ type: Number, required: false })
+  @ApiProperty({ type: Number, required: true })
   lat: number;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsNumber()
-  @ApiProperty({ type: Number, required: false })
+  @ApiProperty({ type: Number, required: true })
   lon: number;
 
   @IsOptional()
