@@ -3,6 +3,7 @@ import { ServiceRequest } from 'src/service-requests/entities/service-request.en
 import { User } from 'src/users/entities/user.entity';
 import {
   Column,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -43,6 +44,9 @@ export class Vehicle extends BaseEntity {
   @Column({ type: 'enum', enum: VehicleType, default: VehicleType.CAR })
   type: VehicleType;
 
+  @DeleteDateColumn({ name: 'deletedAt', nullable: true })
+  deletedAt?: Date;
+  
   @Column({ nullable: false })
   userId: string;
 
