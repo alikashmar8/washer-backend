@@ -1,6 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import * as path from 'path';
 import { AppService } from 'src/app.service';
 import { Repository } from 'typeorm';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
@@ -54,8 +53,8 @@ export class VehiclesService {
             this.vehiclesRepository,
           );
       });
-    
-      return { success: true }
+
+    return { success: true };
   }
 
   async remove(id: string) {
@@ -63,20 +62,22 @@ export class VehiclesService {
     const photo = vehicle.photo;
 
     return await this.vehiclesRepository
-      .delete(id)
+      .softDelete(id)
       .catch((err) => {
         throw new BadRequestException('Error deleting vehicle!', err);
       })
-      .then(async () => {
-        if (photo) {
-          const imagePath = path.join(process.cwd(), photo);
-          console.log('Image path:', imagePath);
-          try {
-            await this.appsService.deleteFile(imagePath);
-          } catch (err) {
-            console.error(err);
-          }
-        }
+      .then(async (data) => {
+        return data;
+        // TODO: check if we need to keep photo after soft delete.
+        // if (photo) {
+        //   const imagePath = path.join(process.cwd(), photo);
+        //   console.log('Image path:', imagePath);
+        //   try {
+        //     await this.appsService.deleteFile(imagePath);
+        //   } catch (err) {
+        //     console.error(err);
+        //   }
+        // }
       });
   }
 
