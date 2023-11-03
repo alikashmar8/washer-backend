@@ -156,11 +156,10 @@ export class ServiceRequestsService {
 
       return request;
     } catch (err) {
-      await queryRunner.rollbackTransaction();
-
       console.log('Error creating request:');
       console.log(err);
-      throw new BadRequestException(Request);
+      await queryRunner.rollbackTransaction();
+      throw err;
     } finally {
       await queryRunner.release();
     }
@@ -190,6 +189,7 @@ export class ServiceRequestsService {
 
     let query: any = this.requestsRepository
       .createQueryBuilder('req')
+      .withDeleted()
       .leftJoinAndSelect('req.user', 'user')
       .leftJoinAndSelect('req.type', 'type')
       .leftJoinAndSelect('req.employee', 'employee')
