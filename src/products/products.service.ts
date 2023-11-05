@@ -126,7 +126,7 @@ export class ProductsService {
       const productRepository = queryRunner.manager.getRepository(Product);
       const res = await productRepository.update(id, data);
 
-      if (images) {
+      if (images && images.length > 0) {
         const productImageRepository =
           queryRunner.manager.getRepository(ProductImage);
         const oldImages = await productImageRepository.find({
