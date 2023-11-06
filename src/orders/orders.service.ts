@@ -141,7 +141,7 @@ export class OrdersService {
     } catch (err) {
       console.log(err);
       await queryRunner.rollbackTransaction();
-      throw new BadRequestException('Error creating order!');
+      throw err;
     } finally {
       await queryRunner.release();
     }
