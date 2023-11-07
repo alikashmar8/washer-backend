@@ -29,7 +29,7 @@ export class NotificationsService {
           userId: data.userId,
           employeeId: data.employeeId,
           status: DeviceTokenStatus.ACTIVE,
-          isMobile: true,
+          // isMobile: true,
           loggedOutAt: null,
           fcmToken: Not(IsNull()), // Filter out null fcmTokens
         },
