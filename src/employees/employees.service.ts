@@ -200,8 +200,17 @@ export class EmployeesService {
     };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} employee`;
+  async findOne(id: string, relations?: string[]) {
+    return await this.employeesRepository
+      .findOneOrFail({
+        where: {
+          id: id,
+        },
+        relations,
+      })
+      .catch((err) => {
+        throw new BadRequestException('Employee not found', err);
+      });
   }
 
   async update(id: string, data: UpdateEmployeeDto) {
@@ -214,6 +223,7 @@ export class EmployeesService {
         throw new BadRequestException('Error updating employee!', err);
       })
       .then((data) => {
+        let res = { success: true };
         if (imagePath) {
           this.appService.updateFile(
             id,
@@ -221,7 +231,9 @@ export class EmployeesService {
             imagePath,
             this.employeesRepository,
           );
+          res['photo'] = imagePath;
         }
+        return res;
       });
   }
 
