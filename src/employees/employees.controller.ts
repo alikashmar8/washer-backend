@@ -20,7 +20,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
-import geoip from 'geoip-lite';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { IsEmployeeGuard } from 'src/auth/guards/is-employee.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { CreateEmployeeChatDTO } from 'src/chats/dto/create-employee-chat.dto';
@@ -105,9 +105,10 @@ export class EmployeesController {
     return this.employeesService.findAll(query, employee);
   }
 
+  @UseGuards(AuthGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.employeesService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    return await this.employeesService.findOne(id);
   }
 
   @Patch(':id')
@@ -163,18 +164,18 @@ export class EmployeesController {
         location.longitude,
       );
     } else {
-      const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-      const location = geoip.lookup(ip);
-      if (location) {
-        const latitude = location.ll[0];
-        const longitude = location.ll[1];
-        return this.employeesService.updateLocation(id, latitude, longitude);
-      } else {
-        throw new HttpException(
-          'Unable to determine location from IP',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
+      // const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+      // const location = geoip.lookup(ip);
+      // if (location) {
+      //   const latitude = location.ll[0];
+      //   const longitude = location.ll[1];
+      //   return this.employeesService.updateLocation(id, latitude, longitude);
+      // } else {
+      throw new HttpException(
+        'Error missing coordinates',
+        HttpStatus.BAD_REQUEST,
+      );
+      // }
     }
   }
 
