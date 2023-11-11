@@ -4,6 +4,7 @@ import { NotificationType } from 'src/common/enums/notification-type.enum';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { User } from 'src/users/entities/user.entity';
+import { IsNull } from 'typeorm';
 import { Repository } from 'typeorm/repository/Repository';
 import { ChatSenderType } from './dto/chat-sender-type.dto';
 import { CreateMessageDto } from './dto/chat.dto';
@@ -58,7 +59,7 @@ export class ChatsService {
         chatId,
       },
       order: {
-        sentTimestamp: 'ASC',
+        sentTimestamp: 'desc',
       },
       skip: skip,
       take: take,
@@ -71,13 +72,22 @@ export class ChatsService {
   }
 
   async markChatMessagesRead(chatId: string, user: User, employee: Employee) {
-    const key = user ? 'userId' : 'employeeId';
-    const value = user ? user.id : employee.id;
+    // const key = user ? 'userId' : 'employeeId';
+    // const value = user ? user.id : employee.id;
+
+    const filter = user
+      ? {
+          userId: IsNull(),
+        }
+      : {
+          employeeId: IsNull(),
+        };
 
     const res = await this.messagesRepository.update(
       {
         chatId,
-        [key]: value,
+        // [key]: value,
+        ...filter,
         isRead: false,
       },
       { isRead: true },
