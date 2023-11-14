@@ -454,12 +454,20 @@ export class ServiceRequestsService {
           type: NotificationType.REQUEST_ACCEPTED,
         });
         break;
-      case RequestStatus.IN_PROGRESS:
+      case RequestStatus.IN_ROUTE:
         this.notificationsService.createAndNotify({
           title: 'Request update.',
           body: 'Driver is on his way and will start soon!',
           userId: serviceRequest.userId,
           type: NotificationType.REQUEST_DRIVER_IN_ROUTE,
+        });
+        break;
+      case RequestStatus.IN_PROGRESS:
+        this.notificationsService.createAndNotify({
+          title: 'Request update.',
+          body: 'Driver has started!',
+          userId: serviceRequest.userId,
+          type: NotificationType.REQUEST_IN_PROGRESS,
         });
         break;
       case RequestStatus.DONE:
