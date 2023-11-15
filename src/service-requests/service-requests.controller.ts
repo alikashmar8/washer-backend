@@ -138,7 +138,7 @@ export class ServiceRequestsController {
     if (employee) {
       if (
         employee.role == EmployeeRole.DRIVER &&
-        ![RequestStatus.DONE, RequestStatus.IN_PROGRESS].includes(body.status)
+        ![RequestStatus.DONE, RequestStatus.IN_PROGRESS, RequestStatus.IN_ROUTE].includes(body.status)
       )
         throw new BadRequestException(
           'You are not allowed to perform this action!',
