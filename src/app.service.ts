@@ -12,6 +12,7 @@ import {
   CAR_COST,
   EXCHANGE_RATE,
   MOTORCYCLE_COST,
+  POINTS_PER_ORDER_PERCENTAGE,
   RANGE_COST,
   TRUCK_COST,
   VAN_COST,
@@ -70,6 +71,7 @@ export class AppService {
     await this.branchesService.create({
       description: 'Beirut branch 1',
       isActive: true,
+      coverageArea: 2000,
       address: {
         description: 'Beirut, Lebanon',
         city: 'Building',
@@ -107,6 +109,10 @@ export class AppService {
         key: MOTORCYCLE_COST,
         value: '5',
       },
+      {
+        key: POINTS_PER_ORDER_PERCENTAGE,
+        value: '1',
+      },
     ]);
   }
 
@@ -116,7 +122,7 @@ export class AppService {
 
   async getAllConstants() {
     return {
-      PAYMENT_METHODS: PaymentType,
+      PAYMENT_METHODS: [PaymentType.CASH, PaymentType.WALLET],
     };
   }
 
@@ -149,12 +155,9 @@ export class AppService {
     const oldFile = entity[filePropertyName];
 
     await repository.update(id, { [filePropertyName]: newFilePath });
-    console.log('check_3');
 
     if (oldFile) {
-      console.log(oldFile);
       const oldFilePath = path.join(process.cwd(), oldFile);
-      console.log(`Old ${filePropertyName} path:`, oldFilePath);
       try {
         await this.deleteFile(oldFilePath);
       } catch (err) {
