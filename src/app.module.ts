@@ -7,6 +7,8 @@ import configuration from 'config/configuration';
 import { join } from 'path';
 import { AddressesModule } from './addresses/addresses.module';
 import { AdsModule } from './ads/ads.module';
+import { AdsService } from './ads/ads.service';
+import { Ad } from './ads/entities/ad.entity';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -15,7 +17,9 @@ import { BranchesService } from './branches/branches.service';
 import { Branch } from './branches/entities/branch.entity';
 import { CategoriesModule } from './categories/categories.module';
 import { ChatsModule } from './chats/chats.module';
+import { ChatsService } from './chats/chats.service';
 import { Chat } from './chats/entities/chat.entity';
+import { Message } from './chats/entities/message.entity';
 import { MailModule } from './common/mail/mail.module';
 import { ConsoleCommandsModule } from './console-commands/console-commands.module';
 import { CreditCardsModule } from './credit-cards/credit-cards.module';
@@ -24,9 +28,14 @@ import { DeviceToken } from './device-tokens/entities/device-token.entity';
 import { EmployeesModule } from './employees/employees.module';
 import { EmployeesService } from './employees/employees.service';
 import { Employee } from './employees/entities/employee.entity';
+import { Notification } from './notifications/entities/notification.entity';
 import { NotificationsModule } from './notifications/notifications.module';
+import { NotificationsService } from './notifications/notifications.service';
 import { OrdersModule } from './orders/orders.module';
+import { ProductImage } from './products/entities/product-image.entity';
+import { Product } from './products/entities/product.entity';
 import { ProductsModule } from './products/products.module';
+import { ProductsService } from './products/products.service';
 import { PromosModule } from './promos/promos.module';
 import { ServiceCategoriesModule } from './service-categories/service-categories.module';
 import { ServiceRequestsModule } from './service-requests/service-requests.module';
@@ -39,13 +48,6 @@ import { UsersModule } from './users/users.module';
 import { UsersService } from './users/users.service';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { WalletsModule } from './wallets/wallets.module';
-import { AdsService } from './ads/ads.service';
-import { ProductsService } from './products/products.service';
-import { Ad } from './ads/entities/ad.entity';
-import { Product } from './products/entities/product.entity';
-import { ProductImage } from './products/entities/product-image.entity';
-import { Message } from './chats/entities/message.entity';
-import { ChatsService } from './chats/chats.service';
 
 @Module({
   imports: [
@@ -70,6 +72,7 @@ import { ChatsService } from './chats/chats.service';
       ProductImage,
       Chat,
       Message,
+      Notification,
     ]),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '../public'), // added ../ to get one folder back
@@ -135,6 +138,7 @@ import { ChatsService } from './chats/chats.service';
     AdsService,
     ProductsService,
     ChatsService,
+    NotificationsService,
   ],
 })
 export class AppModule {
