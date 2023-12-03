@@ -4,6 +4,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { BranchesService } from 'src/branches/branches.service';
+import { Branch } from 'src/branches/entities/branch.entity';
+import { calculateDistance } from 'src/common/utils/functions';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
@@ -11,9 +14,6 @@ import { EmployeeRole } from './../common/enums/employee-role.enum';
 import { CreateUserAddressDto } from './dto/create-user-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
 import { Address } from './entities/address.entity';
-import { BranchesService } from 'src/branches/branches.service';
-import { calculateDistance } from 'src/common/utils/functions';
-import { Branch } from 'src/branches/entities/branch.entity';
 
 @Injectable()
 export class AddressesService {
@@ -109,12 +109,14 @@ export class AddressesService {
       throw new UnauthorizedException(
         'You are not allowed to perform this action!',
       );
-    return await this.addressesRepository.delete(address.id).catch((err) => {
-      console.log(err);
-      throw new BadRequestException(
-        'Error unable to delete this address!',
-        err,
-      );
-    });
+    return await this.addressesRepository
+      .softDelete(address.id)
+      .catch((err) => {
+        console.log(err);
+        throw new BadRequestException(
+          'Error unable to delete this address!',
+          err,
+        );
+      });
   }
 }

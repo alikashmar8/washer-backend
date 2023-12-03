@@ -3,6 +3,7 @@ import { ServiceRequest } from 'src/service-requests/entities/service-request.en
 import { User } from 'src/users/entities/user.entity';
 import {
   Column,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -19,16 +20,16 @@ export class Address extends BaseEntity {
 
   @Column({ type: 'text', nullable: false })
   city: string;
-  
+
   @Column({ type: 'text', nullable: true })
   region?: string;
-  
+
   @Column({ type: 'text', nullable: false })
   street: string;
-  
+
   @Column({ type: 'text', nullable: false })
   building: string;
-  
+
   @Column({ type: 'text', nullable: false })
   description: string;
 
@@ -40,6 +41,9 @@ export class Address extends BaseEntity {
 
   @Column({ default: false })
   isDefault: boolean;
+
+  @DeleteDateColumn({ name: 'deletedAt', nullable: true })
+  deletedAt?: Date;
 
   @Column({ nullable: true })
   userId?: string;

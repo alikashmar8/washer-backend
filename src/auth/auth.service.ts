@@ -29,7 +29,7 @@ import {
   isWhatsappReady,
   sendWhatsappMessage,
   sendWhatsappTestMessage,
-  terminateWhatsappConfiguration,
+  // terminateWhatsappConfiguration,
 } from './whatsapp';
 
 @Injectable()
@@ -433,7 +433,7 @@ export class AuthService {
   }
 
   async terminateWhatsapp() {
-    return await terminateWhatsappConfiguration();
+    // return await terminateWhatsappConfiguration();
   }
 
   async sendTestEmail() {
@@ -451,7 +451,7 @@ export class AuthService {
     }
   }
 
-  async forgetPasswordByEmail(email: string): Promise<void> {
+  async forgetPasswordByEmail(email: string): Promise<{ success: boolean }> {
     const user = await this.usersService.findByEmail(email);
     if (!user) throw new BadRequestException('Error user not found!');
     if (user.isSocialMediaLogin)
@@ -486,6 +486,8 @@ export class AuthService {
     };
 
     this.mailService.send(mailData);
+
+    return { success: true };
   }
 
   async passwordReset(data: PasswordResetDTO) {
