@@ -4,9 +4,12 @@ import {
   IsEnum,
   IsNotEmpty,
   IsNumber,
-  IsOptional
+  IsOptional,
+  ValidateNested
 } from 'class-validator';
 import { PaymentType } from 'src/common/enums/payment-type.enum';
+import { ServiceRequestItem } from '../entities/service-request-item.entity';
+import { Type } from 'class-transformer';
 
 export class CreateServiceRequestDto {
   @ApiProperty()
@@ -50,6 +53,10 @@ export class CreateServiceRequestDto {
   @IsOptional()
   promoCode?: string;
 
+  @ApiProperty({ type: ServiceRequestItem, isArray: true })
+    @ValidateNested({ each: true })
+    @Type(() => ServiceRequestItem)
+  serviceRequestItems: ServiceRequestItem[];
 
 
   //userId & branchId are auto set in code

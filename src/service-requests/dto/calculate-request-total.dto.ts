@@ -1,11 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  ValidateNested,
+} from 'class-validator';
 import { Promo } from 'src/promos/entities/promo.entity';
+import { ServiceRequestItem } from '../entities/service-request-item.entity';
+import { Type } from 'class-transformer';
 
 export class CalculateRequestTotal {
-  @ApiProperty()
-  @IsNotEmpty()
-  serviceTypeId: string;
+  @ApiProperty({ type: ServiceRequestItem, isArray: true })
+  @ValidateNested({ each: true })
+  @Type(() => ServiceRequestItem)
+  serviceRequestItems: ServiceRequestItem[];
 
   @ApiProperty()
   @IsOptional()
@@ -19,11 +27,6 @@ export class CalculateRequestTotal {
   @IsNotEmpty()
   @IsNumber()
   tips: number;
-
-  @ApiProperty({ type: Number })
-  @IsNotEmpty()
-  @IsNumber()
-  quantity: number;
 
   userId: string;
 }

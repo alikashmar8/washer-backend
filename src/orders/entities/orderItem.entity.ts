@@ -26,9 +26,7 @@ export class OrderItem {
   @JoinColumn({ name: 'orderId' })
   order: Order;
 
-  @ManyToOne((type) => Product, (product) => product.orderItems, {
-    onDelete: 'RESTRICT',
-  })
+  @ManyToOne((type) => Product, (product) => product.orderItems, {onDelete: 'RESTRICT',})
   @JoinColumn({ name: 'productId' })
   product: Product;
 }

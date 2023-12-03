@@ -5,7 +5,7 @@ export class CreateOrderItemDto {
   @ApiProperty()
   @IsNotEmpty()
   quantity: number;
-
+  
   @ApiProperty()
   @IsNotEmpty()
   productId: string;

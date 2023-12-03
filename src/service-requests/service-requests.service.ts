@@ -24,6 +24,7 @@ import { UpdateServiceRequestPaymentStatusDto } from './dto/update-service-reque
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
 import { UpdateServiceRequestDto } from './dto/update-service-request.dto';
 import { ServiceRequest } from './entities/service-request.entity';
+import { ServiceRequestItem } from './entities/service-request-item.entity';
 
 @Injectable()
 export class ServiceRequestsService {
@@ -95,13 +96,13 @@ export class ServiceRequestsService {
         });
       data.branchId = branch.id;
 
-      const costObj = await this.calculateRequestCost({
-        serviceTypeId: data.typeId,
+      //to modify
+      const costObj = await this.calculateRequestTotalCost({
+        serviceRequestItems : data.serviceRequestItems,
         vehicleId: data.vehicleId,
         tips: data.tips,
         userId: data.userId,
         promoCode: data.promoCode,
-        quantity: data.quantity,
       });
 
       data.cost = costObj.total;
@@ -484,13 +485,42 @@ export class ServiceRequestsService {
     return res;
   }
 
-  async calculateRequestCost(data: {
-    serviceTypeId: string;
+async calculateRequestItemCost(
+serviceRequestItem:ServiceRequestItem
+):Promise<{cost : number}>{
+let cost = 0;
+
+const serviceType = await this.serviceTypesService.findOneByIdOrFail(
+  serviceRequestItem.typeId
+);
+let quantity = 0;
+    quantity = serviceType.showQuantityInput ? serviceRequestItem.quantity : 1;
+    cost += serviceType.price * quantity;
+
+
+    if (serviceRequestItem.vehicleId) {
+      const vehicle = await this.vehiclesService.findOneByIdOrFail(
+        serviceRequestItem.vehicleId,
+      );
+      const key = vehicle.type + '_COST';
+      const setting = await this.settingsService.findByKey(key);
+      if (setting && setting.value != null) {
+        cost += Number(setting.value);
+      }
+    }
+     return {cost};
+
+
+
+}
+
+
+  async calculateRequestTotalCost(data: {
+    serviceRequestItems: ServiceRequestItem[];
     promoCode?: string;
     vehicleId?: string;
     tips: number;
     userId: string;
-    quantity: number;
   }): Promise<{
     total: number;
     totalLBP: number;
@@ -498,37 +528,23 @@ export class ServiceRequestsService {
     discountAmountLBP: number;
   }> {
     let total = 0;
-    if (!data.tips) data.tips = 0;
+  if (!data.tips) data.tips = 0;
 
-    const exchangeRateSetting: Setting = await this.settingsRepository
-      .findOneOrFail({
-        where: {
-          key: EXCHANGE_RATE,
-        },
-      })
-      .catch((err) => {
-        throw new BadRequestException('Error calculating prices', err);
-      });
-    const exchangeRate = Number(exchangeRateSetting.value);
+  const exchangeRateSetting: Setting = await this.settingsRepository
+    .findOneOrFail({
+      where: {
+        key: EXCHANGE_RATE,
+      },
+    })
+    .catch((err) => {
+      throw new BadRequestException('Error calculating prices', err);
+    });
+  const exchangeRate = Number(exchangeRateSetting.value);
 
-    const serviceType = await this.serviceTypesService.findOneByIdOrFail(
-      data.serviceTypeId,
-    );
+  for (const serviceItem of data.serviceRequestItems) {
+    total +=( await this.calculateRequestItemCost(serviceItem)).cost;
+  }
 
-    let quantity = 0;
-    quantity = serviceType.showQuantityInput ? data.quantity : 1;
-    total += serviceType.price * quantity;
-
-    if (data.vehicleId) {
-      const vehicle = await this.vehiclesService.findOneByIdOrFail(
-        data.vehicleId,
-      );
-      const key = vehicle.type + '_COST';
-      const setting = await this.settingsService.findByKey(key);
-      if (setting && setting.value != null) {
-        total += Number(setting.value);
-      }
-    }
 
     let discountAmount = 0;
     let promoIsValid = false;

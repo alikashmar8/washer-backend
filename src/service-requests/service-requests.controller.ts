@@ -175,7 +175,7 @@ export class ServiceRequestsController {
     @CurrentUser() user: User,
   ) {
     body.userId = user.id;
-    return await this.serviceRequestsService.calculateRequestCost(body);
+    return await this.serviceRequestsService.calculateRequestTotalCost(body);
   }
 
   @UseGuards(IsEmployeeGuard)
