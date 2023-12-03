@@ -1,5 +1,5 @@
 import { VehicleType } from 'src/common/enums/vehicle-type.enum';
-import { ServiceRequest } from 'src/service-requests/entities/service-request.entity';
+import { ServiceRequestItem } from 'src/service-requests/entities/service-request-item.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
   Column,
@@ -8,7 +8,7 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
-  PrimaryGeneratedColumn
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base-entity.entity';
 
@@ -46,7 +46,7 @@ export class Vehicle extends BaseEntity {
 
   @DeleteDateColumn({ name: 'deletedAt', nullable: true })
   deletedAt?: Date;
-  
+
   @Column({ nullable: false })
   userId: string;
 
@@ -56,8 +56,8 @@ export class Vehicle extends BaseEntity {
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @OneToMany((type) => ServiceRequest, (req) => req.vehicle, {
+  @OneToMany((type) => ServiceRequestItem, (req) => req.vehicle, {
     cascade: true,
   })
-  requests: ServiceRequest[];
+  requestItems: ServiceRequestItem[];
 }

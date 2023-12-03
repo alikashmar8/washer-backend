@@ -1,19 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
+  ArrayMinSize,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   ValidateNested,
 } from 'class-validator';
-import { Promo } from 'src/promos/entities/promo.entity';
-import { ServiceRequestItem } from '../entities/service-request-item.entity';
-import { Type } from 'class-transformer';
+import { CreateServiceRequestItemDTO } from './create-service-request.dto';
 
 export class CalculateRequestTotal {
-  @ApiProperty({ type: ServiceRequestItem, isArray: true })
+  @ApiProperty({ type: CreateServiceRequestItemDTO, isArray: true })
   @ValidateNested({ each: true })
-  @Type(() => ServiceRequestItem)
-  serviceRequestItems: ServiceRequestItem[];
+  @Type(() => CreateServiceRequestItemDTO)
+  @IsNotEmpty()
+  @ArrayMinSize(1)
+  serviceRequestItems: CreateServiceRequestItemDTO[];
 
   @ApiProperty()
   @IsOptional()

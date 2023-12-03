@@ -19,7 +19,10 @@ import { User } from 'src/users/entities/user.entity';
 import { VehiclesService } from 'src/vehicles/vehicles.service';
 import { Brackets, DataSource, Repository } from 'typeorm';
 import { Wallet } from './../wallets/entities/wallet.entity';
-import { CreateServiceRequestDto } from './dto/create-service-request.dto';
+import {
+  CreateServiceRequestDto,
+  CreateServiceRequestItemDTO,
+} from './dto/create-service-request.dto';
 import { UpdateServiceRequestPaymentStatusDto } from './dto/update-service-request-payment-status.dto';
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
 import { UpdateServiceRequestDto } from './dto/update-service-request.dto';
@@ -98,8 +101,7 @@ export class ServiceRequestsService {
 
       //to modify
       const costObj = await this.calculateRequestTotalCost({
-        serviceRequestItems : data.serviceRequestItems,
-        vehicleId: data.vehicleId,
+        serviceRequestItems: data.serviceRequestItems,
         tips: data.tips,
         userId: data.userId,
         promoCode: data.promoCode,
@@ -192,10 +194,11 @@ export class ServiceRequestsService {
       .createQueryBuilder('req')
       .withDeleted()
       .leftJoinAndSelect('req.user', 'user')
-      .leftJoinAndSelect('req.type', 'type')
+      .leftJoinAndSelect('req.serviceRequestItems', 'item')
+      .leftJoinAndSelect('item.type', 'type')
+      .leftJoinAndSelect('item.vehicle', 'vehicle')
       .leftJoinAndSelect('req.employee', 'employee')
       .leftJoinAndSelect('req.address', 'address')
-      .leftJoinAndSelect('req.vehicle', 'vehicle')
       .leftJoinAndSelect('type.category', 'category')
       .where('req.id IS NOT NULL');
     isFirstWhere = false;
@@ -485,18 +488,17 @@ export class ServiceRequestsService {
     return res;
   }
 
-async calculateRequestItemCost(
-serviceRequestItem:ServiceRequestItem
-):Promise<{cost : number}>{
-let cost = 0;
+  async calculateRequestItemCost(
+    serviceRequestItem: CreateServiceRequestItemDTO,
+  ): Promise<{ cost: number }> {
+    let cost = 0;
 
-const serviceType = await this.serviceTypesService.findOneByIdOrFail(
-  serviceRequestItem.typeId
-);
-let quantity = 0;
+    const serviceType = await this.serviceTypesService.findOneByIdOrFail(
+      serviceRequestItem.typeId,
+    );
+    let quantity = 0;
     quantity = serviceType.showQuantityInput ? serviceRequestItem.quantity : 1;
     cost += serviceType.price * quantity;
-
 
     if (serviceRequestItem.vehicleId) {
       const vehicle = await this.vehiclesService.findOneByIdOrFail(
@@ -508,17 +510,12 @@ let quantity = 0;
         cost += Number(setting.value);
       }
     }
-     return {cost};
-
-
-
-}
-
+    return { cost };
+  }
 
   async calculateRequestTotalCost(data: {
-    serviceRequestItems: ServiceRequestItem[];
+    serviceRequestItems: CreateServiceRequestItemDTO[];
     promoCode?: string;
-    vehicleId?: string;
     tips: number;
     userId: string;
   }): Promise<{
@@ -528,23 +525,22 @@ let quantity = 0;
     discountAmountLBP: number;
   }> {
     let total = 0;
-  if (!data.tips) data.tips = 0;
+    if (!data.tips) data.tips = 0;
 
-  const exchangeRateSetting: Setting = await this.settingsRepository
-    .findOneOrFail({
-      where: {
-        key: EXCHANGE_RATE,
-      },
-    })
-    .catch((err) => {
-      throw new BadRequestException('Error calculating prices', err);
-    });
-  const exchangeRate = Number(exchangeRateSetting.value);
+    const exchangeRateSetting: Setting = await this.settingsRepository
+      .findOneOrFail({
+        where: {
+          key: EXCHANGE_RATE,
+        },
+      })
+      .catch((err) => {
+        throw new BadRequestException('Error calculating prices', err);
+      });
+    const exchangeRate = Number(exchangeRateSetting.value);
 
-  for (const serviceItem of data.serviceRequestItems) {
-    total +=( await this.calculateRequestItemCost(serviceItem)).cost;
-  }
-
+    for (const serviceItem of data.serviceRequestItems) {
+      total += (await this.calculateRequestItemCost(serviceItem)).cost;
+    }
 
     let discountAmount = 0;
     let promoIsValid = false;

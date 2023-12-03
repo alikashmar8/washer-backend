@@ -1,4 +1,5 @@
-import { Product } from 'src/products/entities/product.entity';
+import { ServiceType } from 'src/service-types/entities/service-type.entity';
+import { Vehicle } from 'src/vehicles/entities/vehicle.entity';
 import {
   Column,
   Entity,
@@ -7,10 +8,8 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { ServiceRequest } from './service-request.entity';
-import { ServiceType } from 'src/service-types/entities/service-type.entity';
-import { Vehicle } from 'src/vehicles/entities/vehicle.entity';
 
-@Entity('order_items')
+@Entity('service_request_items')
 export class ServiceRequestItem {
   @PrimaryGeneratedColumn()
   id: number;
@@ -30,14 +29,13 @@ export class ServiceRequestItem {
   @Column({ nullable: false })
   typeId: string;
 
-  // TODO: check deleting product logic // protect or cascade ?
-  @ManyToOne((type) => ServiceType, (type) => type.serviceRequests, {
+  @ManyToOne((type) => ServiceType, (type) => type.serviceRequestItems, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'typeId' })
   type: ServiceType;
 
-  @ManyToOne((type) => Vehicle, (v) => v.requests, {
+  @ManyToOne((type) => Vehicle, (v) => v.requestItems, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'vehicleId' })

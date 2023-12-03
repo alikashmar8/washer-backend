@@ -48,8 +48,6 @@ export class ServiceRequest extends BaseEntity {
   @Column({ type: 'enum', enum: PaymentType, default: PaymentType.CASH })
   paymentType: PaymentType;
 
-  @Column({ nullable: false, default: 1 })
-  quantity: number;
 
   @OneToMany((type) => ServiceRequestItem, (item) => item.serviceRequest)
   serviceRequestItems: ServiceRequestItem[];
