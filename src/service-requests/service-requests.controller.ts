@@ -26,8 +26,8 @@ import { CalculateRequestTotal } from './dto/calculate-request-total.dto';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
 import { UpdateServiceRequestPaymentStatusDto } from './dto/update-service-request-payment-status.dto';
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
-import { ServiceRequestsService } from './service-requests.service';
 import { UpdateServiceRequestDto } from './dto/update-service-request.dto';
+import { ServiceRequestsService } from './service-requests.service';
 
 @ApiBearerAuth('access_token')
 @ApiTags('Service Requests')
@@ -109,10 +109,10 @@ export class ServiceRequestsController {
       'user',
       'branch',
       'employee',
-      'serviceRequestItem',
-      'serviceRequestItem.type',
+      'serviceRequestItems',
+      'serviceRequestItems.type',
+      'serviceRequestItems.vehicle',
       'address',
-      'vehicle',
     ]);
     if (user && user.id != serviceReq.userId)
       throw new UnauthorizedException(

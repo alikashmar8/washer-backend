@@ -406,6 +406,7 @@ export class ServiceRequestsService {
         relations,
       })
       .catch((err) => {
+        console.error(err);
         throw new BadRequestException('Service request not found!');
       });
   }
