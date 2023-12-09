@@ -1,3 +1,4 @@
+import { ServiceRequestItem } from './../../service-requests/entities/service-request-item.entity';
 import { BaseEntity } from 'src/common/entities/base-entity.entity';
 import { Currency } from 'src/common/enums/currency.enum';
 import { ServiceCategory } from 'src/service-categories/entities/service-category.entity';
@@ -51,6 +52,6 @@ export class ServiceType extends BaseEntity {
   @JoinColumn({ name: 'categoryId' })
   category: ServiceCategory;
 
-  @OneToMany((type) => ServiceRequest, (req) => req.type)
-  serviceRequests: ServiceRequest[];
+  @OneToMany((type) => ServiceRequestItem, (req) => req.type)
+  serviceRequestItems: ServiceRequestItem[];
 }

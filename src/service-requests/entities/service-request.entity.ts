@@ -15,8 +15,10 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { ServiceRequestItem } from './service-request-item.entity';
 
 @Entity('service-requests')
 export class ServiceRequest extends BaseEntity {
@@ -32,7 +34,7 @@ export class ServiceRequest extends BaseEntity {
 
   @Column({ type: 'text', nullable: true })
   cancelReason?: string;
-
+  
   @Column({
     nullable: false,
     type: 'timestamp',
@@ -46,8 +48,9 @@ export class ServiceRequest extends BaseEntity {
   @Column({ type: 'enum', enum: PaymentType, default: PaymentType.CASH })
   paymentType: PaymentType;
 
-  @Column({ nullable: false, default: 1 })
-  quantity: number;
+
+  @OneToMany((type) => ServiceRequestItem, (item) => item.serviceRequest)
+  serviceRequestItems: ServiceRequestItem[];
 
   @Column({ type: 'float', nullable: false })
   cost: number;
@@ -70,17 +73,11 @@ export class ServiceRequest extends BaseEntity {
   @Column({ nullable: true })
   employeeId?: string;
 
-  @Column({ nullable: true })
-  vehicleId?: string;
-
   @Column({ nullable: false })
   branchId: string;
 
   @Column({ nullable: true })
   transactionId?: string;
-
-  @Column({ nullable: false })
-  typeId: string;
 
   @Column({ nullable: false })
   addressId: string;
@@ -90,12 +87,6 @@ export class ServiceRequest extends BaseEntity {
   })
   @JoinColumn({ name: 'userId' })
   user: User;
-
-  @ManyToOne((type) => Vehicle, (v) => v.requests, {
-    onDelete: 'RESTRICT',
-  })
-  @JoinColumn({ name: 'vehicleId' })
-  vehicle?: Vehicle;
 
   @ManyToOne((type) => Address, (add) => add.requests, {
     onDelete: 'RESTRICT',
@@ -121,11 +112,7 @@ export class ServiceRequest extends BaseEntity {
   @JoinColumn({ name: 'transactionId' })
   transaction?: Transaction;
 
-  @ManyToOne((type) => ServiceType, (type) => type.serviceRequests, {
-    onDelete: 'RESTRICT',
-  })
-  @JoinColumn({ name: 'typeId' })
-  type: ServiceType;
+  
 
   @BeforeInsert()
   async hashPassword() {

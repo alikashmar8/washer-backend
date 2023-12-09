@@ -1,13 +1,30 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
+  ArrayMinSize,
   IsDateString,
   IsEnum,
   IsNotEmpty,
   IsNumber,
-  IsOptional
+  IsOptional,
+  ValidateNested,
 } from 'class-validator';
 import { PaymentType } from 'src/common/enums/payment-type.enum';
 
+export class CreateServiceRequestItemDTO {
+  @ApiProperty({ type: Number })
+  @IsNotEmpty()
+  @IsNumber()
+  quantity: number;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  typeId: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  vehicleId?: string;
+}
 export class CreateServiceRequestDto {
   @ApiProperty()
   @IsNotEmpty()
@@ -18,19 +35,10 @@ export class CreateServiceRequestDto {
   @IsNotEmpty()
   addressId: string;
 
-  @ApiProperty({ type: Number })
-  @IsNotEmpty()
-  @IsNumber()
-  quantity: number;
-
   @ApiProperty({ enum: PaymentType })
   @IsNotEmpty()
   @IsEnum(PaymentType)
   paymentType: PaymentType;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  typeId: string;
 
   @ApiProperty({ type: Number })
   @IsNotEmpty()
@@ -44,13 +52,14 @@ export class CreateServiceRequestDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
-  vehicleId?: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
   promoCode?: string;
 
-
+  @ApiProperty({ type: CreateServiceRequestItemDTO, isArray: true })
+  @ValidateNested({ each: true })
+  @Type(() => CreateServiceRequestItemDTO)
+  @IsNotEmpty()
+  @ArrayMinSize(1)
+  serviceRequestItems: CreateServiceRequestItemDTO[];
 
   //userId & branchId are auto set in code
   userId: string;

@@ -26,8 +26,8 @@ import { CalculateRequestTotal } from './dto/calculate-request-total.dto';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
 import { UpdateServiceRequestPaymentStatusDto } from './dto/update-service-request-payment-status.dto';
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
-import { ServiceRequestsService } from './service-requests.service';
 import { UpdateServiceRequestDto } from './dto/update-service-request.dto';
+import { ServiceRequestsService } from './service-requests.service';
 
 @ApiBearerAuth('access_token')
 @ApiTags('Service Requests')
@@ -109,9 +109,10 @@ export class ServiceRequestsController {
       'user',
       'branch',
       'employee',
-      'type',
+      'serviceRequestItems',
+      'serviceRequestItems.type',
+      'serviceRequestItems.vehicle',
       'address',
-      'vehicle',
     ]);
     if (user && user.id != serviceReq.userId)
       throw new UnauthorizedException(
@@ -138,7 +139,11 @@ export class ServiceRequestsController {
     if (employee) {
       if (
         employee.role == EmployeeRole.DRIVER &&
-        ![RequestStatus.DONE, RequestStatus.IN_PROGRESS, RequestStatus.IN_ROUTE].includes(body.status)
+        ![
+          RequestStatus.DONE,
+          RequestStatus.IN_PROGRESS,
+          RequestStatus.IN_ROUTE,
+        ].includes(body.status)
       )
         throw new BadRequestException(
           'You are not allowed to perform this action!',
@@ -175,7 +180,7 @@ export class ServiceRequestsController {
     @CurrentUser() user: User,
   ) {
     body.userId = user.id;
-    return await this.serviceRequestsService.calculateRequestCost(body);
+    return await this.serviceRequestsService.calculateRequestTotalCost(body);
   }
 
   @UseGuards(IsEmployeeGuard)
