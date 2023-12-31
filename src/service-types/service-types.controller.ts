@@ -47,7 +47,7 @@ export class ServiceTypesController {
     @UploadedFile() icon: Express.Multer.File,
   ) {
     if (!icon) {
-      throw new BadRequestException('Ad image is required!');
+      throw new BadRequestException('Service image is required!');
     } else {
       createServiceTypeDto.icon = icon.path;
     }
