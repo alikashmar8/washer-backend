@@ -1,4 +1,7 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateWalletDto } from './create-wallet.dto';
+import { IsNotEmpty, IsNumber } from 'class-validator';
 
-export class UpdateWalletDto extends PartialType(CreateWalletDto) {}
+export class UpdateWalletDto {
+  @IsNotEmpty()
+  @IsNumber()
+  balance: number;
+}
