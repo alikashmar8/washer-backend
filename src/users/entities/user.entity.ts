@@ -14,6 +14,7 @@ import { Wallet } from 'src/wallets/entities/wallet.entity';
 import {
   BeforeInsert,
   Column,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   OneToOne,
@@ -110,6 +111,9 @@ export class User extends BaseEntity {
 
   @Column({ nullable: false })
   walletId: string;
+
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt?: Date;
 
   @OneToMany((type) => Address, (address) => address.user, { cascade: true })
   addresses: Address[];

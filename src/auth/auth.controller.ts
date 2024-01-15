@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -105,6 +106,15 @@ export class AuthController {
     @Body() body: UpdatePasswordDTO,
   ) {
     return await this.authService.updateEmployeePassword(id, body);
+  }
+
+  @UseGuards(IsUserGuard)
+  @Delete('users/:id')
+  async deleteUserAccount(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+  ) {
+    return await this.authService.deleteUserAccount(id);
   }
 
   @Get('whatsapp/status')

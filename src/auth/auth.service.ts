@@ -1,4 +1,3 @@
-import { Wallet } from 'src/wallets/entities/wallet.entity';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as argon from 'argon2';
@@ -17,6 +16,7 @@ import { EmployeesService } from 'src/employees/employees.service';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
+import { Wallet } from 'src/wallets/entities/wallet.entity';
 import { DataSource, Repository } from 'typeorm';
 import { v4 as uuid } from 'uuid';
 import { PasswordResetDTO } from './dtos/forget-password.dto';
@@ -29,7 +29,6 @@ import {
   isWhatsappReady,
   sendWhatsappMessage,
   sendWhatsappTestMessage,
-  // terminateWhatsappConfiguration,
 } from './whatsapp';
 
 @Injectable()
@@ -179,8 +178,8 @@ export class AuthService {
       ));
     if (exists) throw new BadRequestException('User already exists!');
 
-    if (data.addresses && data.addresses.length < 1)
-      throw new BadRequestException('At least 1 address should be provided!');
+    // if (data.addresses?.length < 1)
+    //   throw new BadRequestException('At least 1 address should be provided!');
 
     const queryRunner = this.dataSource.createQueryRunner();
 
@@ -227,46 +226,48 @@ export class AuthService {
       user = await queryRunner.manager.save(user);
 
       // validate addresses:
-      const branches = await queryRunner.manager.find(Branch, {
-        relations: ['address'],
-      });
+      if (addresses?.length > 0) {
+        const branches = await queryRunner.manager.find(Branch, {
+          relations: ['address'],
+        });
 
-      for (let address of addresses) {
-        const userLat = address.lat;
-        const userLon = address.lon;
+        for (let address of addresses) {
+          const userLat = address.lat;
+          const userLon = address.lon;
 
-        let nearestBranch: Branch;
-        let nearestDistance: number = Number.MAX_VALUE;
-        for (const branch of branches) {
-          const branchLat = branch.address.lat;
-          const branchLon = branch.address.lon;
+          let nearestBranch: Branch;
+          let nearestDistance: number = Number.MAX_VALUE;
+          for (const branch of branches) {
+            const branchLat = branch.address.lat;
+            const branchLon = branch.address.lon;
 
-          const distance = calculateDistance(
-            { lat: userLat, lon: userLon },
-            { lat: branchLat, lon: branchLon },
-          );
+            const distance = calculateDistance(
+              { lat: userLat, lon: userLon },
+              { lat: branchLat, lon: branchLon },
+            );
 
-          if (distance < nearestDistance) {
-            nearestBranch = branch;
-            nearestDistance = distance;
+            if (distance < nearestDistance) {
+              nearestBranch = branch;
+              nearestDistance = distance;
+            }
           }
+
+          if (
+            nearestDistance == Number.MAX_VALUE ||
+            !nearestBranch ||
+            nearestBranch.coverageArea < nearestDistance
+          ) {
+            queryRunner.rollbackTransaction();
+            throw new BadRequestException(
+              'No close branch was found near your address!',
+            );
+          }
+
+          address.userId = user.id;
         }
 
-        if (
-          nearestDistance == Number.MAX_VALUE ||
-          !nearestBranch ||
-          nearestBranch.coverageArea < nearestDistance
-        ) {
-          queryRunner.rollbackTransaction();
-          throw new BadRequestException(
-            'No close branch was found near your address!',
-          );
-        }
-
-        address.userId = user.id;
+        await queryRunner.manager.save(Address, addresses);
       }
-
-      await queryRunner.manager.save(Address, addresses);
 
       // data.addresses.forEach(async address => {
       //   address.userId = user.id;
@@ -279,7 +280,7 @@ export class AuthService {
     } catch (err) {
       console.error(err);
       await queryRunner.rollbackTransaction();
-      throw new BadRequestException(err);
+      throw err;
       // throw new BadRequestException('Error registering user!');
     } finally {
       await queryRunner.release();
@@ -530,5 +531,37 @@ export class AuthService {
       lastName,
       token,
     );
+  }
+
+  async deleteUserAccount(id: string) {
+    return await this.dataSource.transaction(async (manager) => {
+      const user = await manager
+        .findOneOrFail(User, {
+          where: { id },
+          relations: ['deviceTokens'],
+        })
+        .catch((err) => {
+          throw new BadRequestException('Account not found!', err);
+        });
+
+      await manager
+        .update(
+          DeviceToken,
+          user.deviceTokens.map((token) => token.id),
+          {
+            status: DeviceTokenStatus.TERMINATED,
+            loggedOutAt: new Date(),
+          },
+        )
+        .catch((err) => {
+          console.error(err);
+          throw new BadRequestException('Error deleting account');
+        });
+
+      return await manager.softDelete(User, id).catch((err) => {
+        console.error(err);
+        throw new BadRequestException('Error deleting account');
+      });
+    });
   }
 }
