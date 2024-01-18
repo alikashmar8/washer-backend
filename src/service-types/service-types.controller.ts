@@ -56,7 +56,7 @@ export class ServiceTypesController {
 
   @UseGuards(AuthGuard)
   @ApiQuery({ name: 'isActive', example: true, required: false })
-  @ApiQuery({ name: 'serviceCategoryId', example: '37', required: false })
+  @ApiQuery({ name: 'categoryId', example: '37', required: false })
   @ApiQuery({ name: 'search', example: 'Washing Service', required: false })
   @Get()
   async findAll(@Query() query: any) {

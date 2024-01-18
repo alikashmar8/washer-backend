@@ -20,6 +20,12 @@ export class ServiceTypesService {
   ) {}
 
   async create(data: CreateServiceTypeDto) {
+    // allow either show vehicle selection or show quantity input
+    if (data.showVehicleSelection && data.showQuantityInput) {
+      throw new BadRequestException(
+        'You can either show vehicle selection or show quantity input at once',
+      );
+    }
     return await this.serviceTypesRepository.save(data).catch((err) => {
       throw new BadRequestException('Error creating type!', err);
     });
@@ -29,7 +35,7 @@ export class ServiceTypesService {
     take?: any;
     skip?: any;
     isActive?: boolean;
-    serviceCategoryId?: string;
+    categoryId?: string;
     search?: string;
   }) {
     const take = queryParams.take || 10;
@@ -68,11 +74,11 @@ export class ServiceTypesService {
       query = query.andWhere(innerQuery);
     }
 
-    if (queryParams.serviceCategoryId) {
-      const queryString = 'type.serviceCategoryId = :categoryId';
+    if (queryParams.categoryId) {
+      const queryString = 'type.categoryId = :categoryId';
 
       query = query.andWhere(queryString, {
-        categoryId: queryParams.serviceCategoryId,
+        categoryId: queryParams.categoryId,
       });
     }
 
