@@ -134,7 +134,7 @@ export class ServiceRequestsController {
 
     if (user && body.status != RequestStatus.CANCELLED)
       throw new BadRequestException(
-        'You are not allowed to perform this action!',
+        'You are not allowed to cancel a service!',
       );
     if (employee) {
       if (
@@ -143,6 +143,7 @@ export class ServiceRequestsController {
           RequestStatus.DONE,
           RequestStatus.IN_PROGRESS,
           RequestStatus.IN_ROUTE,
+          RequestStatus.FIVE_MINUTES,
         ].includes(body.status)
       )
         throw new BadRequestException(

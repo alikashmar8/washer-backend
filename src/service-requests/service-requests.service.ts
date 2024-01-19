@@ -219,13 +219,10 @@ export class ServiceRequestsService {
     }
 
     if (filters.status) {
-      if (isFirstWhere)
-        query = query.where('req.status = :status', { status: filters.status });
-      else
-        query = query.andWhere('req.status = :status', {
-          status: filters.status,
-        });
-      isFirstWhere = false;
+      const statuses = filters.status.split(',');
+      query = query.andWhere('req.status IN  (:...status)', {
+        status: statuses,
+      });
     }
 
     if (filters.isPaid != null) {
@@ -432,61 +429,124 @@ export class ServiceRequestsService {
     if (data.status == RequestStatus.APPROVED && !data.confirmedDate)
       throw new BadRequestException('Please specify the confirmed date!');
 
-    try {
-      res = await this.requestsRepository.update(id, {
-        status: data.status,
-        cancelReason:
-          data.status == RequestStatus.CANCELLED
-            ? data.cancelReason
-            : serviceRequest.cancelReason,
+    if (
+      data.status == RequestStatus.CANCELLED &&
+      [
+        RequestStatus.CANCELLED,
+        RequestStatus.DONE,
+        RequestStatus.REJECTED,
+        RequestStatus.FIVE_MINUTES,
+        RequestStatus.IN_PROGRESS,
+        RequestStatus.IN_ROUTE,
+      ].includes(serviceRequest.status)
+    )
+      throw new BadRequestException('You cannot cancel this service request!');
 
-        confirmedDate:
-          data.status == RequestStatus.APPROVED
-            ? data.confirmedDate
-            : serviceRequest.confirmedDate,
-      });
-    } catch (err) {
-      console.error(err);
-      throw new BadRequestException('Error updating status', err);
-    }
+    this.dataSource.transaction(async (manager) => {
+      const requestsRepository = manager.getRepository(ServiceRequest);
+      try {
+        res = await requestsRepository.update(id, {
+          status: data.status,
+          cancelReason:
+            data.status == RequestStatus.CANCELLED
+              ? data.cancelReason
+              : serviceRequest.cancelReason,
 
-    switch (data.status) {
-      case RequestStatus.APPROVED:
-        this.notificationsService.createAndNotify({
-          title: 'Request update.',
-          body: 'Your Request have been accepted!',
-          userId: serviceRequest.userId,
-          type: NotificationType.REQUEST_ACCEPTED,
+          confirmedDate:
+            data.status == RequestStatus.APPROVED
+              ? data.confirmedDate
+              : serviceRequest.confirmedDate,
         });
-        break;
-      case RequestStatus.IN_ROUTE:
-        this.notificationsService.createAndNotify({
-          title: 'Request update.',
-          body: 'Driver is on his way and will start soon!',
-          userId: serviceRequest.userId,
-          type: NotificationType.REQUEST_DRIVER_IN_ROUTE,
-        });
-        break;
-      case RequestStatus.IN_PROGRESS:
-        this.notificationsService.createAndNotify({
-          title: 'Request update.',
-          body: 'Driver has started!',
-          userId: serviceRequest.userId,
-          type: NotificationType.REQUEST_IN_PROGRESS,
-        });
-        break;
-      case RequestStatus.DONE:
-        this.notificationsService.createAndNotify({
-          title: 'Request update.',
-          body: 'Your request is done! Thank you for your business.',
-          userId: serviceRequest.userId,
-          type: NotificationType.REQUEST_DONE,
-        });
-        break;
-      default:
-        break;
-    }
-    return res;
+
+        switch (data.status) {
+          case RequestStatus.CANCELLED:
+            const isPaidByWallet =
+              serviceRequest.paymentType == PaymentType.WALLET;
+            if (isPaidByWallet) {
+              const exchangeRateSetting: Setting = await this.settingsRepository
+                .findOneOrFail({
+                  where: {
+                    key: EXCHANGE_RATE,
+                  },
+                })
+                .catch((err) => {
+                  throw new BadRequestException(
+                    'Error cancelling service request',
+                    err,
+                  );
+                });
+              const exchangeRate = Number(exchangeRateSetting.value);
+              const user = await manager.findOneOrFail(User, {
+                where: {
+                  id: serviceRequest.userId,
+                },
+                relations: ['wallet'],
+              });
+              const amountToRefundUSD =
+                serviceRequest.cost + serviceRequest.tips;
+              const amountToRefund = amountToRefundUSD * exchangeRate;
+              const newBalance = user.wallet.balance + amountToRefund;
+              await manager.update(Wallet, user.wallet.id, {
+                balance: newBalance,
+              });
+            }
+            // this.notificationsService.createAndNotify({
+            //   title: 'Request update.',
+            //   body: 'Your Request have been accepted!',
+            //   userId: serviceRequest.userId,
+            //   type: NotificationType.REQUEST_ACCEPTED,
+            // });
+            break;
+          case RequestStatus.APPROVED:
+            this.notificationsService.createAndNotify({
+              title: 'Request update.',
+              body: 'Your Request have been accepted!',
+              userId: serviceRequest.userId,
+              type: NotificationType.REQUEST_ACCEPTED,
+            });
+            break;
+          case RequestStatus.IN_ROUTE:
+            this.notificationsService.createAndNotify({
+              title: 'Request update.',
+              body: 'Driver is on his way and will start soon!',
+              userId: serviceRequest.userId,
+              type: NotificationType.REQUEST_DRIVER_IN_ROUTE,
+            });
+            break;
+          case RequestStatus.IN_PROGRESS:
+            this.notificationsService.createAndNotify({
+              title: 'Request update.',
+              body: 'Driver has started!',
+              userId: serviceRequest.userId,
+              type: NotificationType.REQUEST_IN_PROGRESS,
+            });
+            break;
+            break;
+          case RequestStatus.FIVE_MINUTES:
+            this.notificationsService.createAndNotify({
+              title: 'Request update.',
+              body: 'Driver needs 5 minutes to arrive!',
+              userId: serviceRequest.userId,
+              type: NotificationType.REQUEST_IN_PROGRESS,
+            });
+            break;
+          case RequestStatus.DONE:
+            this.notificationsService.createAndNotify({
+              title: 'Request update.',
+              body: 'Your request is done! Thank you for your business.',
+              userId: serviceRequest.userId,
+              type: NotificationType.REQUEST_DONE,
+            });
+            break;
+          default:
+            break;
+        }
+      } catch (err) {
+        console.error(err);
+        throw new BadRequestException('Error updating status', err);
+      }
+      return res;
+    });
   }
 
   async calculateRequestItemCost(

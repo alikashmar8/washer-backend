@@ -34,7 +34,7 @@ export class ServiceRequest extends BaseEntity {
 
   @Column({ type: 'text', nullable: true })
   cancelReason?: string;
-  
+
   @Column({
     nullable: false,
     type: 'timestamp',
@@ -48,8 +48,9 @@ export class ServiceRequest extends BaseEntity {
   @Column({ type: 'enum', enum: PaymentType, default: PaymentType.CASH })
   paymentType: PaymentType;
 
-
-  @OneToMany((type) => ServiceRequestItem, (item) => item.serviceRequest)
+  @OneToMany((type) => ServiceRequestItem, (item) => item.serviceRequest, {
+    cascade: true,
+  })
   serviceRequestItems: ServiceRequestItem[];
 
   @Column({ type: 'float', nullable: false })
@@ -111,8 +112,6 @@ export class ServiceRequest extends BaseEntity {
   })
   @JoinColumn({ name: 'transactionId' })
   transaction?: Transaction;
-
-  
 
   @BeforeInsert()
   async hashPassword() {
