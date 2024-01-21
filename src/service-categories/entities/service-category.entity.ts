@@ -13,6 +13,12 @@ export class ServiceCategory extends BaseEntity {
   @Column({ default: false })
   isActive: boolean;
 
+  @Column({ name: 'showVehicleSelection', default: false })
+  showVehicleSelection: boolean;
+
+  @Column({ name: 'showQuantityInput', default: false })
+  showQuantityInput: boolean;
+
   @OneToMany((type) => ServiceType, (type) => type.category)
   serviceTypes: ServiceType[];
 }

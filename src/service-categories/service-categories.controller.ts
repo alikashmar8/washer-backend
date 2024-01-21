@@ -54,6 +54,23 @@ export class ServiceCategoriesController {
     } else {
       createServiceCategoryDto.icon = icon.path;
     }
+    
+    if (
+      createServiceCategoryDto.showQuantityInput &&
+      createServiceCategoryDto.showVehicleSelection
+    ) {
+      throw new BadRequestException(
+        'Cannot show both quantity input and vehicle selection at the same time!',
+      );
+    }
+    if (
+      !createServiceCategoryDto.showQuantityInput &&
+      !createServiceCategoryDto.showVehicleSelection
+    ) {
+      throw new BadRequestException(
+        'Must show either quantity input or vehicle selection!',
+      );
+    }
     return await this.serviceCategoriesService.create(createServiceCategoryDto);
   }
 
@@ -88,6 +105,26 @@ export class ServiceCategoriesController {
     @UploadedFile() file?: Express.Multer.File,
   ) {
     if (file) updateServiceCategoryDto.icon = file.path;
+
+    
+    // const updatingShowQuantityInput = "showQuantityInput" in updateServiceCategoryDto;
+    // const updatingShowVehicleSelection = "showVehicleSelection" in updateServiceCategoryDto;
+     // if (
+    //   updateServiceCategoryDto.showQuantityInput &&
+    //   updateServiceCategoryDto.showVehicleSelection
+    // ) {
+    //   throw new BadRequestException(
+    //     'Cannot show both quantity input and vehicle selection at the same time!',
+    //   );
+    // }
+    // if (
+    //   !updateServiceCategoryDto.showQuantityInput &&
+    //   !updateServiceCategoryDto.showVehicleSelection
+    // ) {
+    //   throw new BadRequestException(
+    //     'Must show either quantity input or vehicle selection!',
+    //   );
+    // }
     return await this.serviceCategoriesService.update(
       id,
       updateServiceCategoryDto,

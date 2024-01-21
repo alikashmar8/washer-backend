@@ -5,6 +5,7 @@ import { OrderItem } from 'src/orders/entities/orderItem.entity';
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -57,6 +58,9 @@ export class Product {
   @ManyToOne((type) => Category, (category) => category.products)
   @JoinColumn({ name: 'categoryId' })
   category: Category;
+
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt?: Date;
 
   @CreateDateColumn()
   createdAt: Date;
