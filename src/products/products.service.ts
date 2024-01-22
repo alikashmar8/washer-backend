@@ -188,20 +188,22 @@ export class ProductsService {
       const product = await this.findOneByIdOrFail(id, ['images']);
       const images = product.images;
 
-      await this.productRepository.delete(id);
-
-      images.forEach(async (image) => {
-        const imagePath = path.join(process.cwd(), image.image);
-        if (imagePath) {
-          try {
-            await this.appsService.deleteFile(imagePath);
-          } catch (err) {
-            console.error(err);
-          }
-        } else {
-          console.log(`Image ${imagePath} not found`);
-        }
+      await this.productRepository.softDelete(id).catch((err) => {
+        throw new BadRequestException('Error deleting product', err);
       });
+
+      // images.forEach(async (image) => {
+      //   const imagePath = path.join(process.cwd(), image.image);
+      //   if (imagePath) {
+      //     try {
+      //       await this.appsService.deleteFile(imagePath);
+      //     } catch (err) {
+      //       console.error(err);
+      //     }
+      //   } else {
+      //     console.log(`Image ${imagePath} not found`);
+      //   }
+      // });
 
       return { message: 'Product deleted successfully' };
     } catch (error) {
