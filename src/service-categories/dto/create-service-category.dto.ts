@@ -20,6 +20,32 @@ export class CreateServiceCategoryDto {
   isActive?: boolean;
 
   @ApiProperty({
+    type: Boolean,
+    default: false,
+    nullable: true,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    return [true, 'enabled', 'true', 1, '1'].indexOf(value) > -1;
+  })
+  showVehicleSelection?: boolean;
+
+  @ApiProperty({
+    type: Boolean,
+    default: false,
+    nullable: true,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    return [true, 'enabled', 'true', 1, '1'].indexOf(value) > -1;
+  })
+  showQuantityInput?: boolean;
+
+  @ApiProperty({
     type: 'string',
     format: 'binary',
     required: true,
