@@ -13,6 +13,8 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/orderItem.entity';
 import { OrderStatus } from './enums/order-status.enum';
+import { NotificationsService } from 'src/notifications/notifications.service';
+import { NotificationType } from 'src/common/enums/notification-type.enum';
 
 @Injectable()
 export class OrdersService {
@@ -25,6 +27,7 @@ export class OrdersService {
     private productsRepository: Repository<Product>,
     private promoService: PromosService,
     private dataSource: DataSource,
+    private notificationsService: NotificationsService,
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
@@ -221,12 +224,60 @@ export class OrdersService {
   }
 
   async update(id: string, updateOrderDto: UpdateOrderDto) {
-    return await this.ordersRepository
+    const order = await this.findOneByIdOrFail(+id);
+
+    if (
+      updateOrderDto?.status == OrderStatus.CANCELLED &&
+      [
+        OrderStatus.DELIVERED,
+        OrderStatus.REJECTED,
+        OrderStatus.REVIEWED,
+      ].includes(order?.status)
+    ) {
+      throw new BadRequestException('Order cannot be cancelled!');
+    }
+
+    const updateResult = await this.ordersRepository
       .update(id, updateOrderDto)
       .catch((err) => {
         console.log(err);
         throw new BadRequestException('Error updating order!');
       });
+
+    if (updateResult.affected > 0) {
+      const statusChanged =
+        updateOrderDto.status && order.status != updateOrderDto.status;
+      if (statusChanged) {
+        switch (updateOrderDto.status) {
+          case OrderStatus.CONFIRMED:
+            this.notificationsService.createAndNotify({
+              title: 'Order update.',
+              body: 'Your Order have been approved!',
+              userId: order.userId,
+              type: NotificationType.ORDER_STATUS_CHANGED,
+            });
+            break;
+          case OrderStatus.REJECTED:
+            this.notificationsService.createAndNotify({
+              title: 'Order update.',
+              body: 'Your Order have been rejected!',
+              userId: order.userId,
+              type: NotificationType.ORDER_STATUS_CHANGED,
+            });
+            break;
+          case OrderStatus.DELIVERED:
+            this.notificationsService.createAndNotify({
+              title: 'Order update.',
+              body: 'Your Order have been delivered!',
+              userId: order.userId,
+              type: NotificationType.ORDER_STATUS_CHANGED,
+            });
+            break;
+        }
+      }
+    }
+
+    return updateResult;
   }
 
   async updateStatus(id: string, status: OrderStatus) {
