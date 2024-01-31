@@ -6,4 +6,5 @@ export enum RequestStatus {
   DONE = 'DONE',
   CANCELLED = 'CANCELLED',
   REJECTED = 'REJECTED',
+  FIVE_MINUTES = 'FIVE_MINUTES',
 }
