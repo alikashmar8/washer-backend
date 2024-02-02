@@ -77,8 +77,8 @@ export class ChatsGateway
       'employee',
     ]);
     // emit message to related employee only
-    this.server.emit('messages-e' + chat.employeeId, { messageObj });
-
+    this.emitMessageToSocket(ChatSenderType.EMPLOYEE, chat.employeeId, messageObj);
+    
     await this.notificationsService.createAndNotify({
       title: user.firstName + ' ' + user.lastName,
       body: messageObj.text,
@@ -109,7 +109,7 @@ export class ChatsGateway
       'employee',
     ]);
     // emit message to related user only
-    this.server.emit('messages-u' + chat.userId, { messageObj });
+    this.emitMessageToSocket(ChatSenderType.USER, chat.userId, messageObj);
 
     await this.notificationsService.createAndNotify({
       title: employee.firstName + ' ' + employee.lastName,
@@ -119,6 +119,10 @@ export class ChatsGateway
     });
   }
 
+  async emitMessageToSocket(receiverType: ChatSenderType, userId, messageObject){
+    const listenerId = receiverType == ChatSenderType.USER ? 'u' : 'e';
+    this.server.emit('messages-' + listenerId + userId, { messageObject });
+  }
+
   // todo: 1- check if notify on chat creation is needed
-  //       2- ?
 }

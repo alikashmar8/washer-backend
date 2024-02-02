@@ -128,7 +128,7 @@ export class ChatsService {
       // create message in database
       const messageObj = await this.createMessage({
         chatId: chat.id,
-        userId: user.id,
+        userId: null,
         employeeId: currentEmployee.id,
         lastSenderType: ChatSenderType.EMPLOYEE,
         sentTimestamp: Math.floor(Date.now() / 1000),
