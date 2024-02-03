@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type, } from 'class-transformer';
+import { Type } from 'class-transformer';
 import {
   IsNotEmpty,
   Length,
@@ -7,7 +7,7 @@ import {
   IsOptional,
   ValidateNested,
   Matches,
-  
+  IsArray,
 } from 'class-validator';
 import { CreateAddressDto } from 'src/addresses/dto/create-address.dto';
 import { passwordRegex } from 'src/common/constants';
@@ -53,12 +53,14 @@ export class RegisterUserDTO {
   referralCode: string;
 
   @ApiProperty({
-    required: false
+    required: false,
   })
   @IsOptional()
   photo?: any;
-  
+
   @ApiProperty({ type: CreateAddressDto, isArray: true })
+  @IsArray()
+  @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => CreateAddressDto)
   addresses: CreateAddressDto[];
