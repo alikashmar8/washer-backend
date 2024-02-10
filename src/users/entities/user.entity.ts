@@ -39,17 +39,17 @@ export class User extends BaseEntity {
   @Column({ nullable: false })
   lastName: string;
 
-  @Column({ nullable: false, unique: true })
+  @Column({ name: 'username', nullable: false, unique: false })
   username: string;
 
   @Exclude()
   @Column()
   password: string;
 
-  @Column({ nullable: false, unique: true })
+  @Column({ name: 'email', nullable: false, unique: false })
   email: string;
 
-  @Column({ nullable: false, unique: true })
+  @Column({ name: 'phoneNumber', nullable: false, unique: false })
   phoneNumber: string;
 
   @Column({ nullable: true })

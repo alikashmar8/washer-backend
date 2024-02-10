@@ -150,6 +150,27 @@ export class UsersService {
         ? false
         : user.isMobileVerified;
 
+    if (data.phoneNumber && user.phoneNumber != data.phoneNumber) {
+      const exists = await this.findByPhoneNumber(data.phoneNumber);
+      if (exists) {
+        throw new BadRequestException('Phone number already exists');
+      }
+    }
+
+    if (data.email && user.email != data.email) {
+      const exists = await this.findByEmail(data.email);
+      if (exists) {
+        throw new BadRequestException('Email already exists');
+      }
+    }
+
+    if (data.username && user.username != data.username) {
+      const exists = await this.findByUsername(data.username);
+      if (exists) {
+        throw new BadRequestException('Username already exists');
+      }
+    }
+
     await this.usersRepository
       .update(id, { ...data, isMobileVerified })
       .catch((err) => {
@@ -183,10 +204,6 @@ export class UsersService {
         }
       });
     return await this.findById(id);
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
   }
 
   async findOneByToken(token: string) {

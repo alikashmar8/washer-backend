@@ -85,12 +85,6 @@ export class UsersController {
     return await this.usersService.update(id, updateUserDto);
   }
 
-  @UseGuards(AuthGuard)
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
-  }
-
   @UseGuards(IsEmployeeGuard)
   @Post(':id/chats')
   async addNewChat(
