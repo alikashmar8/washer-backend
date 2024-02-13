@@ -145,7 +145,7 @@ export class ServiceTypesService {
     const icon = service.icon;
 
     return await this.serviceTypesRepository
-      .delete(id)
+      .softDelete(id)
       .catch((err) => {
         throw new BadRequestException('Error deleting service!', err);
       })

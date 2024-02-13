@@ -5,11 +5,11 @@ import { ServiceCategory } from 'src/service-categories/entities/service-categor
 import { ServiceRequest } from 'src/service-requests/entities/service-request.entity';
 import {
   Column,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   OneToMany,
-  PrimaryGeneratedColumn,
 } from 'typeorm';
 
 @Entity('service-types')
@@ -45,6 +45,10 @@ export class ServiceType extends BaseEntity {
 
   @Column({ nullable: false })
   categoryId: string;
+
+  
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt?: Date;
 
   @ManyToOne((type) => ServiceCategory, (category) => category.serviceTypes, {
     onDelete: 'CASCADE',
