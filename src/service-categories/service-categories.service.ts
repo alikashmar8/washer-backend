@@ -94,10 +94,17 @@ export class ServiceCategoriesService {
   }
 
   async remove(id: string) {
-    const service_category = await this.findOneByIdOrFail(id);
+    const service_category = await this.findOneByIdOrFail(id, ['serviceTypes']);
+
+    if (service_category?.serviceTypes?.length > 0) {
+      throw new BadRequestException(
+        'You need to delete all service types in this category before!',
+      );
+    }
+
     const icon = service_category.icon;
     return await this.serviceCategoriesRepository
-      .delete(id)
+      .softDelete(id)
       .catch((err) => {
         console.log(err);
         throw new BadRequestException('Error deleting category!', err);

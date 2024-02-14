@@ -161,6 +161,7 @@ export class OrdersService {
 
     let query: any = this.ordersRepository
       .createQueryBuilder('order')
+      .withDeleted()
       .leftJoinAndSelect('order.user', 'user')
       .leftJoinAndSelect('order.orderItems', 'item')
       .leftJoinAndSelect('item.product', 'product')
