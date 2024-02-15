@@ -11,6 +11,7 @@ import { ServiceRequest } from 'src/service-requests/entities/service-request.en
 import {
   BeforeInsert,
   Column,
+  DeleteDateColumn,
   Entity,
   ManyToOne,
   OneToMany,
@@ -29,16 +30,16 @@ export class Employee extends BaseEntity {
   @Column({ nullable: false })
   lastName: string;
 
-  @Column({ nullable: false, unique: true })
+  @Column({ name: 'username', nullable: false, unique: false })
   username: string;
 
   @Column()
   password: string;
 
-  @Column({ nullable: true, unique: true })
+  @Column({ name: 'email', nullable: true, unique: false })
   email?: string;
 
-  @Column({ nullable: false, unique: true })
+  @Column({ name: 'phoneNumber', nullable: false, unique: false })
   phoneNumber: string;
 
   @Column({ nullable: true })
@@ -66,6 +67,9 @@ export class Employee extends BaseEntity {
 
   @Column({ nullable: true })
   branchId?: string;
+
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt?: Date;
 
   @ManyToOne((type) => Branch, (branch) => branch.employees, {
     onDelete: 'CASCADE',
