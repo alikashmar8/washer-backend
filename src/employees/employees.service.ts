@@ -84,6 +84,17 @@ export class EmployeesService {
   }
 
   async create(data: CreateEmployeeDto) {
+    const exists = await this.employeesRepository.findOne({
+      where: [
+        { email: data.email },
+        { phoneNumber: data.phoneNumber },
+        { username: data.username },
+      ],
+    });
+    if (exists) {
+      throw new BadRequestException('Employee already exists!');
+    }
+
     const employee = this.employeesRepository.create(data);
     return await this.employeesRepository.save(employee).catch((err) => {
       console.log(err);
@@ -214,8 +225,37 @@ export class EmployeesService {
   }
 
   async update(id: string, data: UpdateEmployeeDto) {
+    const employee = await this.findByIdOrFail(id);
     const imagePath = data.photo;
     delete data.photo;
+
+    if (data.phoneNumber && employee.phoneNumber != data.phoneNumber) {
+      const exists = await this.employeesRepository.findOne({
+        where: { phoneNumber: data.phoneNumber },
+      });
+      if (exists) {
+        throw new BadRequestException('Phone number already exists');
+      }
+    }
+
+    if (data.email && employee.email != data.email) {
+      const exists = await this.employeesRepository.findOne({
+        where: { email: data.email },
+      });
+      if (exists) {
+        throw new BadRequestException('Email already exists');
+      }
+    }
+
+    if (data.username && employee.username != data.username) {
+      const exists = await this.employeesRepository.findOne({
+        where: { username: data.username },
+      });
+      if (exists) {
+        throw new BadRequestException('Username already exists');
+      }
+    }
+
     return await this.employeesRepository
       .update(id, data)
       .catch((err) => {
@@ -242,8 +282,9 @@ export class EmployeesService {
     const photo = employee.photo;
 
     return await this.employeesRepository
-      .delete(id)
+      .softDelete(id)
       .catch((err) => {
+        console.error(err);
         throw new BadRequestException('Error deleting employee!', err);
       })
       .then(async () => {
