@@ -12,6 +12,7 @@ export class CleanClinic1707599818132 implements MigrationInterface {
         await queryRunner.query(`DROP INDEX \`IDX_765bc1ac8967533a04c74a9f6a\` ON \`employees\``);
         await queryRunner.query(`ALTER TABLE \`categories\` ADD \`deleted_at\` datetime(6) NULL`);
         await queryRunner.query(`ALTER TABLE \`service-types\` ADD \`deleted_at\` datetime(6) NULL`);
+        await queryRunner.query(`ALTER TABLE \`service-categories\` ADD \`deleted_at\` datetime(6) NULL`);
         await queryRunner.query(`ALTER TABLE \`employees\` ADD \`deleted_at\` datetime(6) NULL`);
         await queryRunner.query(`ALTER TABLE \`branches\` ADD \`deleted_at\` datetime(6) NULL`);
     }
@@ -19,6 +20,7 @@ export class CleanClinic1707599818132 implements MigrationInterface {
     public async down(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`ALTER TABLE \`branches\` DROP COLUMN \`deleted_at\``);
         await queryRunner.query(`ALTER TABLE \`employees\` DROP COLUMN \`deleted_at\``);
+        await queryRunner.query(`ALTER TABLE \`service-categories\` DROP COLUMN \`deleted_at\``);
         await queryRunner.query(`ALTER TABLE \`service-types\` DROP COLUMN \`deleted_at\``);
         await queryRunner.query(`ALTER TABLE \`categories\` DROP COLUMN \`deleted_at\``);
         await queryRunner.query(`CREATE UNIQUE INDEX \`IDX_765bc1ac8967533a04c74a9f6a\` ON \`employees\` (\`email\`)`);

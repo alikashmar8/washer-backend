@@ -1,6 +1,6 @@
 import { BaseEntity } from 'src/common/entities/base-entity.entity';
 import { ServiceType } from 'src/service-types/entities/service-type.entity';
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, DeleteDateColumn, Entity, OneToMany } from 'typeorm';
 
 @Entity('service-categories')
 export class ServiceCategory extends BaseEntity {
@@ -19,6 +19,9 @@ export class ServiceCategory extends BaseEntity {
   @Column({ name: 'showQuantityInput', default: false })
   showQuantityInput: boolean;
 
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt?: Date;
+  
   @OneToMany((type) => ServiceType, (type) => type.category)
   serviceTypes: ServiceType[];
 }
