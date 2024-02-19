@@ -4,12 +4,15 @@ import { Repository } from 'typeorm';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Category } from './entities/category.entity';
+import { Product } from 'src/products/entities/product.entity';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     @InjectRepository(Category)
     private categoriesRepository: Repository<Category>,
+    @InjectRepository(Product)
+    private productsRepository: Repository<Product>,
   ) {}
 
   async create(createCategoryDto: CreateCategoryDto) {
@@ -73,11 +76,19 @@ export class CategoriesService {
   }
 
   async remove(id: string) {
+    const products = await this.productsRepository.count({
+      where: { categoryId: id },
+    });
+    if (products > 0)
+      throw new BadRequestException(
+        'Category has products, cannot be deleted now',
+      );
+
     const category = await this.categoriesRepository
       .findOneByOrFail({ id })
       .catch(() => {
         throw new BadRequestException(`Category with id: ${id} was not found`);
       });
-    return await this.categoriesRepository.remove(category);
+    return await this.categoriesRepository.softDelete(category.id);
   }
 }

@@ -2,6 +2,7 @@ import { BaseEntity } from 'src/common/entities/base-entity.entity';
 import { Product } from 'src/products/entities/product.entity';
 import {
   Column,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -36,6 +37,9 @@ export class Category extends BaseEntity {
   @JoinColumn({ name: 'categoryId' })
   children?: Category[];
 
-  @Column({ default:false })
+  @Column({ default: false })
   isActive: boolean;
+
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt?: Date;
 }
