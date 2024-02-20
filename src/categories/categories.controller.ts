@@ -63,8 +63,10 @@ export class CategoriesController {
     return await this.categoriesService.update(id, updateCategoryDto);
   }
 
+  @Roles(EmployeeRole.ADMIN)
+  @UseGuards(RolesGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.categoriesService.remove(id);
+  async remove(@Param('id') id: string) {
+    return await this.categoriesService.remove(id);
   }
 }

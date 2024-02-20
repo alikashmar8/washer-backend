@@ -11,6 +11,7 @@ import { EmployeesService } from 'src/employees/employees.service';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { Notification } from 'src/notifications/entities/notification.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
+import { Product } from 'src/products/entities/product.entity';
 import { Setting } from 'src/settings/entities/setting.entity';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
@@ -30,6 +31,7 @@ import { Category } from './entities/category.entity';
       Chat,
       Message,
       Notification,
+      Product,
     ]),
   ],
   controllers: [CategoriesController],
