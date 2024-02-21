@@ -11,6 +11,7 @@ import { EmployeesService } from 'src/employees/employees.service';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { Notification } from 'src/notifications/entities/notification.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
+import { ServiceRequest } from 'src/service-requests/entities/service-request.entity';
 import { Setting } from 'src/settings/entities/setting.entity';
 import { User } from './entities/user.entity';
 import { UsersController } from './users.controller';
@@ -27,6 +28,7 @@ import { UsersService } from './users.service';
       Chat,
       Message,
       Notification,
+      ServiceRequest,
     ]),
   ],
   controllers: [UsersController],

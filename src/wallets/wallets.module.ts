@@ -8,6 +8,7 @@ import { Message } from 'src/chats/entities/message.entity';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
 import { EmployeesService } from 'src/employees/employees.service';
 import { Employee } from 'src/employees/entities/employee.entity';
+import { ServiceRequest } from 'src/service-requests/entities/service-request.entity';
 import { Setting } from 'src/settings/entities/setting.entity';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
@@ -26,6 +27,7 @@ import { WalletsService } from './wallets.service';
       Chat,
       Branch,
       User,
+      ServiceRequest,
     ]),
   ],
   controllers: [WalletsController],
