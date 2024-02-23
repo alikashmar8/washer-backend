@@ -29,7 +29,7 @@ import {
   isWhatsappReady,
   sendWhatsappMessage,
   sendWhatsappTestMessage,
-} from './whatsapp';
+} from './whatsapp-ultramsg';
 
 @Injectable()
 export class AuthService {
