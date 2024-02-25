@@ -48,7 +48,7 @@ export class BranchesService {
   }
 
   async remove(id: string) {
-    return await this.branchesRepository.delete(id).catch((err) => {
+    return await this.branchesRepository.softDelete(id).catch((err) => {
       throw new BadRequestException('Error deleting branch');
     });
   }

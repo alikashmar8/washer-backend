@@ -4,6 +4,7 @@ import { Employee } from 'src/employees/entities/employee.entity';
 import { ServiceRequest } from 'src/service-requests/entities/service-request.entity';
 import {
   Column,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   OneToMany,
@@ -27,6 +28,9 @@ export class Branch extends BaseEntity {
   
   @Column({ nullable: false })
   addressId: string;
+
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt?: Date;
 
   @OneToOne((type) => Address, (address) => address.branch, {
     cascade: true,
