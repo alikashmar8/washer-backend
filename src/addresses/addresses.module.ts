@@ -17,6 +17,7 @@ import { UsersService } from 'src/users/users.service';
 import { AddressesController } from './addresses.controller';
 import { AddressesService } from './addresses.service';
 import { Address } from './entities/address.entity';
+import { ServiceRequest } from 'src/service-requests/entities/service-request.entity';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { Address } from './entities/address.entity';
       Chat,
       Message,
       Notification,
+      ServiceRequest
     ]),
   ],
   controllers: [AddressesController],

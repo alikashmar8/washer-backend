@@ -10,6 +10,7 @@ import { EmployeesService } from 'src/employees/employees.service';
 import { Employee } from 'src/employees/entities/employee.entity';
 import { Notification } from 'src/notifications/entities/notification.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
+import { ServiceRequest } from 'src/service-requests/entities/service-request.entity';
 import { Setting } from 'src/settings/entities/setting.entity';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
@@ -30,6 +31,7 @@ import { Ad } from './entities/ad.entity';
       Chat,
       Message,
       Notification,
+      ServiceRequest,
     ]),
   ],
   controllers: [AdsController],
