@@ -6,6 +6,9 @@ import { Branch } from 'src/branches/entities/branch.entity';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
 import { EmployeesService } from 'src/employees/employees.service';
 import { Employee } from 'src/employees/entities/employee.entity';
+import { Notification } from 'src/notifications/entities/notification.entity';
+import { NotificationsService } from 'src/notifications/notifications.service';
+import { ServiceRequest } from 'src/service-requests/entities/service-request.entity';
 import { Setting } from 'src/settings/entities/setting.entity';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
@@ -14,8 +17,6 @@ import { ChatsGateway } from './chats.gateway';
 import { ChatsService } from './chats.service';
 import { Chat } from './entities/chat.entity';
 import { Message } from './entities/message.entity';
-import { NotificationsService } from 'src/notifications/notifications.service';
-import { Notification } from 'src/notifications/entities/notification.entity';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { Notification } from 'src/notifications/entities/notification.entity';
       Setting,
       Branch,
       Notification,
+      ServiceRequest,
     ]),
   ],
   controllers: [ChatsController],

@@ -14,6 +14,7 @@ import { NotificationsService } from 'src/notifications/notifications.service';
 import { Product } from 'src/products/entities/product.entity';
 import { Promo } from 'src/promos/entities/promo.entity';
 import { PromosService } from 'src/promos/promos.service';
+import { ServiceRequest } from 'src/service-requests/entities/service-request.entity';
 import { Setting } from 'src/settings/entities/setting.entity';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
@@ -37,6 +38,7 @@ import { OrdersService } from './orders.service';
       Chat,
       Message,
       Notification,
+      ServiceRequest,
     ]),
   ],
   controllers: [OrdersController],
