@@ -38,6 +38,7 @@ import { ProductsModule } from './products/products.module';
 import { ProductsService } from './products/products.service';
 import { PromosModule } from './promos/promos.module';
 import { ServiceCategoriesModule } from './service-categories/service-categories.module';
+import { ServiceRequest } from './service-requests/entities/service-request.entity';
 import { ServiceRequestsModule } from './service-requests/service-requests.module';
 import { ServiceTypesModule } from './service-types/service-types.module';
 import { Setting } from './settings/entities/setting.entity';
@@ -73,6 +74,7 @@ import { WalletsModule } from './wallets/wallets.module';
       Chat,
       Message,
       Notification,
+      ServiceRequest,
     ]),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '../public'), // added ../ to get one folder back

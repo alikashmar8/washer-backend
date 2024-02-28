@@ -8,6 +8,7 @@ import {
   ValidateNested,
   Matches,
   IsArray,
+  IsPhoneNumber,
 } from 'class-validator';
 import { CreateAddressDto } from 'src/addresses/dto/create-address.dto';
 import { passwordRegex } from 'src/common/constants';
@@ -44,6 +45,7 @@ export class RegisterUserDTO {
 
   @ApiProperty()
   @IsNotEmpty()
+  @IsPhoneNumber()
   @Length(6, 32)
   phoneNumber: string;
 
