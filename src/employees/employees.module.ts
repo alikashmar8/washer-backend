@@ -10,6 +10,7 @@ import { DeviceTokensService } from 'src/device-tokens/device-tokens.service';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
 import { Notification } from 'src/notifications/entities/notification.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
+import { ServiceRequest } from 'src/service-requests/entities/service-request.entity';
 import { Setting } from 'src/settings/entities/setting.entity';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
@@ -28,6 +29,7 @@ import { Employee } from './entities/employee.entity';
       Chat,
       Message,
       Notification,
+      ServiceRequest
     ]),
   ],
   controllers: [EmployeesController],

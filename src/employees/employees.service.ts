@@ -6,8 +6,10 @@ import { Chat } from 'src/chats/entities/chat.entity';
 import { Message } from 'src/chats/entities/message.entity';
 import { DeviceTokenStatus } from 'src/common/enums/device-token-status.enum';
 import { EmployeeRole } from 'src/common/enums/employee-role.enum';
+import { RequestStatus } from 'src/common/enums/request-status.enum';
 import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
-import { Brackets, IsNull, Not, Repository } from 'typeorm';
+import { ServiceRequest } from 'src/service-requests/entities/service-request.entity';
+import { Brackets, In, IsNull, Not, Repository } from 'typeorm';
 import { CreateEmployeeChatDTO } from './../chats/dto/create-employee-chat.dto';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
@@ -22,6 +24,8 @@ export class EmployeesService {
     @InjectRepository(DeviceToken)
     private deviceTokensRepository: Repository<DeviceToken>,
     @InjectRepository(Chat) private chatsRepository: Repository<Chat>,
+    @InjectRepository(ServiceRequest)
+    private serviceRequestsRepository: Repository<ServiceRequest>,
     private appService: AppService,
   ) {}
 
@@ -281,6 +285,25 @@ export class EmployeesService {
     const employee = await this.findOneByIdOrFail(id);
     const photo = employee.photo;
 
+    const activeServiceRequests = await this.serviceRequestsRepository.exist({
+      where: {
+        employeeId: id,
+        status: Not(
+          In([
+            RequestStatus.CANCELLED,
+            RequestStatus.DONE,
+            RequestStatus.REJECTED,
+          ]),
+        ),
+      },
+    });
+
+    if (activeServiceRequests) {
+      throw new BadRequestException(
+        'Employee has active service requests, cannot delete now!',
+      );
+    }
+
     return await this.employeesRepository
       .softDelete(id)
       .catch((err) => {
@@ -352,12 +375,13 @@ export class EmployeesService {
   }
 
   async getEmployeeChats(id: string) {
-    let chats = await this.chatsRepository.find({
-      where: {
-        employeeId: id,
-      },
-      relations: ['user', 'employee'],
-    });
+    let chats = await this.chatsRepository
+      .createQueryBuilder('chat')
+      .withDeleted()
+      .leftJoinAndSelect('chat.user', 'user')
+      .leftJoinAndSelect('chat.employee', 'employee')
+      .where('chat.employeeId = :id', { id })
+      .getMany();
 
     chats = await Promise.all(
       chats.map(async (chat) => {
