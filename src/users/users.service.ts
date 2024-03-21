@@ -252,15 +252,14 @@ export class UsersService {
   }
 
   async getUserChats(id: string) {
-    let chats = await this.chatsRepository.find({
-      where: {
-        userId: id,
-      },
-      relations: ['user', 'employee'],
-      order: {
-        lastMessageDate: 'DESC',
-      },
-    });
+    let chats = await this.chatsRepository
+      .createQueryBuilder('chat')
+      .withDeleted()
+      .leftJoinAndSelect('chat.user', 'user')
+      .leftJoinAndSelect('chat.employee', 'employee')
+      .where('chat.userId = :id', { id })
+      .orderBy('chat.lastMessageDate', 'DESC')
+      .getMany();
 
     chats = await Promise.all(
       chats.map(async (chat) => {
