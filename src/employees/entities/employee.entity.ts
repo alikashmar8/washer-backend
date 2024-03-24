@@ -59,10 +59,10 @@ export class Employee extends BaseEntity {
   @Column({ nullable: true })
   passwordResetExpiry?: Date;
 
-  @Column({ nullable: true })
+  @Column({ type: 'float', nullable: true })
   currentLongitude?: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'float', nullable: true })
   currentLatitude?: number;
 
   @Column({ nullable: true })
