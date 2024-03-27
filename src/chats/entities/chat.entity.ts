@@ -1,5 +1,3 @@
-import { Employee } from 'src/employees/entities/employee.entity';
-import { User } from 'src/users/entities/user.entity';
 import {
   Column,
   Entity,
@@ -8,6 +6,9 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
+import { Employee } from '../../employees/entities/employee.entity';
+import { User } from '../../users/entities/user.entity';
 import { ChatSenderType } from '../dto/chat-sender-type.dto';
 import { Message } from './message.entity';
 

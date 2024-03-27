@@ -1,5 +1,3 @@
-import { BaseEntity } from 'src/common/entities/base-entity.entity';
-import { Product } from 'src/products/entities/product.entity';
 import {
   Column,
   DeleteDateColumn,
@@ -9,6 +7,9 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
+import { BaseEntity } from '../../common/entities/base-entity.entity';
+import { Product } from '../../products/entities/product.entity';
 
 @Entity('categories')
 export class Category extends BaseEntity {

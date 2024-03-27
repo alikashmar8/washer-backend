@@ -1,6 +1,3 @@
-import { Branch } from 'src/branches/entities/branch.entity';
-import { ServiceRequest } from 'src/service-requests/entities/service-request.entity';
-import { User } from 'src/users/entities/user.entity';
 import {
   Column,
   DeleteDateColumn,
@@ -11,7 +8,11 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
+import { Branch } from '../../branches/entities/branch.entity';
 import { BaseEntity } from '../../common/entities/base-entity.entity';
+import { ServiceRequest } from '../../service-requests/entities/service-request.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity('addresses')
 export class Address extends BaseEntity {
@@ -33,10 +34,10 @@ export class Address extends BaseEntity {
   @Column({ type: 'text', nullable: false })
   description: string;
 
-  @Column({ type: 'float', nullable: false })
+  @Column({ type: 'decimal', precision: 11, scale: 7, nullable: false })
   lat: number;
 
-  @Column({ type: 'float', nullable: false })
+  @Column({ type: 'decimal', precision: 11, scale: 7, nullable: false })
   lon: number;
 
   @Column({ default: false })

@@ -1,13 +1,5 @@
 import * as argon from 'argon2';
 import { Exclude } from 'class-transformer';
-import { Chat } from 'src/chats/entities/chat.entity';
-import { Message } from 'src/chats/entities/message.entity';
-import { BaseEntity } from 'src/common/entities/base-entity.entity';
-import { EmployeeRole } from 'src/common/enums/employee-role.enum';
-import { removeSpecialCharacters } from 'src/common/utils/functions';
-import { DeviceToken } from 'src/device-tokens/entities/device-token.entity';
-import { Notification } from 'src/notifications/entities/notification.entity';
-import { ServiceRequest } from 'src/service-requests/entities/service-request.entity';
 import {
   BeforeInsert,
   Column,
@@ -17,6 +9,15 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
+import { Chat } from '../../chats/entities/chat.entity';
+import { Message } from '../../chats/entities/message.entity';
+import { BaseEntity } from '../../common/entities/base-entity.entity';
+import { EmployeeRole } from '../../common/enums/employee-role.enum';
+import { removeSpecialCharacters } from '../../common/utils/functions';
+import { DeviceToken } from '../../device-tokens/entities/device-token.entity';
+import { Notification } from '../../notifications/entities/notification.entity';
+import { ServiceRequest } from '../../service-requests/entities/service-request.entity';
 import { Branch } from './../../branches/entities/branch.entity';
 
 @Entity('employees')
@@ -59,10 +60,10 @@ export class Employee extends BaseEntity {
   @Column({ nullable: true })
   passwordResetExpiry?: Date;
 
-  @Column({ type: 'float', nullable: true })
+  @Column({ type: 'decimal', precision: 11, scale: 7, nullable: true })
   currentLongitude?: number;
 
-  @Column({ type: 'float', nullable: true })
+  @Column({ type: 'decimal', precision: 11, scale: 7, nullable: true })
   currentLatitude?: number;
 
   @Column({ nullable: true })
